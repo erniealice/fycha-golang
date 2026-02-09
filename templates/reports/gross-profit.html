@@ -1,0 +1,73 @@
+{{/* Full page — for direct access / non-HTMX */}}
+{{define "gross-profit"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial — for HTMX navigation */}}
+{{define "gross-profit-content"}}
+<div class="page-content report-layout" data-page-css="/assets/css/fycha/fycha-report.css?v={{.CacheVersion}}">
+
+    {{/* ─── Summary Bar ─── */}}
+    <div class="report-summary-bar">
+        {{range .Summary}}
+        <div class="summary-metric{{if .Highlight}} highlight{{end}}">
+            <span class="summary-label">{{.Label}}</span>
+            {{if .Variant}}
+            <span class="summary-value badge {{.Variant}}">{{.Value}}</span>
+            {{else}}
+            <span class="summary-value">{{.Value}}</span>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+
+    {{/* ─── Filter Bar ─── */}}
+    <div class="report-filters"
+         hx-get="/app/reports/gross-profit"
+         hx-target="#grossProfitTable-body"
+         hx-swap="outerHTML"
+         hx-trigger="change"
+         hx-push-url="true"
+         hx-include="[name^='filter-']">
+
+        {{/* Group by selector */}}
+        <div class="filter-group">
+            <label class="filter-label" for="filter-group-by">{{.Labels.GroupBy}}</label>
+            <select name="filter-group-by" id="filter-group-by" class="filter-select">
+                {{range .GroupByOptions}}
+                <option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>
+                {{end}}
+            </select>
+        </div>
+
+        {{/* Period presets */}}
+        <div class="period-presets">
+            <button type="button" class="preset-btn{{if eq .ActivePreset "thisMonth"}} active{{end}}" data-preset="thisMonth">{{.Labels.PeriodThisMonth}}</button>
+            <button type="button" class="preset-btn{{if eq .ActivePreset "lastMonth"}} active{{end}}" data-preset="lastMonth">{{.Labels.PeriodLastMonth}}</button>
+            <button type="button" class="preset-btn{{if eq .ActivePreset "thisQuarter"}} active{{end}}" data-preset="thisQuarter">{{.Labels.PeriodThisQuarter}}</button>
+            <button type="button" class="preset-btn{{if eq .ActivePreset "lastQuarter"}} active{{end}}" data-preset="lastQuarter">{{.Labels.PeriodLastQuarter}}</button>
+            <button type="button" class="preset-btn{{if eq .ActivePreset "thisYear"}} active{{end}}" data-preset="thisYear">{{.Labels.PeriodThisYear}}</button>
+            <button type="button" class="preset-btn{{if eq .ActivePreset "lastYear"}} active{{end}}" data-preset="lastYear">{{.Labels.PeriodLastYear}}</button>
+            <button type="button" class="preset-btn{{if eq .ActivePreset "custom"}} active{{end}}" data-preset="custom">{{.Labels.PeriodCustom}}</button>
+        </div>
+
+        {{/* Date inputs (shown when custom period selected) */}}
+        <div class="filter-dates{{if ne .ActivePreset "custom"}} hidden{{end}}" id="custom-dates">
+            <div class="filter-group">
+                <label class="filter-label" for="filter-start">{{.Labels.DateStart}}</label>
+                <input type="date" name="filter-start" id="filter-start" class="filter-input" value="{{.StartDate}}">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="filter-end">{{.Labels.DateEnd}}</label>
+                <input type="date" name="filter-end" id="filter-end" class="filter-input" value="{{.EndDate}}">
+            </div>
+        </div>
+    </div>
+
+    {{/* ─── Table Card ─── */}}
+    <div class="report-table-wrapper">
+        {{template "table-card" .Table}}
+    </div>
+
+</div>
+{{end}}
