@@ -23,7 +23,7 @@
 
     {{/* ─── Filter Bar ─── */}}
     <div class="report-filters"
-         hx-get="/app/reports/gross-profit"
+         hx-get="{{route "reports.gross_profit"}}"
          hx-target="#grossProfitTable-body"
          hx-swap="outerHTML"
          hx-trigger="change"
