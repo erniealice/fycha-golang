@@ -1,0 +1,30 @@
+{{/* Full page — for direct access / non-HTMX */}}
+{{define "cost-of-sales"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial — for HTMX navigation */}}
+{{define "cost-of-sales-content"}}
+<div class="page-content report-layout" data-page-css="/assets/css/fycha/fycha-report.css?v={{.CacheVersion}}">
+
+    {{/* ─── Summary Bar ─── */}}
+    <div class="report-summary-bar">
+        {{range .Summary}}
+        <div class="summary-metric{{if .Highlight}} highlight{{end}}">
+            <span class="summary-label">{{.Label}}</span>
+            {{if .Variant}}
+            <span class="summary-value badge {{.Variant}}">{{.Value}}</span>
+            {{else}}
+            <span class="summary-value">{{.Value}}</span>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+
+    {{/* ─── Table Card ─── */}}
+    <div class="report-table-wrapper">
+        {{template "table-card" .Table}}
+    </div>
+
+</div>
+{{end}}
