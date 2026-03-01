@@ -23,44 +23,28 @@ type Deps struct {
 	TableLabels  types.TableLabels
 }
 
-// SummaryMetric holds a single summary bar metric.
-type SummaryMetric struct {
-	Label     string
-	Value     string
-	Highlight bool
-	Variant   string // "success", "warning", "danger" — for margin badge
-}
-
-// FilterOption holds a dropdown option for filters.
-type FilterOption struct {
-	Value    string
-	Label    string
-	Selected bool
-}
-
 // PageData holds the data for the gross profit report page.
 type PageData struct {
 	types.PageData
-	ContentTemplate string
-	Labels          fycha.GrossProfitLabels
-	Summary         []SummaryMetric
-	Table           *types.TableConfig
-	// Filter state
-	GroupBy       string
-	StartDate     string
-	EndDate       string
-	ProductID     string
-	LocationID    string
-	CategoryID    string
-	ActivePreset  string
-	GroupByOptions []FilterOption
-	PeriodPresets  []FilterOption
+	ContentTemplate   string
+	Labels            fycha.GrossProfitLabels
+	Summary           []fycha.SummaryMetric
+	Table             *types.TableConfig
+	Filter            fycha.FilterState
+	PeriodLabels      fycha.PeriodLabels
+	ReportURL         string
+	ActiveFilterCount int
+	// Legacy fields used by gross profit specific filters
+	ProductID  string
+	LocationID string
+	CategoryID string
 }
 
 // NewView creates the gross profit report view.
 func NewView(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		l := deps.Labels.GrossProfit
+		pl := deps.Labels.Period
 
 		// Parse filter query params
 		groupBy := viewCtx.QueryParams["group-by"]
@@ -72,6 +56,43 @@ func NewView(deps *Deps) view.View {
 		productID := viewCtx.QueryParams["product-id"]
 		locationID := viewCtx.QueryParams["location-id"]
 		categoryID := viewCtx.QueryParams["category-id"]
+
+		// Period preset
+		period := viewCtx.QueryParams["period"]
+		if period == "" {
+			period = "thisMonth"
+		}
+
+		reportURL := viewCtx.CurrentPath
+		if reportURL == "" {
+			reportURL = fycha.ReportsGrossProfitURL
+		}
+
+		// Build group-by options for filter sheet
+		groupByOptions := []fycha.FilterOption{
+			{Value: "product", Label: l.GroupByProduct, Selected: groupBy == "product"},
+			{Value: "location", Label: l.GroupByLocation, Selected: groupBy == "location"},
+			{Value: "category", Label: l.GroupByCategory, Selected: groupBy == "category"},
+			{Value: "monthly", Label: l.GroupByMonthly, Selected: groupBy == "monthly"},
+			{Value: "quarterly", Label: l.GroupByQuarterly, Selected: groupBy == "quarterly"},
+		}
+
+		// Handle filter sheet request
+		if viewCtx.QueryParams["sheet"] == "filters" {
+			sheetFilter := fycha.FilterState{
+				ActivePreset:   period,
+				StartDate:      startDateStr,
+				EndDate:        endDateStr,
+				GroupBy:        groupBy,
+				GroupByOptions: groupByOptions,
+				PeriodPresets:  fycha.DefaultPeriodPresets(pl, period),
+			}
+			return view.OK("report-filter-sheet", &fycha.FilterSheetData{
+				Filter:       sheetFilter,
+				PeriodLabels: pl,
+				ReportURL:    reportURL,
+			})
+		}
 
 		// Build proto request
 		req := &reportpb.GrossProfitReportRequest{}
@@ -90,31 +111,33 @@ func NewView(deps *Deps) view.View {
 			req.PeriodGranularity = &gran
 		}
 
-		// Parse date filters
-		activePreset := "thisMonth"
-		if startDateStr != "" {
+		// Resolve dates
+		if period == "custom" && startDateStr != "" {
 			if ts, err := strconv.ParseInt(startDateStr, 10, 64); err == nil {
 				req.StartDate = &ts
-				activePreset = "custom"
+			} else if t, err := time.Parse("2006-01-02", startDateStr); err == nil {
+				ts := t.Unix()
+				req.StartDate = &ts
 			}
 		}
-		if endDateStr != "" {
+		if period == "custom" && endDateStr != "" {
 			if ts, err := strconv.ParseInt(endDateStr, 10, 64); err == nil {
 				req.EndDate = &ts
-				activePreset = "custom"
+			} else if t, err := time.Parse("2006-01-02", endDateStr); err == nil {
+				ts := t.Unix()
+				req.EndDate = &ts
 			}
 		}
 
-		// Apply default period (this month) if no dates provided
+		// Apply period preset if not custom
 		if req.StartDate == nil {
-			now := time.Now()
-			startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.Local)
-			ts := startOfMonth.Unix()
+			start, _ := fycha.ParsePeriodPreset(period)
+			ts := start.Unix()
 			req.StartDate = &ts
 		}
 		if req.EndDate == nil {
-			now := time.Now()
-			ts := now.Unix()
+			_, end := fycha.ParsePeriodPreset(period)
+			ts := end.Unix()
 			req.EndDate = &ts
 		}
 
@@ -145,13 +168,13 @@ func NewView(deps *Deps) view.View {
 		// Build table
 		table := buildTable(resp.GetLineItems(), resp.GetSummary(), l, deps.TableLabels, groupBy)
 
-		// Build group-by options
-		groupByOptions := []FilterOption{
-			{Value: "product", Label: l.GroupByProduct, Selected: groupBy == "product"},
-			{Value: "location", Label: l.GroupByLocation, Selected: groupBy == "location"},
-			{Value: "category", Label: l.GroupByCategory, Selected: groupBy == "category"},
-			{Value: "monthly", Label: l.GroupByMonthly, Selected: groupBy == "monthly"},
-			{Value: "quarterly", Label: l.GroupByQuarterly, Selected: groupBy == "quarterly"},
+		filter := fycha.FilterState{
+			ActivePreset:   period,
+			StartDate:      startDateStr,
+			EndDate:        endDateStr,
+			GroupBy:        groupBy,
+			GroupByOptions: groupByOptions,
+			PeriodPresets:  fycha.DefaultPeriodPresets(pl, period),
 		}
 
 		pageData := &PageData{
@@ -169,14 +192,13 @@ func NewView(deps *Deps) view.View {
 			Labels:          l,
 			Summary:         summary,
 			Table:           table,
-			GroupBy:         groupBy,
-			StartDate:       startDateStr,
-			EndDate:         endDateStr,
-			ProductID:       productID,
-			LocationID:      locationID,
-			CategoryID:      categoryID,
-			ActivePreset:    activePreset,
-			GroupByOptions:  groupByOptions,
+			Filter:          filter,
+			PeriodLabels:    pl,
+			ReportURL:         reportURL,
+			ActiveFilterCount: fycha.ActiveFilterCount(filter),
+			ProductID:         productID,
+			LocationID:        locationID,
+			CategoryID:        categoryID,
 		}
 
 		if viewCtx.IsHTMX {
@@ -186,7 +208,7 @@ func NewView(deps *Deps) view.View {
 	})
 }
 
-func buildSummary(s *reportpb.GrossProfitSummary, l fycha.GrossProfitLabels) []SummaryMetric {
+func buildSummary(s *reportpb.GrossProfitSummary, l fycha.GrossProfitLabels) []fycha.SummaryMetric {
 	if s == nil {
 		s = &reportpb.GrossProfitSummary{}
 	}
@@ -196,7 +218,7 @@ func buildSummary(s *reportpb.GrossProfitSummary, l fycha.GrossProfitLabels) []S
 	} else if s.GetOverallMargin() < 30 {
 		marginVariant = "warning"
 	}
-	return []SummaryMetric{
+	return []fycha.SummaryMetric{
 		{Label: l.SummaryNetRevenue, Value: formatCurrency(s.GetNetRevenue())},
 		{Label: l.SummaryCogs, Value: formatCurrency(s.GetTotalCogs())},
 		{Label: l.SummaryGrossProfit, Value: formatCurrency(s.GetTotalGrossProfit()), Highlight: true},
@@ -254,7 +276,6 @@ func buildTable(items []*reportpb.GrossProfitLineItem, summary *reportpb.GrossPr
 
 	rows := make([]types.TableRow, 0, len(items))
 	for _, item := range items {
-		// Margin badge variant
 		marginVariant := "success"
 		if item.GetGrossProfitMargin() < 15 {
 			marginVariant = "danger"
@@ -275,16 +296,13 @@ func buildTable(items []*reportpb.GrossProfitLineItem, summary *reportpb.GrossPr
 				"txnCount":      strconv.FormatInt(item.GetTransactionCount(), 10),
 			},
 			Cells: []types.TableCell{
-				// Revenue group
 				{Type: "name", Value: item.GetGroupKey()},
 				{Type: "text", Value: formatCurrency(item.GetTotalRevenue())},
 				{Type: "text", Value: formatCurrency(item.GetTotalDiscount())},
 				{Type: "text", Value: formatCurrency(item.GetNetRevenue())},
-				// Profitability group
 				{Type: "text", Value: formatCurrency(item.GetCostOfGoodsSold())},
 				{Type: "text", Value: formatCurrency(item.GetGrossProfit())},
 				{Type: "badge", Value: fmt.Sprintf("%.1f%%", item.GetGrossProfitMargin()), Variant: marginVariant},
-				// Volume group
 				{Type: "text", Value: strconv.FormatInt(item.GetUnitsSold(), 10)},
 				{Type: "text", Value: strconv.FormatInt(item.GetTransactionCount(), 10)},
 			},
@@ -292,7 +310,7 @@ func buildTable(items []*reportpb.GrossProfitLineItem, summary *reportpb.GrossPr
 		rows = append(rows, row)
 	}
 
-	// Add totals row if we have summary data
+	// Add totals row
 	if summary != nil && len(items) > 0 {
 		marginVariant := "success"
 		if summary.GetOverallMargin() < 15 {
@@ -324,22 +342,17 @@ func buildTable(items []*reportpb.GrossProfitLineItem, summary *reportpb.GrossPr
 	return table
 }
 
-// formatCurrency formats a float64 as PHP currency with comma separators.
 func formatCurrency(amount float64) string {
 	negative := amount < 0
 	if negative {
 		amount = -amount
 	}
-
-	// Format with 2 decimal places
 	whole := int64(amount)
 	frac := int64((amount - float64(whole)) * 100 + 0.5)
 	if frac >= 100 {
 		whole++
 		frac -= 100
 	}
-
-	// Add comma separators to whole part
 	wholeStr := strconv.FormatInt(whole, 10)
 	n := len(wholeStr)
 	if n > 3 {
@@ -352,8 +365,7 @@ func formatCurrency(amount float64) string {
 		}
 		wholeStr = string(result)
 	}
-
-	formatted := fmt.Sprintf("₱%s.%02d", wholeStr, frac)
+	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
 	if negative {
 		formatted = "-" + formatted
 	}

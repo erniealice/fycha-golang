@@ -1,10 +1,12 @@
-/* fycha — gross profit report layout and styling */
+/* fycha — report layout and styling */
 
 .page-content.report-layout {
     display: flex;
     flex-direction: column;
+    height: calc(100vh - 4.5rem);
+    padding: 1.5rem 2rem;
     gap: 1.25rem;
-    padding: 0;
+    overflow: hidden;
 }
 
 /* ─── Summary Bar ─── */
@@ -12,6 +14,7 @@
     display: flex;
     gap: 1rem;
     flex-wrap: wrap;
+    flex-shrink: 0;
 }
 .summary-metric {
     flex: 1 1 0;
@@ -66,49 +69,63 @@
     color: var(--status-danger-text);
 }
 
-/* ─── Filter Bar ─── */
-.report-filters {
+/* ─── Filter Button ─── */
+.report-header-actions {
     display: flex;
-    flex-wrap: wrap;
-    align-items: flex-end;
-    gap: 1rem;
-    background: var(--bg-card);
-    border: var(--border-width) solid var(--border);
-    border-radius: var(--radius-lg);
-    padding: 1rem 1.25rem;
-    box-shadow: var(--shadow-card);
+    gap: 0.5rem;
+    align-items: center;
+    flex-shrink: 0;
 }
-.filter-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.375rem;
-}
-.filter-label {
-    font-size: 0.6875rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-}
-.filter-select,
-.filter-input {
+.filter-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
     height: 2.25rem;
-    padding: 0 0.75rem;
+    padding: 0 1rem;
     border: var(--border-width) solid var(--border);
     border-radius: var(--radius-md);
     background: var(--bg-input);
-    color: var(--text-primary);
+    color: var(--text-secondary);
     font-size: 0.8125rem;
+    font-weight: 500;
     font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
 }
-.filter-select:focus,
-.filter-input:focus {
-    outline: none;
-    border-color: var(--accent-primary);
-    box-shadow: 0 0 0 2px var(--accent-primary-light);
+.filter-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-focus);
+}
+.filter-btn svg {
+    width: 1rem;
+    height: 1rem;
+}
+.filter-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.25rem;
+    height: 1.25rem;
+    padding: 0 0.375rem;
+    border-radius: 999px;
+    background: var(--accent-primary);
+    color: var(--text-inverse);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1;
 }
 
-/* ─── Period Presets ─── */
+/* ─── Table Wrapper ─── */
+.report-table-wrapper {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ─── Period Presets (inside filter sheet) ─── */
 .period-presets {
     display: flex;
     flex-wrap: wrap;
@@ -138,19 +155,223 @@
     border-color: var(--accent-primary);
 }
 
-/* ─── Date Inputs ─── */
+/* ─── Date Inputs (inside filter sheet) ─── */
 .filter-dates {
     display: flex;
     gap: 0.75rem;
+    margin-top: 0.75rem;
 }
 .filter-dates.hidden {
     display: none;
 }
+.filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    flex: 1;
+}
+.filter-label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+.filter-input {
+    height: 2.25rem;
+    padding: 0 0.75rem;
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-input);
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    font-family: var(--font-body);
+}
+.filter-input:focus {
+    outline: none;
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 2px var(--accent-primary-light);
+}
 
-/* ─── Table Wrapper ─── */
-.report-table-wrapper {
-    flex: 1 1 0;
-    min-height: 0;
+/* ─── Filter Sheet Sections ─── */
+.filter-sheet-section {
+    padding: 0 0 1.25rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 1.25rem;
+}
+.filter-sheet-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+.filter-sheet-section-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin: 0 0 0.75rem;
+}
+
+/* ─── Filter Sheet Footer ─── */
+.filter-sheet-footer {
+    display: flex;
+    gap: 0.75rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border);
+    margin-top: auto;
+}
+
+/* ─── P&L Statement ─── */
+.pl-statement {
+    width: 100%;
+    border-collapse: collapse;
+}
+.pl-row {
+    border-bottom: var(--border-width) solid var(--border);
+}
+.pl-row:last-child {
+    border-bottom: none;
+}
+.pl-total {
+    font-weight: 700;
+    border-top: 2px solid var(--border);
+    background: var(--bg-base);
+}
+.pl-label {
+    padding: 0.875rem 1.25rem;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+.pl-total .pl-label {
+    font-weight: 700;
+}
+.pl-value {
+    padding: 0.875rem 1.25rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.875rem;
+    text-align: right;
+    color: var(--text-primary);
+}
+.pl-value.success {
+    color: var(--status-success-text);
+}
+.pl-value.warning {
+    color: var(--status-warning-text);
+}
+.pl-value.danger {
+    color: var(--status-danger-text);
+}
+
+/* ─── Group-By Options (inside filter sheet) ─── */
+.groupby-options {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0.5rem 0;
+}
+.groupby-option {
+    display: flex;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.15s ease;
+    border: none;
+    background: none;
+    width: 100%;
+    text-align: left;
+    font-family: var(--font-body);
+}
+.groupby-option:hover {
+    background: var(--bg-hover);
+}
+.groupby-option.active {
+    background: var(--accent-primary-light);
+    color: var(--accent-primary);
+    font-weight: 600;
+}
+.groupby-option input[type="radio"] {
+    margin-right: 0.75rem;
+    accent-color: var(--accent-primary);
+}
+
+/* ─── Dashboard Layout ─── */
+/* The base .report-layout locks height and sets overflow:hidden for table
+   scrolling. The dashboard has no table — its card grid scrolls naturally. */
+.page-content.dashboard-layout {
+    overflow-y: auto;
+}
+
+.dashboard-report-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+.dashboard-report-card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.25rem 1.5rem;
+    background: var(--bg-card);
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-lg);
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.2s ease;
+    box-shadow: var(--shadow-card);
+    cursor: pointer;
+}
+.dashboard-report-card:hover {
+    border-color: var(--accent-primary);
+    box-shadow: var(--shadow-card-hover, 0 2px 8px rgba(0,0,0,0.08));
+    transform: translateY(-1px);
+}
+.dashboard-report-card-icon {
+    width: 2.75rem;
+    height: 2.75rem;
+    border-radius: var(--radius-md);
+    background: var(--accent-primary-light);
+    color: var(--accent-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.dashboard-report-card-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+.dashboard-report-card-body {
+    flex: 1;
+    min-width: 0;
+}
+.dashboard-report-card-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 0.25rem;
+}
+.dashboard-report-card-desc {
+    font-size: 0.8125rem;
+    color: var(--text-muted);
+    margin: 0;
+    line-height: 1.4;
+}
+.dashboard-report-card-arrow {
+    color: var(--text-muted);
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+}
+.dashboard-report-card:hover .dashboard-report-card-arrow {
+    color: var(--accent-primary);
+    transform: translateX(2px);
+}
+.dashboard-report-card-arrow svg {
+    width: 1rem;
+    height: 1rem;
 }
 
 /* ─── Responsive ─── */
@@ -161,11 +382,20 @@
     .summary-metric {
         min-width: auto;
     }
-    .report-filters {
-        flex-direction: column;
-        align-items: stretch;
-    }
     .period-presets {
         flex-wrap: wrap;
+    }
+    .page-content.report-layout {
+        padding: 1rem;
+    }
+    .filter-dates {
+        flex-direction: column;
+    }
+    .dashboard-report-card {
+        padding: 1rem;
+    }
+    .dashboard-report-card-icon {
+        width: 2.25rem;
+        height: 2.25rem;
     }
 }

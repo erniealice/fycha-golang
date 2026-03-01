@@ -7,6 +7,38 @@ type ReportsLabels struct {
 	CostOfSales CostOfSalesLabels `json:"costOfSales"`
 	Expenses    ExpensesLabels    `json:"expenses"`
 	NetProfit   NetProfitLabels   `json:"netProfit"`
+	Dashboard   DashboardLabels   `json:"dashboard"`
+	Period      PeriodLabels      `json:"period"`
+}
+
+// PeriodLabels holds shared period preset labels used across all reports.
+type PeriodLabels struct {
+	ThisMonth   string `json:"thisMonth"`
+	LastMonth   string `json:"lastMonth"`
+	ThisQuarter string `json:"thisQuarter"`
+	LastQuarter string `json:"lastQuarter"`
+	ThisYear    string `json:"thisYear"`
+	LastYear    string `json:"lastYear"`
+	Custom      string `json:"custom"`
+	DateStart   string `json:"dateStart"`
+	DateEnd     string `json:"dateEnd"`
+	GroupBy     string `json:"groupBy"`
+}
+
+// DashboardLabels holds translatable strings for the reports dashboard.
+type DashboardLabels struct {
+	Title              string `json:"title"`
+	Subtitle           string `json:"subtitle"`
+	RevenueCard        string `json:"revenueCard"`
+	ExpensesCard       string `json:"expensesCard"`
+	NetProfitCard      string `json:"netProfitCard"`
+	NetMarginCard      string `json:"netMarginCard"`
+	RevenueDesc        string `json:"revenueDesc"`
+	GrossProfitDesc    string `json:"grossProfitDesc"`
+	CostOfSalesDesc    string `json:"costOfSalesDesc"`
+	ExpensesDesc       string `json:"expensesDesc"`
+	NetProfitDesc      string `json:"netProfitDesc"`
+	ViewReport         string `json:"viewReport"`
 }
 
 // GrossProfitLabels holds translatable strings for the gross profit report.

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	fycha "github.com/erniealice/fycha-golang"
 	pyeza "github.com/erniealice/pyeza-golang"
@@ -20,18 +21,71 @@ type Deps struct {
 
 type PageData struct {
 	types.PageData
-	ContentTemplate string
-	Table           *types.TableConfig
+	ContentTemplate   string
+	Summary           []fycha.SummaryMetric
+	Table             *types.TableConfig
+	Filter            fycha.FilterState
+	PeriodLabels      fycha.PeriodLabels
+	ReportURL         string
+	ActiveFilterCount int
 }
 
 func NewView(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		l := deps.Labels.Expenses
+		pl := deps.Labels.Period
 
-		records, err := deps.DB.ListExpenses(ctx)
+		// Parse filter
+		filter := parseFilter(viewCtx.QueryParams, pl)
+
+		reportURL := viewCtx.CurrentPath
+		if reportURL == "" {
+			reportURL = fycha.ReportsExpensesURL
+		}
+
+		// Handle filter sheet request
+		if viewCtx.QueryParams["sheet"] == "filters" {
+			return view.OK("report-filter-sheet", &fycha.FilterSheetData{
+				Filter:       filter,
+				PeriodLabels: pl,
+				ReportURL:    reportURL,
+			})
+		}
+
+		// Resolve dates from period preset
+		start, end := fycha.ParsePeriodPreset(filter.ActivePreset)
+		if filter.ActivePreset == "custom" {
+			if t, err := time.Parse("2006-01-02", filter.StartDate); err == nil {
+				start = t
+			}
+			if t, err := time.Parse("2006-01-02", filter.EndDate); err == nil {
+				end = t
+			}
+		}
+
+		records, err := deps.DB.ListExpenses(ctx, &start, &end)
 		if err != nil {
 			log.Printf("Failed to list expenses: %v", err)
 			records = nil
+		}
+
+		// Build summary
+		var totalAmount float64
+		var approvedCount, pendingCount int
+		for _, r := range records {
+			totalAmount += toFloat64(r["total_amount"])
+			switch toString(r["status"]) {
+			case "approved", "paid":
+				approvedCount++
+			case "pending":
+				pendingCount++
+			}
+		}
+		summary := []fycha.SummaryMetric{
+			{Label: l.SummaryTotal, Value: formatCurrency(totalAmount), Highlight: true},
+			{Label: l.SummaryCount, Value: fmt.Sprintf("%d", len(records))},
+			{Label: l.SummaryApproved, Value: fmt.Sprintf("%d", approvedCount), Variant: "success"},
+			{Label: l.SummaryPending, Value: fmt.Sprintf("%d", pendingCount), Variant: "warning"},
 		}
 
 		columns := []types.TableColumn{
@@ -62,25 +116,30 @@ func NewView(deps *Deps) view.View {
 			Labels:               deps.TableLabels,
 			EmptyState: types.TableEmptyState{
 				Title:   "No expenses",
-				Message: "No expense records found.",
+				Message: "No expense records found for the selected period.",
 			},
 		}
 		types.ApplyTableSettings(tableConfig)
 
 		pageData := &PageData{
 			PageData: types.PageData{
-				CacheVersion: viewCtx.CacheVersion,
-				Title:        l.Title,
-				CurrentPath:  viewCtx.CurrentPath,
-				ActiveNav:    "reports",
-				ActiveSubNav: "expenses",
-				HeaderTitle:  l.Title,
+				CacheVersion:   viewCtx.CacheVersion,
+				Title:          l.Title,
+				CurrentPath:    viewCtx.CurrentPath,
+				ActiveNav:      "reports",
+				ActiveSubNav:   "expenses",
+				HeaderTitle:    l.Title,
 				HeaderSubtitle: l.Subtitle,
-				HeaderIcon:   "icon-file-minus",
-				CommonLabels: deps.CommonLabels,
+				HeaderIcon:     "icon-file-minus",
+				CommonLabels:   deps.CommonLabels,
 			},
 			ContentTemplate: "expenses-report-content",
+			Summary:         summary,
 			Table:           tableConfig,
+			Filter:            filter,
+			PeriodLabels:      pl,
+			ReportURL:         reportURL,
+			ActiveFilterCount: fycha.ActiveFilterCount(filter),
 		}
 
 		if viewCtx.IsHTMX {
@@ -88,6 +147,19 @@ func NewView(deps *Deps) view.View {
 		}
 		return view.OK("expenses-report", pageData)
 	})
+}
+
+func parseFilter(params map[string]string, pl fycha.PeriodLabels) fycha.FilterState {
+	preset := params["period"]
+	if preset == "" {
+		preset = "thisMonth"
+	}
+	return fycha.FilterState{
+		ActivePreset:  preset,
+		StartDate:     params["start"],
+		EndDate:       params["end"],
+		PeriodPresets: fycha.DefaultPeriodPresets(pl, preset),
+	}
 }
 
 func buildRows(records []map[string]any) []types.TableRow {
@@ -139,6 +211,21 @@ func toString(v any) string {
 	}
 }
 
+func toFloat64(v any) float64 {
+	switch n := v.(type) {
+	case float64:
+		return n
+	case float32:
+		return float64(n)
+	case int64:
+		return float64(n)
+	case int:
+		return float64(n)
+	default:
+		return 0
+	}
+}
+
 func formatAmount(v any) string {
 	switch n := v.(type) {
 	case float64:
@@ -154,6 +241,36 @@ func formatAmount(v any) string {
 	default:
 		return fmt.Sprintf("%v", v)
 	}
+}
+
+func formatCurrency(amount float64) string {
+	negative := amount < 0
+	if negative {
+		amount = -amount
+	}
+	whole := int64(amount)
+	frac := int64((amount-float64(whole))*100 + 0.5)
+	if frac >= 100 {
+		whole++
+		frac -= 100
+	}
+	wholeStr := fmt.Sprintf("%d", whole)
+	n := len(wholeStr)
+	if n > 3 {
+		var result []byte
+		for i, ch := range wholeStr {
+			if i > 0 && (n-i)%3 == 0 {
+				result = append(result, ',')
+			}
+			result = append(result, byte(ch))
+		}
+		wholeStr = string(result)
+	}
+	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
+	if negative {
+		formatted = "-" + formatted
+	}
+	return formatted
 }
 
 func statusVariant(status string) string {

@@ -1,6 +1,7 @@
 package fycha
 
 const (
+	ReportsBaseURL         = "/app/reports/"
 	ReportsDashboardURL    = "/app/reports/dashboard"
 	ReportsRevenueURL      = "/app/reports/revenue"
 	ReportsCostOfSalesURL  = "/app/reports/cost-of-sales"

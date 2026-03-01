@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	fycha "github.com/erniealice/fycha-golang"
 	pyeza "github.com/erniealice/pyeza-golang"
@@ -20,18 +21,67 @@ type Deps struct {
 
 type PageData struct {
 	types.PageData
-	ContentTemplate string
-	Table           *types.TableConfig
+	ContentTemplate   string
+	Summary           []fycha.SummaryMetric
+	Table             *types.TableConfig
+	Filter            fycha.FilterState
+	PeriodLabels      fycha.PeriodLabels
+	ReportURL         string
+	ActiveFilterCount int
 }
 
 func NewView(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		l := deps.Labels.Revenue
+		pl := deps.Labels.Period
 
-		records, err := deps.DB.ListRevenue(ctx)
+		// Parse filter
+		filter := parseFilter(viewCtx.QueryParams, pl)
+
+		reportURL := viewCtx.CurrentPath
+		if reportURL == "" {
+			reportURL = fycha.ReportsRevenueURL
+		}
+
+		// Handle filter sheet request
+		if viewCtx.QueryParams["sheet"] == "filters" {
+			return view.OK("report-filter-sheet", &fycha.FilterSheetData{
+				Filter:       filter,
+				PeriodLabels: pl,
+				ReportURL:    reportURL,
+			})
+		}
+
+		// Resolve dates from period preset
+		start, end := fycha.ParsePeriodPreset(filter.ActivePreset)
+		if filter.ActivePreset == "custom" {
+			if t, err := time.Parse("2006-01-02", filter.StartDate); err == nil {
+				start = t
+			}
+			if t, err := time.Parse("2006-01-02", filter.EndDate); err == nil {
+				end = t
+			}
+		}
+
+		records, err := deps.DB.ListRevenue(ctx, &start, &end)
 		if err != nil {
 			log.Printf("Failed to list revenue: %v", err)
 			records = nil
+		}
+
+		// Build summary
+		var totalAmount float64
+		for _, r := range records {
+			totalAmount += toFloat64(r["total_amount"])
+		}
+		avgAmount := 0.0
+		if len(records) > 0 {
+			avgAmount = totalAmount / float64(len(records))
+		}
+		summary := []fycha.SummaryMetric{
+			{Label: l.SummaryTotal, Value: formatCurrency(totalAmount), Highlight: true},
+			{Label: l.SummaryTransactions, Value: fmt.Sprintf("%d", len(records))},
+			{Label: l.SummaryAverage, Value: formatCurrency(avgAmount)},
 		}
 
 		columns := []types.TableColumn{
@@ -60,25 +110,30 @@ func NewView(deps *Deps) view.View {
 			Labels:               deps.TableLabels,
 			EmptyState: types.TableEmptyState{
 				Title:   "No revenue",
-				Message: "No revenue records found.",
+				Message: "No revenue records found for the selected period.",
 			},
 		}
 		types.ApplyTableSettings(tableConfig)
 
 		pageData := &PageData{
 			PageData: types.PageData{
-				CacheVersion: viewCtx.CacheVersion,
-				Title:        l.Title,
-				CurrentPath:  viewCtx.CurrentPath,
-				ActiveNav:    "reports",
-				ActiveSubNav: "revenue",
-				HeaderTitle:  l.Title,
+				CacheVersion:   viewCtx.CacheVersion,
+				Title:          l.Title,
+				CurrentPath:    viewCtx.CurrentPath,
+				ActiveNav:      "reports",
+				ActiveSubNav:   "revenue",
+				HeaderTitle:    l.Title,
 				HeaderSubtitle: l.Subtitle,
-				HeaderIcon:   "icon-trending-up",
-				CommonLabels: deps.CommonLabels,
+				HeaderIcon:     "icon-trending-up",
+				CommonLabels:   deps.CommonLabels,
 			},
 			ContentTemplate: "revenue-content",
+			Summary:         summary,
 			Table:           tableConfig,
+			Filter:            filter,
+			PeriodLabels:      pl,
+			ReportURL:         reportURL,
+			ActiveFilterCount: fycha.ActiveFilterCount(filter),
 		}
 
 		if viewCtx.IsHTMX {
@@ -86,6 +141,19 @@ func NewView(deps *Deps) view.View {
 		}
 		return view.OK("revenue", pageData)
 	})
+}
+
+func parseFilter(params map[string]string, pl fycha.PeriodLabels) fycha.FilterState {
+	preset := params["period"]
+	if preset == "" {
+		preset = "thisMonth"
+	}
+	return fycha.FilterState{
+		ActivePreset:  preset,
+		StartDate:     params["start"],
+		EndDate:       params["end"],
+		PeriodPresets: fycha.DefaultPeriodPresets(pl, preset),
+	}
 }
 
 func buildRows(records []map[string]any) []types.TableRow {
@@ -131,6 +199,21 @@ func toString(v any) string {
 	}
 }
 
+func toFloat64(v any) float64 {
+	switch n := v.(type) {
+	case float64:
+		return n
+	case float32:
+		return float64(n)
+	case int64:
+		return float64(n)
+	case int:
+		return float64(n)
+	default:
+		return 0
+	}
+}
+
 func formatAmount(v any) string {
 	switch n := v.(type) {
 	case float64:
@@ -146,6 +229,36 @@ func formatAmount(v any) string {
 	default:
 		return fmt.Sprintf("%v", v)
 	}
+}
+
+func formatCurrency(amount float64) string {
+	negative := amount < 0
+	if negative {
+		amount = -amount
+	}
+	whole := int64(amount)
+	frac := int64((amount-float64(whole))*100 + 0.5)
+	if frac >= 100 {
+		whole++
+		frac -= 100
+	}
+	wholeStr := fmt.Sprintf("%d", whole)
+	n := len(wholeStr)
+	if n > 3 {
+		var result []byte
+		for i, ch := range wholeStr {
+			if i > 0 && (n-i)%3 == 0 {
+				result = append(result, ',')
+			}
+			result = append(result, byte(ch))
+		}
+		wholeStr = string(result)
+	}
+	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
+	if negative {
+		formatted = "-" + formatted
+	}
+	return formatted
 }
 
 func statusVariant(status string) string {

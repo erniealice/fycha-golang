@@ -5,7 +5,12 @@
 
 {{/* Content-only partial — for HTMX navigation */}}
 {{define "net-profit-content"}}
-<div class="page-content report-layout" data-page-css="/assets/css/fycha/fycha-report.css?v={{.CacheVersion}}">
+<div class="page-content report-layout"
+     data-page-css="/assets/css/fycha/fycha-report.css?v={{.CacheVersion}}"
+     data-page-js="/assets/js/fycha/fycha-report-filter.js?v={{.CacheVersion}}">
+
+    {{/* ─── Filter Button ─── */}}
+    {{template "report-filter-btn" .}}
 
     {{/* ─── Summary Bar ─── */}}
     <div class="report-summary-bar">

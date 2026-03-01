@@ -1,0 +1,60 @@
+{{/* Filter sheet content — loaded into #sheetContent via HTMX.
+     Expects .Filter (FilterState), .PeriodLabels, .ReportURL in the data.
+     GroupByOptions are optional (only gross profit uses them). */}}
+
+{{define "report-filter-sheet"}}
+<form class="filter-sheet-form"
+      hx-get="{{.ReportURL}}"
+      hx-target="closest .page-content"
+      hx-swap="innerHTML"
+      hx-push-url="true">
+
+    {{/* ─── Period Section ─── */}}
+    <div class="filter-sheet-section">
+        <h3 class="filter-sheet-section-title">Period</h3>
+        <input type="hidden" name="period" value="{{.Filter.ActivePreset}}">
+        <div class="period-presets">
+            {{range .Filter.PeriodPresets}}
+            <button type="button" class="preset-btn{{if .Selected}} active{{end}}"
+                    data-preset="{{.Value}}">{{.Label}}</button>
+            {{end}}
+        </div>
+        <div class="filter-dates{{if ne .Filter.ActivePreset "custom"}} hidden{{end}}" id="custom-dates">
+            <div class="filter-group">
+                <label class="filter-label" for="filter-start">{{.PeriodLabels.DateStart}}</label>
+                <input type="date" class="filter-input" name="start" id="filter-start" value="{{.Filter.StartDate}}">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="filter-end">{{.PeriodLabels.DateEnd}}</label>
+                <input type="date" class="filter-input" name="end" id="filter-end" value="{{.Filter.EndDate}}">
+            </div>
+        </div>
+    </div>
+
+    {{/* ─── Group-By Section (conditional) ─── */}}
+    {{if .Filter.GroupByOptions}}
+    <div class="filter-sheet-section">
+        <h3 class="filter-sheet-section-title">{{.PeriodLabels.GroupBy}}</h3>
+        <div class="groupby-options">
+            {{range .Filter.GroupByOptions}}
+            <label class="groupby-option{{if .Selected}} active{{end}}">
+                <input type="radio" name="group-by" value="{{.Value}}"{{if .Selected}} checked{{end}}>
+                {{.Label}}
+            </label>
+            {{end}}
+        </div>
+    </div>
+    {{end}}
+
+    {{/* ─── Footer ─── */}}
+    <div class="filter-sheet-footer">
+        <button type="submit" class="btn btn-primary" onclick="Sheet.close()">Apply Filters</button>
+        <a href="{{.ReportURL}}" class="btn btn-ghost"
+           hx-get="{{.ReportURL}}"
+           hx-target="closest .page-content"
+           hx-swap="innerHTML"
+           hx-push-url="true"
+           onclick="Sheet.close()">Clear</a>
+    </div>
+</form>
+{{end}}

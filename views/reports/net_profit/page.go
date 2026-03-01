@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"time"
 
 	fycha "github.com/erniealice/fycha-golang"
 	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
@@ -20,33 +21,68 @@ type Deps struct {
 	TableLabels  types.TableLabels
 }
 
-type SummaryMetric struct {
-	Label     string
-	Value     string
-	Highlight bool
-	Variant   string
-}
-
-type PLLineItem struct {
-	Label     string
-	Value     string
-	IsTotal   bool
-	Variant   string
-}
-
 type PageData struct {
 	types.PageData
-	ContentTemplate string
-	Summary         []SummaryMetric
-	LineItems       []PLLineItem
+	ContentTemplate   string
+	Summary           []fycha.SummaryMetric
+	LineItems         []fycha.PLLineItem
+	Filter            fycha.FilterState
+	PeriodLabels      fycha.PeriodLabels
+	ReportURL         string
+	ActiveFilterCount int
 }
 
 func NewView(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		l := deps.Labels.NetProfit
+		pl := deps.Labels.Period
+
+		// Parse filter
+		period := viewCtx.QueryParams["period"]
+		if period == "" {
+			period = "thisMonth"
+		}
+		startDateStr := viewCtx.QueryParams["start"]
+		endDateStr := viewCtx.QueryParams["end"]
+
+		reportURL := viewCtx.CurrentPath
+		if reportURL == "" {
+			reportURL = fycha.ReportsNetProfitURL
+		}
+
+		// Handle filter sheet request
+		if viewCtx.QueryParams["sheet"] == "filters" {
+			sheetFilter := fycha.FilterState{
+				ActivePreset:  period,
+				StartDate:     startDateStr,
+				EndDate:       endDateStr,
+				PeriodPresets: fycha.DefaultPeriodPresets(pl, period),
+			}
+			return view.OK("report-filter-sheet", &fycha.FilterSheetData{
+				Filter:       sheetFilter,
+				PeriodLabels: pl,
+				ReportURL:    reportURL,
+			})
+		}
+
+		// Resolve dates
+		start, end := fycha.ParsePeriodPreset(period)
+		if period == "custom" {
+			if t, err := time.Parse("2006-01-02", startDateStr); err == nil {
+				start = t
+			}
+			if t, err := time.Parse("2006-01-02", endDateStr); err == nil {
+				end = t
+			}
+		}
 
 		// Get gross profit data (contains revenue + COGS)
 		req := &reportpb.GrossProfitReportRequest{}
+		startTS := start.Unix()
+		endTS := end.Unix()
+		req.StartDate = &startTS
+		req.EndDate = &endTS
+
 		resp, err := deps.DB.GetGrossProfitReport(ctx, req)
 		if err != nil {
 			log.Printf("Failed to get profit report: %v", err)
@@ -60,7 +96,7 @@ func NewView(deps *Deps) view.View {
 		}
 
 		// Get expenses total
-		expenseRecords, err := deps.DB.ListExpenses(ctx)
+		expenseRecords, err := deps.DB.ListExpenses(ctx, &start, &end)
 		if err != nil {
 			log.Printf("Failed to list expenses: %v", err)
 		}
@@ -87,7 +123,7 @@ func NewView(deps *Deps) view.View {
 			netVariant = "warning"
 		}
 
-		summary := []SummaryMetric{
+		summary := []fycha.SummaryMetric{
 			{Label: l.SummaryRevenue, Value: formatCurrency(s.GetNetRevenue())},
 			{Label: l.SummaryGross, Value: formatCurrency(s.GetTotalGrossProfit())},
 			{Label: l.SummaryExpenses, Value: formatCurrency(totalExpenses)},
@@ -95,7 +131,7 @@ func NewView(deps *Deps) view.View {
 		}
 
 		// P&L statement line items
-		lineItems := []PLLineItem{
+		lineItems := []fycha.PLLineItem{
 			{Label: l.Revenue, Value: formatCurrency(s.GetNetRevenue())},
 			{Label: l.CostOfSales, Value: formatCurrency(s.GetTotalCogs())},
 			{Label: l.GrossProfit, Value: formatCurrency(s.GetTotalGrossProfit()), IsTotal: true},
@@ -103,6 +139,13 @@ func NewView(deps *Deps) view.View {
 			{Label: l.Expenses, Value: formatCurrency(totalExpenses)},
 			{Label: l.NetProfit, Value: formatCurrency(netProfit), IsTotal: true},
 			{Label: l.NetMargin, Value: fmt.Sprintf("%.1f%%", netMargin), Variant: netVariant},
+		}
+
+		filter := fycha.FilterState{
+			ActivePreset:  period,
+			StartDate:     startDateStr,
+			EndDate:       endDateStr,
+			PeriodPresets: fycha.DefaultPeriodPresets(pl, period),
 		}
 
 		pageData := &PageData{
@@ -120,6 +163,10 @@ func NewView(deps *Deps) view.View {
 			ContentTemplate: "net-profit-content",
 			Summary:         summary,
 			LineItems:       lineItems,
+			Filter:            filter,
+			PeriodLabels:      pl,
+			ReportURL:         reportURL,
+			ActiveFilterCount: fycha.ActiveFilterCount(filter),
 		}
 
 		if viewCtx.IsHTMX {
@@ -167,7 +214,7 @@ func formatCurrency(amount float64) string {
 		}
 		wholeStr = string(result)
 	}
-	formatted := fmt.Sprintf("₱%s.%02d", wholeStr, frac)
+	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
 	if negative {
 		formatted = "-" + formatted
 	}

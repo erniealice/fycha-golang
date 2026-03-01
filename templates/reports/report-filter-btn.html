@@ -1,0 +1,19 @@
+{{/* Filter button — opens the filter sheet via HTMX.
+     Expects .ReportURL string and .ActiveFilterCount int in the page data. */}}
+
+{{define "report-filter-btn"}}
+<div class="report-header-actions">
+    <button type="button" class="filter-btn"
+            hx-get="{{.ReportURL}}?sheet=filters"
+            hx-target="#sheetContent"
+            hx-swap="innerHTML"
+            hx-push-url="false"
+            onclick="Sheet.open('Filters')">
+        {{template "icon-filter"}}
+        <span>Filters</span>
+        {{if .ActiveFilterCount}}
+        <span class="filter-count-badge">{{.ActiveFilterCount}}</span>
+        {{end}}
+    </button>
+</div>
+{{end}}
