@@ -1,5 +1,50 @@
 package fycha
 
+import (
+	pyeza "github.com/erniealice/pyeza-golang"
+	"github.com/erniealice/pyeza-golang/types"
+)
+
+// MapTableLabels maps common labels into the flat types.TableLabels structure.
+func MapTableLabels(common pyeza.CommonLabels) types.TableLabels {
+	return types.TableLabels{
+		Search:             common.Table.Search,
+		SearchPlaceholder:  common.Table.SearchPlaceholder,
+		Filters:            common.Table.Filters,
+		FilterConditions:   common.Table.FilterConditions,
+		ClearAll:           common.Table.ClearAll,
+		AddCondition:       common.Table.AddCondition,
+		Clear:              common.Table.Clear,
+		ApplyFilters:       common.Table.ApplyFilters,
+		Sort:               common.Table.Sort,
+		Columns:            common.Table.Columns,
+		Export:              common.Table.Export,
+		DensityDefault:     common.Table.Density.Default,
+		DensityComfortable: common.Table.Density.Comfortable,
+		DensityCompact:     common.Table.Density.Compact,
+		Show:               common.Table.Show,
+		Entries:             common.Table.Entries,
+		Showing:            common.Table.Showing,
+		To:                 common.Table.To,
+		Of:                 common.Table.Of,
+		EntriesLabel:       common.Table.EntriesLabel,
+		SelectAll:          common.Table.SelectAll,
+		Actions:            common.Table.Actions,
+		Prev:               common.Pagination.Prev,
+		Next:               common.Pagination.Next,
+	}
+}
+
+// MapBulkConfig returns a BulkActionsConfig with labels from common bulk labels.
+func MapBulkConfig(common pyeza.CommonLabels) types.BulkActionsConfig {
+	return types.BulkActionsConfig{
+		Enabled:        true,
+		SelectAllLabel: common.Bulk.SelectAll,
+		SelectedLabel:  common.Bulk.Selected,
+		CancelLabel:    common.Bulk.ClearSelection,
+	}
+}
+
 // ReportsLabels holds all translatable strings for the reports module.
 type ReportsLabels struct {
 	GrossProfit GrossProfitLabels `json:"grossProfit"`
@@ -126,6 +171,225 @@ type ExpensesLabels struct {
 	SummaryCount    string `json:"summaryCount"`
 	SummaryApproved string `json:"summaryApproved"`
 	SummaryPending  string `json:"summaryPending"`
+}
+
+// ---------------------------------------------------------------------------
+// Asset labels
+// ---------------------------------------------------------------------------
+
+// AssetLabels holds all translatable strings for the fixed asset module.
+type AssetLabels struct {
+	Page    AssetPageLabels    `json:"page"`
+	Buttons AssetButtonLabels  `json:"buttons"`
+	Columns AssetColumnLabels  `json:"columns"`
+	Empty   AssetEmptyLabels   `json:"empty"`
+	Form    AssetFormLabels    `json:"form"`
+	Actions AssetActionLabels  `json:"actions"`
+	Detail  AssetDetailLabels  `json:"detail"`
+	Dashboard AssetDashboardLabels `json:"dashboard"`
+}
+
+type AssetPageLabels struct {
+	Heading         string `json:"heading"`
+	HeadingActive   string `json:"headingActive"`
+	HeadingInactive string `json:"headingInactive"`
+	Caption         string `json:"caption"`
+	CaptionActive   string `json:"captionActive"`
+	CaptionInactive string `json:"captionInactive"`
+}
+
+type AssetButtonLabels struct {
+	AddAsset string `json:"addAsset"`
+}
+
+type AssetColumnLabels struct {
+	AssetNumber     string `json:"assetNumber"`
+	Name            string `json:"name"`
+	Category        string `json:"category"`
+	Location        string `json:"location"`
+	AcquisitionCost string `json:"acquisitionCost"`
+	BookValue       string `json:"bookValue"`
+	Status          string `json:"status"`
+}
+
+type AssetEmptyLabels struct {
+	ActiveTitle     string `json:"activeTitle"`
+	ActiveMessage   string `json:"activeMessage"`
+	InactiveTitle   string `json:"inactiveTitle"`
+	InactiveMessage string `json:"inactiveMessage"`
+}
+
+type AssetFormLabels struct {
+	Name                       string `json:"name"`
+	NamePlaceholder            string `json:"namePlaceholder"`
+	AssetNumber                string `json:"assetNumber"`
+	AssetNumberPlaceholder     string `json:"assetNumberPlaceholder"`
+	Description                string `json:"description"`
+	DescriptionPlaceholder     string `json:"descriptionPlaceholder"`
+	Category                   string `json:"category"`
+	CategoryPlaceholder        string `json:"categoryPlaceholder"`
+	Location                   string `json:"location"`
+	LocationPlaceholder        string `json:"locationPlaceholder"`
+	AcquisitionCost            string `json:"acquisitionCost"`
+	AcquisitionCostPlaceholder string `json:"acquisitionCostPlaceholder"`
+	SalvageValue               string `json:"salvageValue"`
+	SalvageValuePlaceholder    string `json:"salvageValuePlaceholder"`
+	UsefulLifeMonths           string `json:"usefulLifeMonths"`
+	UsefulLifePlaceholder      string `json:"usefulLifePlaceholder"`
+	DepreciationMethod         string `json:"depreciationMethod"`
+	Active                     string `json:"active"`
+}
+
+type AssetActionLabels struct {
+	View       string `json:"view"`
+	Edit       string `json:"edit"`
+	Delete     string `json:"delete"`
+	Activate   string `json:"activate"`
+	Deactivate string `json:"deactivate"`
+}
+
+type AssetDetailLabels struct {
+	BasicInfo   AssetDetailBasicInfoLabels `json:"basicInfo"`
+	Tabs        AssetDetailTabLabels       `json:"tabs"`
+	EmptyStates AssetDetailEmptyLabels     `json:"emptyStates"`
+}
+
+type AssetDetailBasicInfoLabels struct {
+	Title              string `json:"title"`
+	Name               string `json:"name"`
+	AssetNumber        string `json:"assetNumber"`
+	Description        string `json:"description"`
+	Category           string `json:"category"`
+	Location           string `json:"location"`
+	AcquisitionCost    string `json:"acquisitionCost"`
+	SalvageValue       string `json:"salvageValue"`
+	UsefulLifeMonths   string `json:"usefulLifeMonths"`
+	DepreciationMethod string `json:"depreciationMethod"`
+	BookValue          string `json:"bookValue"`
+	Status             string `json:"status"`
+}
+
+type AssetDetailTabLabels struct {
+	Info          string `json:"info"`
+	Depreciation  string `json:"depreciation"`
+	Maintenance   string `json:"maintenance"`
+	Transactions  string `json:"transactions"`
+}
+
+type AssetDetailEmptyLabels struct {
+	DepreciationTitle string `json:"depreciationTitle"`
+	DepreciationDesc  string `json:"depreciationDesc"`
+	MaintenanceTitle  string `json:"maintenanceTitle"`
+	MaintenanceDesc   string `json:"maintenanceDesc"`
+	TransactionsTitle string `json:"transactionsTitle"`
+	TransactionsDesc  string `json:"transactionsDesc"`
+}
+
+type AssetDashboardLabels struct {
+	Title            string `json:"title"`
+	Subtitle         string `json:"subtitle"`
+	TotalAssets      string `json:"totalAssets"`
+	TotalBookValue   string `json:"totalBookValue"`
+	FullyDepreciated string `json:"fullyDepreciated"`
+	UnderMaintenance string `json:"underMaintenance"`
+}
+
+// DefaultAssetLabels returns AssetLabels with hardcoded English defaults.
+// Consumer apps should override these via lyngua JSON files.
+func DefaultAssetLabels() AssetLabels {
+	return AssetLabels{
+		Page: AssetPageLabels{
+			Heading:         "Fixed Assets",
+			HeadingActive:   "Active Assets",
+			HeadingInactive: "Inactive Assets",
+			Caption:         "Manage your fixed assets",
+			CaptionActive:   "Active fixed assets in your register",
+			CaptionInactive: "Inactive or disposed fixed assets",
+		},
+		Buttons: AssetButtonLabels{
+			AddAsset: "Add Asset",
+		},
+		Columns: AssetColumnLabels{
+			AssetNumber:     "Asset Number",
+			Name:            "Name",
+			Category:        "Category",
+			Location:        "Location",
+			AcquisitionCost: "Acquisition Cost",
+			BookValue:       "Book Value",
+			Status:          "Status",
+		},
+		Empty: AssetEmptyLabels{
+			ActiveTitle:     "No active assets",
+			ActiveMessage:   "Add your first fixed asset to start tracking depreciation and maintenance.",
+			InactiveTitle:   "No inactive assets",
+			InactiveMessage: "Deactivated or disposed assets will appear here.",
+		},
+		Form: AssetFormLabels{
+			Name:                       "Name",
+			NamePlaceholder:            "e.g. Office Laptop",
+			AssetNumber:                "Asset Number",
+			AssetNumberPlaceholder:     "e.g. FA-001",
+			Description:                "Description",
+			DescriptionPlaceholder:     "Brief description of the asset",
+			Category:                   "Category",
+			CategoryPlaceholder:        "Select a category",
+			Location:                   "Location",
+			LocationPlaceholder:        "Select a location",
+			AcquisitionCost:            "Acquisition Cost",
+			AcquisitionCostPlaceholder: "0.00",
+			SalvageValue:               "Salvage Value",
+			SalvageValuePlaceholder:    "0.00",
+			UsefulLifeMonths:           "Useful Life (Months)",
+			UsefulLifePlaceholder:      "e.g. 60",
+			DepreciationMethod:         "Depreciation Method",
+			Active:                     "Active",
+		},
+		Actions: AssetActionLabels{
+			View:       "View",
+			Edit:       "Edit",
+			Delete:     "Delete",
+			Activate:   "Activate",
+			Deactivate: "Deactivate",
+		},
+		Detail: AssetDetailLabels{
+			BasicInfo: AssetDetailBasicInfoLabels{
+				Title:              "Asset Information",
+				Name:               "Name",
+				AssetNumber:        "Asset Number",
+				Description:        "Description",
+				Category:           "Category",
+				Location:           "Location",
+				AcquisitionCost:    "Acquisition Cost",
+				SalvageValue:       "Salvage Value",
+				UsefulLifeMonths:   "Useful Life (Months)",
+				DepreciationMethod: "Depreciation Method",
+				BookValue:          "Book Value",
+				Status:             "Status",
+			},
+			Tabs: AssetDetailTabLabels{
+				Info:         "Info",
+				Depreciation: "Depreciation",
+				Maintenance:  "Maintenance",
+				Transactions: "Transactions",
+			},
+			EmptyStates: AssetDetailEmptyLabels{
+				DepreciationTitle: "No depreciation records",
+				DepreciationDesc:  "Depreciation schedule will appear here once configured.",
+				MaintenanceTitle:  "No maintenance records",
+				MaintenanceDesc:   "Maintenance history for this asset will appear here.",
+				TransactionsTitle: "No transactions",
+				TransactionsDesc:  "Transaction audit trail for this asset will appear here.",
+			},
+		},
+		Dashboard: AssetDashboardLabels{
+			Title:            "Assets Dashboard",
+			Subtitle:         "Overview of your fixed asset register",
+			TotalAssets:      "Total Assets",
+			TotalBookValue:   "Total Book Value",
+			FullyDepreciated: "Fully Depreciated",
+			UnderMaintenance: "Under Maintenance",
+		},
+	}
 }
 
 // NetProfitLabels holds translatable strings for the net profit report.

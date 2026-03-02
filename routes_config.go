@@ -49,3 +49,56 @@ func (r ReportsRoutes) RouteMap() map[string]string {
 		"reports.net_profit":     r.NetProfitURL,
 	}
 }
+
+// ---------------------------------------------------------------------------
+// AssetRoutes
+// ---------------------------------------------------------------------------
+
+// AssetRoutes holds route paths for fixed asset management views.
+type AssetRoutes struct {
+	DashboardURL     string `json:"dashboard_url"`
+	ListURL          string `json:"list_url"`
+	DetailURL        string `json:"detail_url"`
+	TabActionURL     string `json:"tab_action_url"`
+	TableURL         string `json:"table_url"`
+	AddURL           string `json:"add_url"`
+	EditURL          string `json:"edit_url"`
+	DeleteURL        string `json:"delete_url"`
+	BulkDeleteURL    string `json:"bulk_delete_url"`
+	SetStatusURL     string `json:"set_status_url"`
+	BulkSetStatusURL string `json:"bulk_set_status_url"`
+}
+
+// DefaultAssetRoutes returns an AssetRoutes populated from package-level consts.
+func DefaultAssetRoutes() AssetRoutes {
+	return AssetRoutes{
+		DashboardURL:     AssetDashboardURL,
+		ListURL:          AssetListURL,
+		DetailURL:        AssetDetailURL,
+		TabActionURL:     AssetTabActionURL,
+		TableURL:         AssetTableURL,
+		AddURL:           AssetAddURL,
+		EditURL:          AssetEditURL,
+		DeleteURL:        AssetDeleteURL,
+		BulkDeleteURL:    AssetBulkDeleteURL,
+		SetStatusURL:     AssetSetStatusURL,
+		BulkSetStatusURL: AssetBulkSetStatusURL,
+	}
+}
+
+// RouteMap returns a map of dot-notation keys to route paths.
+func (r AssetRoutes) RouteMap() map[string]string {
+	return map[string]string{
+		"asset.dashboard":       r.DashboardURL,
+		"asset.list":            r.ListURL,
+		"asset.detail":          r.DetailURL,
+		"asset.tab_action":      r.TabActionURL,
+		"asset.table":           r.TableURL,
+		"asset.add":             r.AddURL,
+		"asset.edit":            r.EditURL,
+		"asset.delete":          r.DeleteURL,
+		"asset.bulk_delete":     r.BulkDeleteURL,
+		"asset.set_status":      r.SetStatusURL,
+		"asset.bulk_set_status": r.BulkSetStatusURL,
+	}
+}

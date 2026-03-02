@@ -1,0 +1,115 @@
+{{/*
+Asset drawer form -- loaded into #sheetContent via HTMX.
+Used by both Add and Edit actions.
+Data: .Name, .AssetNumber, .Description, .CategoryID, .LocationID,
+      .AcquisitionCost, .SalvageValue, .UsefulLifeMonths, .DepreciationMethod,
+      .Active, .ID, .FormAction, .IsEdit, .CommonLabels
+*/}}
+{{define "asset-drawer-form"}}
+<form hx-post="{{.FormAction}}" hx-swap="none" hx-on::after-request="Sheet.handleResponse(event)">
+    {{if .ID}}<input type="hidden" name="id" value="{{.ID}}">{{end}}
+
+    <div class="sheet-body">
+        <div class="form-row single">
+            {{template "form-group" (dict
+                "Type" "text"
+                "Name" "name"
+                "Label" .Labels.Name
+                "Value" .Name
+                "Required" true
+                "Placeholder" .Labels.NamePlaceholder
+            )}}
+        </div>
+
+        <div class="form-row single">
+            {{template "form-group" (dict
+                "Type" "text"
+                "Name" "asset_number"
+                "Label" .Labels.AssetNumber
+                "Value" .AssetNumber
+                "Required" true
+                "Placeholder" .Labels.AssetNumberPlaceholder
+            )}}
+        </div>
+
+        <div class="form-row single">
+            {{template "form-group" (dict
+                "Type" "textarea"
+                "Name" "description"
+                "Label" .Labels.Description
+                "Value" .Description
+                "Placeholder" .Labels.DescriptionPlaceholder
+            )}}
+        </div>
+
+        <div class="form-row">
+            {{template "form-group" (dict
+                "Type" "text"
+                "Name" "asset_category_id"
+                "Label" .Labels.Category
+                "Value" .CategoryID
+                "Placeholder" .Labels.CategoryPlaceholder
+            )}}
+            {{template "form-group" (dict
+                "Type" "text"
+                "Name" "location_id"
+                "Label" .Labels.Location
+                "Value" .LocationID
+                "Placeholder" .Labels.LocationPlaceholder
+            )}}
+        </div>
+
+        <div class="form-row">
+            {{template "form-group" (dict
+                "Type" "number"
+                "Name" "acquisition_cost"
+                "Label" .Labels.AcquisitionCost
+                "Value" .AcquisitionCost
+                "Required" true
+                "Placeholder" .Labels.AcquisitionCostPlaceholder
+            )}}
+            {{template "form-group" (dict
+                "Type" "number"
+                "Name" "salvage_value"
+                "Label" .Labels.SalvageValue
+                "Value" .SalvageValue
+                "Placeholder" .Labels.SalvageValuePlaceholder
+            )}}
+        </div>
+
+        <div class="form-row">
+            {{template "form-group" (dict
+                "Type" "number"
+                "Name" "useful_life_months"
+                "Label" .Labels.UsefulLifeMonths
+                "Value" .UsefulLifeMonths
+                "Required" true
+                "Placeholder" .Labels.UsefulLifePlaceholder
+            )}}
+            {{template "form-group" (dict
+                "Type" "select"
+                "Name" "depreciation_method"
+                "Label" .Labels.DepreciationMethod
+                "Value" .DepreciationMethod
+                "Options" (list
+                    (dict "Value" "straight_line" "Label" "Straight Line")
+                    (dict "Value" "declining_balance" "Label" "Declining Balance")
+                    (dict "Value" "sum_of_years" "Label" "Sum of Years' Digits")
+                    (dict "Value" "units_of_production" "Label" "Units of Production")
+                )
+            )}}
+        </div>
+
+        <div class="form-row single">
+            {{template "toggle" (dict
+                "Name" "active"
+                "Label" .Labels.Active
+                "Checked" .Active
+                "Value" "true"
+            )}}
+        </div>
+    </div>
+
+    {{template "sheet-form-footer" (dict "CommonLabels" .CommonLabels "ShowCancel" true "IsEdit" .IsEdit)}}
+</form>
+{{end}}

@@ -1,0 +1,127 @@
+{{/* Full page -- for direct access / non-HTMX */}}
+{{define "asset-detail"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial -- for HTMX navigation */}}
+{{define "asset-detail-content"}}
+<div class="page-content detail-layout" data-page-css="/assets/css/fycha/fycha-asset-detail.css?v={{.CacheVersion}}">
+    <div class="detail-tabs">
+        {{template "tabs" (dict "Items" .TabItems "ActiveTab" .ActiveTab "Variant" "default" "ID" "asset-detail-tabs")}}
+    </div>
+    <div id="tabContent" class="detail-body">
+        {{if eq .ActiveTab "info"}}
+            {{template "asset-tab-info" .}}
+        {{else if eq .ActiveTab "depreciation"}}
+            {{template "asset-tab-depreciation" .}}
+        {{else if eq .ActiveTab "maintenance"}}
+            {{template "asset-tab-maintenance" .}}
+        {{else if eq .ActiveTab "transactions"}}
+            {{template "asset-tab-transactions" .}}
+        {{end}}
+    </div>
+</div>
+{{end}}
+
+{{/* =============================================
+     TAB PARTIAL: Info (editable form)
+     ============================================= */}}
+{{define "asset-tab-info"}}
+<div class="tab-scroll">
+    <h4 class="detail-section-title">{{.Labels.Detail.BasicInfo.Title}}</h4>
+
+    <div id="info-result" style="display:none;" class="form-result"></div>
+
+    <form id="info-edit-form"
+          hx-post="{{.EditURL}}"
+          hx-swap="none"
+          hx-on::after-request="handleInfoUpdate(event)">
+        <input type="hidden" name="id" value="{{.ID}}">
+
+        <div class="form-row single">
+            {{template "form-group" (dict "Type" "text" "Name" "name" "Label" .Labels.Form.Name "Value" .AssetName "Required" true "Placeholder" .Labels.Form.NamePlaceholder)}}
+        </div>
+
+        <div class="form-row single">
+            {{template "form-group" (dict "Type" "text" "Name" "asset_number" "Label" .Labels.Form.AssetNumber "Value" .AssetNumber "Required" true "Placeholder" .Labels.Form.AssetNumberPlaceholder)}}
+        </div>
+
+        <div class="form-row single">
+            {{template "form-group" (dict "Type" "textarea" "Name" "description" "Label" .Labels.Form.Description "Value" .AssetDescription "Placeholder" .Labels.Form.DescriptionPlaceholder)}}
+        </div>
+
+        <div class="form-row">
+            {{template "form-group" (dict "Type" "text" "Name" "asset_category_id" "Label" .Labels.Form.Category "Value" .CategoryName "Placeholder" .Labels.Form.CategoryPlaceholder)}}
+            {{template "form-group" (dict "Type" "text" "Name" "location_id" "Label" .Labels.Form.Location "Value" .LocationName "Placeholder" .Labels.Form.LocationPlaceholder)}}
+        </div>
+
+        <div class="form-row">
+            {{template "form-group" (dict "Type" "number" "Name" "acquisition_cost" "Label" .Labels.Form.AcquisitionCost "Value" .AcquisitionCostRaw "Required" true "Placeholder" .Labels.Form.AcquisitionCostPlaceholder)}}
+            {{template "form-group" (dict "Type" "number" "Name" "salvage_value" "Label" .Labels.Form.SalvageValue "Value" .SalvageValueRaw "Placeholder" .Labels.Form.SalvageValuePlaceholder)}}
+        </div>
+
+        <div class="form-row">
+            {{template "form-group" (dict "Type" "number" "Name" "useful_life_months" "Label" .Labels.Form.UsefulLifeMonths "Value" .UsefulLifeMonths "Required" true "Placeholder" .Labels.Form.UsefulLifePlaceholder)}}
+            {{template "form-group" (dict "Type" "select" "Name" "depreciation_method" "Label" .Labels.Form.DepreciationMethod "Value" .DepreciationMethodKey "Options" (list (dict "Value" "straight_line" "Label" "Straight Line") (dict "Value" "declining_balance" "Label" "Declining Balance") (dict "Value" "sum_of_years" "Label" "Sum of Years' Digits") (dict "Value" "units_of_production" "Label" "Units of Production")))}}
+        </div>
+
+        <div class="form-row single">
+            {{template "toggle" (dict "Name" "active" "Label" .Labels.Form.Active "Checked" (eq .AssetStatus "active") "Value" "true")}}
+        </div>
+
+        <div style="margin-top: 1.5rem;">
+            <button type="submit" class="btn btn--primary btn--sm">
+                {{template "icon-save"}}
+                <span>Save Changes</span>
+            </button>
+        </div>
+    </form>
+</div>
+
+<script>
+function handleInfoUpdate(evt) {
+    var el = document.getElementById('info-result');
+    if (!el) return;
+    el.style.display = 'block';
+    if (evt.detail.successful) {
+        el.className = 'form-result form-result--success';
+        el.textContent = 'Asset updated successfully';
+    } else {
+        var msg = evt.detail.xhr.getResponseHeader('HX-Error-Message') || 'Failed to update asset';
+        el.className = 'form-result form-result--error';
+        el.textContent = msg;
+    }
+    setTimeout(function() { el.style.display = 'none'; }, 5000);
+}
+</script>
+{{end}}
+
+{{/* =============================================
+     TAB PARTIAL: Depreciation (table-card)
+     ============================================= */}}
+{{define "asset-tab-depreciation"}}
+<div class="tab-scroll">
+    <h4 class="detail-section-title">Depreciation Schedule</h4>
+    {{template "table-card" .DepreciationTable}}
+</div>
+{{end}}
+
+{{/* =============================================
+     TAB PARTIAL: Maintenance (table-card)
+     ============================================= */}}
+{{define "asset-tab-maintenance"}}
+<div class="tab-scroll">
+    <h4 class="detail-section-title">Maintenance History</h4>
+    {{template "table-card" .MaintenanceTable}}
+</div>
+{{end}}
+
+{{/* =============================================
+     TAB PARTIAL: Transactions (table-card)
+     ============================================= */}}
+{{define "asset-tab-transactions"}}
+<div class="tab-scroll">
+    <h4 class="detail-section-title">Transaction History</h4>
+    {{template "table-card" .TransactionTable}}
+</div>
+{{end}}

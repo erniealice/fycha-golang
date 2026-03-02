@@ -1,0 +1,79 @@
+{{/* Full page -- for direct access / non-HTMX */}}
+{{define "asset-dashboard"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial -- for HTMX navigation */}}
+{{define "asset-dashboard-content"}}
+<div class="page-content" data-page-css="/assets/css/fycha/fycha-asset-dashboard.css?v={{.CacheVersion}}">
+    <!-- Stats Row -->
+    <div class="fycha-asset-stats-row">
+        {{template "stat-card" dict "Icon" "icon-box" "Value" (printf "%d" .Stats.TotalAssets) "Label" .Labels.TotalAssets "Trend" "" "TrendUp" true "Color" "terracotta"}}
+        {{template "stat-card" dict "Icon" "icon-dollar-sign" "Value" .Stats.TotalBookValue "Label" .Labels.TotalBookValue "Trend" "" "TrendUp" true "Color" "sage"}}
+        {{template "stat-card" dict "Icon" "icon-trending-down" "Value" (printf "%d" .Stats.FullyDepreciated) "Label" .Labels.FullyDepreciated "Trend" "" "TrendUp" false "Color" "navy"}}
+        {{template "stat-card" dict "Icon" "icon-tool" "Value" (printf "%d" .Stats.UnderMaintenance) "Label" .Labels.UnderMaintenance "Trend" "" "TrendUp" false "Color" "amber"}}
+    </div>
+
+    <!-- Main Grid -->
+    <div class="fycha-asset-dashboard-grid">
+        <!-- Depreciation Chart Placeholder -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Depreciation Overview</h2>
+            </div>
+            <div class="fycha-asset-chart-area">
+                <div class="fycha-asset-chart-placeholder">
+                    <div class="fycha-asset-chart-line">
+                        <svg viewBox="0 0 400 200" preserveAspectRatio="none">
+                            <defs>
+                                <linearGradient id="assetChartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#3B5998;stop-opacity:0.3" />
+                                    <stop offset="100%" style="stop-color:#3B5998;stop-opacity:0" />
+                                </linearGradient>
+                            </defs>
+                            <path d="M0,40 Q50,50 100,70 T200,100 T300,130 T400,160" fill="none" stroke="#3B5998" stroke-width="3" stroke-linecap="round"/>
+                            <path d="M0,40 Q50,50 100,70 T200,100 T300,130 T400,160 L400,200 L0,200 Z" fill="url(#assetChartGradient)"/>
+                        </svg>
+                    </div>
+                    <div class="fycha-asset-chart-labels">
+                        <span class="fycha-asset-chart-label">Jan</span>
+                        <span class="fycha-asset-chart-label">Mar</span>
+                        <span class="fycha-asset-chart-label">May</span>
+                        <span class="fycha-asset-chart-label">Jul</span>
+                        <span class="fycha-asset-chart-label">Sep</span>
+                        <span class="fycha-asset-chart-label">Nov</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">Recent Activity</h2>
+                <button class="card-btn">View All</button>
+            </div>
+            <div class="fycha-asset-activity-list">
+                {{if .RecentActivity}}
+                    {{range .RecentActivity}}
+                    <div class="fycha-asset-activity-item">
+                        <div class="fycha-asset-activity-icon">
+                            {{.IconHTML}}
+                        </div>
+                        <div class="fycha-asset-activity-content">
+                            <div class="fycha-asset-activity-title">{{.Title}}</div>
+                            <div class="fycha-asset-activity-desc">{{.Description}}</div>
+                        </div>
+                        <span class="fycha-asset-activity-time">{{.TimeAgo}}</span>
+                    </div>
+                    {{end}}
+                {{else}}
+                <div class="fycha-asset-activity-empty">
+                    <p>No recent activity</p>
+                </div>
+                {{end}}
+            </div>
+        </div>
+    </div>
+</div>
+{{end}}
