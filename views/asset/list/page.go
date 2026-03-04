@@ -47,7 +47,8 @@ func NewView(deps *Deps) view.View {
 			status = "active"
 		}
 
-		tableConfig := buildTableConfig(deps, status)
+		perms := view.GetUserPermissions(ctx)
+		tableConfig := buildTableConfig(deps, status, perms)
 
 		pageData := &PageData{
 			PageData: types.PageData{
@@ -78,7 +79,8 @@ func NewTableView(deps *Deps) view.View {
 			status = "active"
 		}
 
-		tableConfig := buildTableConfig(deps, status)
+		perms := view.GetUserPermissions(ctx)
+		tableConfig := buildTableConfig(deps, status, perms)
 		return view.OK("table-card", tableConfig)
 	})
 }
@@ -96,10 +98,10 @@ func mockAssets() []MockAsset {
 	}
 }
 
-func buildTableConfig(deps *Deps, status string) *types.TableConfig {
+func buildTableConfig(deps *Deps, status string, perms *types.UserPermissions) *types.TableConfig {
 	l := deps.Labels
 	columns := assetColumns(l)
-	rows := buildTableRows(mockAssets(), status, l, deps.Routes)
+	rows := buildTableRows(mockAssets(), status, l, deps.Routes, perms)
 	types.ApplyColumnStyles(columns, rows)
 
 	bulkCfg := fycha.MapBulkConfig(deps.CommonLabels)
@@ -128,9 +130,11 @@ func buildTableConfig(deps *Deps, status string) *types.TableConfig {
 			Message: statusEmptyMessage(l, status),
 		},
 		PrimaryAction: &types.PrimaryAction{
-			Label:     l.Buttons.AddAsset,
-			ActionURL: deps.Routes.AddURL,
-			Icon:      "icon-plus",
+			Label:           l.Buttons.AddAsset,
+			ActionURL:       deps.Routes.AddURL,
+			Icon:            "icon-plus",
+			Disabled:        !perms.Can("asset", "create"),
+			DisabledTooltip: "No permission",
 		},
 		BulkActions: &bulkCfg,
 	}
@@ -151,7 +155,7 @@ func assetColumns(l fycha.AssetLabels) []types.TableColumn {
 	}
 }
 
-func buildTableRows(assets []MockAsset, status string, l fycha.AssetLabels, routes fycha.AssetRoutes) []types.TableRow {
+func buildTableRows(assets []MockAsset, status string, l fycha.AssetLabels, routes fycha.AssetRoutes, perms *types.UserPermissions) []types.TableRow {
 	rows := []types.TableRow{}
 	for _, asset := range assets {
 		recordStatus := "active"
@@ -165,9 +169,12 @@ func buildTableRows(assets []MockAsset, status string, l fycha.AssetLabels, rout
 		id := asset.ID
 		name := asset.Name
 
+		canUpdate := perms.Can("asset", "update")
+		canDelete := perms.Can("asset", "delete")
+
 		actions := []types.TableAction{
 			{Type: "view", Label: l.Actions.View, Action: "view", Href: route.ResolveURL(routes.DetailURL, "id", id)},
-			{Type: "edit", Label: l.Actions.Edit, Action: "edit", URL: route.ResolveURL(routes.EditURL, "id", id), DrawerTitle: l.Actions.Edit},
+			{Type: "edit", Label: l.Actions.Edit, Action: "edit", URL: route.ResolveURL(routes.EditURL, "id", id), DrawerTitle: l.Actions.Edit, Disabled: !canUpdate, DisabledTooltip: "No permission"},
 		}
 		if asset.Active {
 			actions = append(actions, types.TableAction{
@@ -175,6 +182,7 @@ func buildTableRows(assets []MockAsset, status string, l fycha.AssetLabels, rout
 				URL: routes.SetStatusURL + "?status=inactive", ItemName: name,
 				ConfirmTitle:   l.Actions.Deactivate,
 				ConfirmMessage: fmt.Sprintf("Are you sure you want to deactivate %s?", name),
+				Disabled: !canUpdate, DisabledTooltip: "No permission",
 			})
 		} else {
 			actions = append(actions, types.TableAction{
@@ -182,6 +190,7 @@ func buildTableRows(assets []MockAsset, status string, l fycha.AssetLabels, rout
 				URL: routes.SetStatusURL + "?status=active", ItemName: name,
 				ConfirmTitle:   l.Actions.Activate,
 				ConfirmMessage: fmt.Sprintf("Are you sure you want to activate %s?", name),
+				Disabled: !canUpdate, DisabledTooltip: "No permission",
 			})
 		}
 		actions = append(actions, types.TableAction{
@@ -190,6 +199,7 @@ func buildTableRows(assets []MockAsset, status string, l fycha.AssetLabels, rout
 			Action:   "delete",
 			URL:      routes.DeleteURL,
 			ItemName: name,
+			Disabled: !canDelete, DisabledTooltip: "No permission",
 		})
 
 		rows = append(rows, types.TableRow{

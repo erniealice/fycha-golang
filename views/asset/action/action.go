@@ -2,6 +2,7 @@ package action
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 
@@ -83,6 +84,11 @@ func formLabelsFromStruct(l fycha.AssetFormLabels) FormLabels {
 // NewAddAction creates the asset add action (GET = form, POST = create).
 func NewAddAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("asset", "create") {
+			return view.Error(fmt.Errorf("permission denied"))
+		}
+
 		if viewCtx.Request.Method == http.MethodGet {
 			return view.OK("asset-drawer-form", &FormData{
 				FormAction:         deps.Routes.AddURL,
@@ -106,6 +112,11 @@ func NewAddAction(deps *Deps) view.View {
 // NewEditAction creates the asset edit action (GET = form, POST = update).
 func NewEditAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("asset", "update") {
+			return view.Error(fmt.Errorf("permission denied"))
+		}
+
 		id := viewCtx.Request.PathValue("id")
 
 		if viewCtx.Request.Method == http.MethodGet {
@@ -140,6 +151,11 @@ func NewEditAction(deps *Deps) view.View {
 // NewDeleteAction creates the asset delete action (POST only).
 func NewDeleteAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("asset", "delete") {
+			return view.Error(fmt.Errorf("permission denied"))
+		}
+
 		id := viewCtx.Request.URL.Query().Get("id")
 		if id == "" {
 			_ = viewCtx.Request.ParseForm()
@@ -157,6 +173,11 @@ func NewDeleteAction(deps *Deps) view.View {
 // NewBulkDeleteAction creates the asset bulk delete action (POST only).
 func NewBulkDeleteAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("asset", "delete") {
+			return view.Error(fmt.Errorf("permission denied"))
+		}
+
 		_ = viewCtx.Request.ParseMultipartForm(32 << 20)
 
 		ids := viewCtx.Request.Form["id"]
@@ -172,6 +193,11 @@ func NewBulkDeleteAction(deps *Deps) view.View {
 // NewSetStatusAction creates the asset activate/deactivate action (POST only).
 func NewSetStatusAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("asset", "update") {
+			return view.Error(fmt.Errorf("permission denied"))
+		}
+
 		id := viewCtx.Request.URL.Query().Get("id")
 		targetStatus := viewCtx.Request.URL.Query().Get("status")
 
@@ -195,6 +221,11 @@ func NewSetStatusAction(deps *Deps) view.View {
 // NewBulkSetStatusAction creates the asset bulk activate/deactivate action (POST only).
 func NewBulkSetStatusAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("asset", "update") {
+			return view.Error(fmt.Errorf("permission denied"))
+		}
+
 		_ = viewCtx.Request.ParseMultipartForm(32 << 20)
 
 		ids := viewCtx.Request.Form["id"]

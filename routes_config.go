@@ -67,6 +67,10 @@ type AssetRoutes struct {
 	BulkDeleteURL    string `json:"bulk_delete_url"`
 	SetStatusURL     string `json:"set_status_url"`
 	BulkSetStatusURL string `json:"bulk_set_status_url"`
+
+	// Report/settings routes
+	LapsingScheduleURL       string `json:"lapsing_schedule_url"`
+	DepreciationPoliciesURL  string `json:"depreciation_policies_url"`
 }
 
 // DefaultAssetRoutes returns an AssetRoutes populated from package-level consts.
@@ -83,6 +87,9 @@ func DefaultAssetRoutes() AssetRoutes {
 		BulkDeleteURL:    AssetBulkDeleteURL,
 		SetStatusURL:     AssetSetStatusURL,
 		BulkSetStatusURL: AssetBulkSetStatusURL,
+
+		LapsingScheduleURL:      AssetLapsingScheduleURL,
+		DepreciationPoliciesURL: AssetDepreciationPoliciesURL,
 	}
 }
 
@@ -100,5 +107,8 @@ func (r AssetRoutes) RouteMap() map[string]string {
 		"asset.bulk_delete":     r.BulkDeleteURL,
 		"asset.set_status":      r.SetStatusURL,
 		"asset.bulk_set_status": r.BulkSetStatusURL,
+
+		"asset.lapsing_schedule":      r.LapsingScheduleURL,
+		"asset.depreciation_policies": r.DepreciationPoliciesURL,
 	}
 }

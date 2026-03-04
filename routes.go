@@ -12,6 +12,9 @@ const (
 	// StorageImagesPrefix is the default route prefix for image serving.
 	StorageImagesPrefix = "/storage/images"
 
+	// Cash report routes
+	CashBookURL = "/app/cash/reports/cash-book"
+
 	// Asset routes
 	AssetDashboardURL     = "/app/assets/dashboard"
 	AssetListURL          = "/app/assets/list/{status}"
@@ -24,4 +27,8 @@ const (
 	AssetBulkDeleteURL    = "/action/assets/bulk-delete"
 	AssetSetStatusURL     = "/action/assets/set-status"
 	AssetBulkSetStatusURL = "/action/assets/bulk-set-status"
+
+	// Asset report/settings routes
+	AssetLapsingScheduleURL       = "/app/assets/reports/lapsing-schedule"
+	AssetDepreciationPoliciesURL  = "/app/assets/settings/depreciation-policies"
 )

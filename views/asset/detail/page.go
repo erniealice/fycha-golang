@@ -102,6 +102,7 @@ type PageData struct {
 	AssetStatus           string
 	StatusVariant         string
 	EditURL               string
+	CanEdit               bool
 	DepreciationTable     *types.TableConfig
 	MaintenanceTable      *types.TableConfig
 	TransactionTable      *types.TableConfig
@@ -121,7 +122,8 @@ func NewView(deps *Deps) view.View {
 			activeTab = "info"
 		}
 
-		pageData := buildPageData(deps, id, activeTab, viewCtx)
+		perms := view.GetUserPermissions(ctx)
+		pageData := buildPageData(deps, id, activeTab, viewCtx, perms)
 		return view.OK("asset-detail", pageData)
 	})
 }
@@ -135,7 +137,8 @@ func NewTabAction(deps *Deps) view.View {
 			tab = "info"
 		}
 
-		pageData := buildPageData(deps, id, tab, viewCtx)
+		perms := view.GetUserPermissions(ctx)
+		pageData := buildPageData(deps, id, tab, viewCtx, perms)
 
 		// Return only the tab partial template
 		templateName := "asset-tab-" + tab
@@ -147,7 +150,7 @@ func NewTabAction(deps *Deps) view.View {
 // Page data builder
 // ---------------------------------------------------------------------------
 
-func buildPageData(deps *Deps, id, activeTab string, viewCtx *view.ViewContext) *PageData {
+func buildPageData(deps *Deps, id, activeTab string, viewCtx *view.ViewContext, perms *types.UserPermissions) *PageData {
 	asset := getMockAsset(id)
 
 	statusVariant := "success"
@@ -190,6 +193,7 @@ func buildPageData(deps *Deps, id, activeTab string, viewCtx *view.ViewContext) 
 		AssetStatus:           asset.Status,
 		StatusVariant:         statusVariant,
 		EditURL:               route.ResolveURL(deps.Routes.EditURL, "id", id),
+		CanEdit:               perms.Can("asset", "update"),
 		DepreciationTable:     buildDepreciationTable(asset.DepreciationSchedule, deps.Labels, deps.TableLabels),
 		MaintenanceTable:      buildMaintenanceTable(asset.MaintenanceRecords, deps.Labels, deps.TableLabels),
 		TransactionTable:      buildTransactionTable(asset.TransactionHistory, deps.Labels, deps.TableLabels),
