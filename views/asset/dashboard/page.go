@@ -61,19 +61,19 @@ func NewView(deps *Deps) view.View {
 		recentActivity := []ActivityItem{
 			{
 				IconHTML:    template.HTML(`<svg class="icon"><use href="#icon-box"></use></svg>`),
-				Title:       "New asset acquired",
+				Title:       l.ActivityAcquired,
 				Description: "Office Laptop (Dell XPS 15) added to register",
 				TimeAgo:     "2 hours ago",
 			},
 			{
 				IconHTML:    template.HTML(`<svg class="icon"><use href="#icon-tool"></use></svg>`),
-				Title:       "Maintenance completed",
+				Title:       l.ActivityMaintenance,
 				Description: "Air Conditioning Unit - Annual servicing",
 				TimeAgo:     "1 day ago",
 			},
 			{
 				IconHTML:    template.HTML(`<svg class="icon"><use href="#icon-trending-down"></use></svg>`),
-				Title:       "Depreciation recorded",
+				Title:       l.ActivityDepreciation,
 				Description: "Monthly depreciation for 24 assets processed",
 				TimeAgo:     "3 days ago",
 			},

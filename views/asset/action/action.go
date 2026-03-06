@@ -101,7 +101,7 @@ func NewAddAction(deps *Deps) view.View {
 
 		// POST -- create asset (mock — just return success)
 		if err := viewCtx.Request.ParseForm(); err != nil {
-			return fycha.HTMXError("Invalid form data")
+			return fycha.HTMXError(deps.Labels.Actions.InvalidFormData)
 		}
 
 		log.Printf("Mock create asset: %s", viewCtx.Request.FormValue("name"))
@@ -140,7 +140,7 @@ func NewEditAction(deps *Deps) view.View {
 
 		// POST -- update asset (mock — just return success)
 		if err := viewCtx.Request.ParseForm(); err != nil {
-			return fycha.HTMXError("Invalid form data")
+			return fycha.HTMXError(deps.Labels.Actions.InvalidFormData)
 		}
 
 		log.Printf("Mock update asset %s: %s", id, viewCtx.Request.FormValue("name"))
@@ -162,7 +162,7 @@ func NewDeleteAction(deps *Deps) view.View {
 			id = viewCtx.Request.FormValue("id")
 		}
 		if id == "" {
-			return fycha.HTMXError("Asset ID is required")
+			return fycha.HTMXError(deps.Labels.Actions.IDRequired)
 		}
 
 		log.Printf("Mock delete asset: %s", id)
@@ -182,7 +182,7 @@ func NewBulkDeleteAction(deps *Deps) view.View {
 
 		ids := viewCtx.Request.Form["id"]
 		if len(ids) == 0 {
-			return fycha.HTMXError("No asset IDs provided")
+			return fycha.HTMXError(deps.Labels.Actions.NoIDsProvided)
 		}
 
 		log.Printf("Mock bulk delete assets: %v", ids)
@@ -207,10 +207,10 @@ func NewSetStatusAction(deps *Deps) view.View {
 			targetStatus = viewCtx.Request.FormValue("status")
 		}
 		if id == "" {
-			return fycha.HTMXError("Asset ID is required")
+			return fycha.HTMXError(deps.Labels.Actions.IDRequired)
 		}
 		if targetStatus != "active" && targetStatus != "inactive" {
-			return fycha.HTMXError("Invalid status")
+			return fycha.HTMXError(deps.Labels.Actions.InvalidStatus)
 		}
 
 		log.Printf("Mock set asset status %s: %s", id, targetStatus)
@@ -232,10 +232,10 @@ func NewBulkSetStatusAction(deps *Deps) view.View {
 		targetStatus := viewCtx.Request.FormValue("target_status")
 
 		if len(ids) == 0 {
-			return fycha.HTMXError("No asset IDs provided")
+			return fycha.HTMXError(deps.Labels.Actions.NoIDsProvided)
 		}
 		if targetStatus != "active" && targetStatus != "inactive" {
-			return fycha.HTMXError("Invalid target status")
+			return fycha.HTMXError(deps.Labels.Actions.InvalidTargetStatus)
 		}
 
 		log.Printf("Mock bulk set asset status %v: %s", ids, targetStatus)

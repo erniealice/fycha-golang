@@ -263,8 +263,8 @@ func buildTable(items []*reportpb.GrossProfitLineItem, summary *reportpb.GrossPr
 			},
 		},
 		EmptyState: types.TableEmptyState{
-			Title:   "No data",
-			Message: "No gross profit data found for the selected period.",
+			Title:   l.EmptyTitle,
+			Message: l.EmptyMessage,
 		},
 	}
 
@@ -321,7 +321,7 @@ func buildTable(items []*reportpb.GrossProfitLineItem, summary *reportpb.GrossPr
 		totalsRow := types.TableRow{
 			ID: "__totals__",
 			Cells: []types.TableCell{
-				{Type: "name", Value: "TOTALS"},
+				{Type: "name", Value: l.Totals},
 				{Type: "text", Value: formatCurrency(summary.GetTotalRevenue())},
 				{Type: "text", Value: formatCurrency(summary.GetTotalDiscount())},
 				{Type: "text", Value: formatCurrency(summary.GetNetRevenue())},

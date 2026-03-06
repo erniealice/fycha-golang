@@ -134,7 +134,7 @@ func buildTableConfig(deps *Deps, status string, perms *types.UserPermissions) *
 			ActionURL:       deps.Routes.AddURL,
 			Icon:            "icon-plus",
 			Disabled:        !perms.Can("asset", "create"),
-			DisabledTooltip: "No permission",
+			DisabledTooltip: l.Actions.NoPermission,
 		},
 		BulkActions: &bulkCfg,
 	}
@@ -174,23 +174,23 @@ func buildTableRows(assets []MockAsset, status string, l fycha.AssetLabels, rout
 
 		actions := []types.TableAction{
 			{Type: "view", Label: l.Actions.View, Action: "view", Href: route.ResolveURL(routes.DetailURL, "id", id)},
-			{Type: "edit", Label: l.Actions.Edit, Action: "edit", URL: route.ResolveURL(routes.EditURL, "id", id), DrawerTitle: l.Actions.Edit, Disabled: !canUpdate, DisabledTooltip: "No permission"},
+			{Type: "edit", Label: l.Actions.Edit, Action: "edit", URL: route.ResolveURL(routes.EditURL, "id", id), DrawerTitle: l.Actions.Edit, Disabled: !canUpdate, DisabledTooltip: l.Actions.NoPermission},
 		}
 		if asset.Active {
 			actions = append(actions, types.TableAction{
 				Type: "deactivate", Label: l.Actions.Deactivate, Action: "deactivate",
 				URL: routes.SetStatusURL + "?status=inactive", ItemName: name,
 				ConfirmTitle:   l.Actions.Deactivate,
-				ConfirmMessage: fmt.Sprintf("Are you sure you want to deactivate %s?", name),
-				Disabled: !canUpdate, DisabledTooltip: "No permission",
+				ConfirmMessage: fmt.Sprintf(l.Actions.ConfirmDeactivate, name),
+				Disabled: !canUpdate, DisabledTooltip: l.Actions.NoPermission,
 			})
 		} else {
 			actions = append(actions, types.TableAction{
 				Type: "activate", Label: l.Actions.Activate, Action: "activate",
 				URL: routes.SetStatusURL + "?status=active", ItemName: name,
 				ConfirmTitle:   l.Actions.Activate,
-				ConfirmMessage: fmt.Sprintf("Are you sure you want to activate %s?", name),
-				Disabled: !canUpdate, DisabledTooltip: "No permission",
+				ConfirmMessage: fmt.Sprintf(l.Actions.ConfirmActivate, name),
+				Disabled: !canUpdate, DisabledTooltip: l.Actions.NoPermission,
 			})
 		}
 		actions = append(actions, types.TableAction{
@@ -199,7 +199,7 @@ func buildTableRows(assets []MockAsset, status string, l fycha.AssetLabels, rout
 			Action:   "delete",
 			URL:      routes.DeleteURL,
 			ItemName: name,
-			Disabled: !canDelete, DisabledTooltip: "No permission",
+			Disabled: !canDelete, DisabledTooltip: l.Actions.NoPermission,
 		})
 
 		rows = append(rows, types.TableRow{
@@ -317,7 +317,7 @@ func buildBulkActions(l fycha.AssetLabels, common pyeza.CommonLabels, status str
 			Variant:         "warning",
 			Endpoint:        routes.BulkSetStatusURL,
 			ConfirmTitle:    l.Actions.Deactivate,
-			ConfirmMessage:  "Are you sure you want to deactivate {{count}} asset(s)?",
+			ConfirmMessage:  l.Actions.ConfirmBulkDeactivate,
 			ExtraParamsJSON: `{"target_status":"inactive"}`,
 		})
 	case "inactive":
@@ -328,7 +328,7 @@ func buildBulkActions(l fycha.AssetLabels, common pyeza.CommonLabels, status str
 			Variant:         "primary",
 			Endpoint:        routes.BulkSetStatusURL,
 			ConfirmTitle:    l.Actions.Activate,
-			ConfirmMessage:  "Are you sure you want to activate {{count}} asset(s)?",
+			ConfirmMessage:  l.Actions.ConfirmBulkActivate,
 			ExtraParamsJSON: `{"target_status":"active"}`,
 		})
 	}
@@ -340,7 +340,7 @@ func buildBulkActions(l fycha.AssetLabels, common pyeza.CommonLabels, status str
 		Variant:        "danger",
 		Endpoint:       routes.BulkDeleteURL,
 		ConfirmTitle:   common.Bulk.Delete,
-		ConfirmMessage: "Are you sure you want to delete {{count}} asset(s)? This action cannot be undone.",
+		ConfirmMessage: l.Actions.ConfirmBulkDelete,
 	})
 
 	return actions

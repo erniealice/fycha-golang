@@ -115,8 +115,8 @@ func NewView(deps *Deps) view.View {
 			DefaultSortDirection: "desc",
 			Labels:               deps.TableLabels,
 			EmptyState: types.TableEmptyState{
-				Title:   "No expenses",
-				Message: "No expense records found for the selected period.",
+				Title:   l.EmptyTitle,
+				Message: l.EmptyMessage,
 			},
 		}
 		types.ApplyTableSettings(tableConfig)

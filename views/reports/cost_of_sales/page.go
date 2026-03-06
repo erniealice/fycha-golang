@@ -122,11 +122,11 @@ func NewView(deps *Deps) view.View {
 
 		// Table
 		columns := []types.TableColumn{
-			{Key: "group", Label: "Item", Sortable: true},
-			{Key: "cogs", Label: "COGS", Sortable: true, Align: "right", MinWidth: "120px"},
-			{Key: "revenue", Label: "Net Revenue", Sortable: true, Align: "right", MinWidth: "120px"},
-			{Key: "ratio", Label: "COGS %", Sortable: true, Align: "right", MinWidth: "80px"},
-			{Key: "units", Label: "Units", Sortable: true, Align: "right", MinWidth: "80px"},
+			{Key: "group", Label: l.Item, Sortable: true},
+			{Key: "cogs", Label: l.COGS, Sortable: true, Align: "right", MinWidth: "120px"},
+			{Key: "revenue", Label: l.NetRevenue, Sortable: true, Align: "right", MinWidth: "120px"},
+			{Key: "ratio", Label: l.COGSPct, Sortable: true, Align: "right", MinWidth: "80px"},
+			{Key: "units", Label: l.Units, Sortable: true, Align: "right", MinWidth: "80px"},
 		}
 
 		rows := make([]types.TableRow, 0, len(resp.GetLineItems()))
@@ -170,8 +170,8 @@ func NewView(deps *Deps) view.View {
 			DefaultSortDirection: "desc",
 			Labels:               deps.TableLabels,
 			EmptyState: types.TableEmptyState{
-				Title:   "No data",
-				Message: "No cost of sales data found for the selected period.",
+				Title:   l.EmptyTitle,
+				Message: l.EmptyMessage,
 			},
 		}
 		types.ApplyTableSettings(tableConfig)

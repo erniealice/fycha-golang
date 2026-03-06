@@ -217,11 +217,11 @@ func buildTabItems(id string, labels fycha.AssetLabels, routes fycha.AssetRoutes
 
 func buildDepreciationTable(schedule []DepreciationRow, labels fycha.AssetLabels, tableLabels types.TableLabels) *types.TableConfig {
 	columns := []types.TableColumn{
-		{Key: "period", Label: "Period", Sortable: true},
-		{Key: "start_value", Label: "Start Value", Align: "right"},
-		{Key: "depreciation", Label: "Depreciation", Align: "right"},
-		{Key: "end_value", Label: "End Value", Align: "right"},
-		{Key: "accumulated", Label: "Accumulated", Align: "right"},
+		{Key: "period", Label: labels.Columns.Period, Sortable: true},
+		{Key: "start_value", Label: labels.Columns.StartValue, Align: "right"},
+		{Key: "depreciation", Label: labels.Columns.Depreciation, Align: "right"},
+		{Key: "end_value", Label: labels.Columns.EndValue, Align: "right"},
+		{Key: "accumulated", Label: labels.Columns.Accumulated, Align: "right"},
 	}
 
 	rows := make([]types.TableRow, len(schedule))
@@ -257,11 +257,11 @@ func buildDepreciationTable(schedule []DepreciationRow, labels fycha.AssetLabels
 
 func buildMaintenanceTable(records []MaintenanceRow, labels fycha.AssetLabels, tableLabels types.TableLabels) *types.TableConfig {
 	columns := []types.TableColumn{
-		{Key: "date", Label: "Date", Sortable: true},
-		{Key: "type", Label: "Type", Sortable: true},
-		{Key: "description", Label: "Description"},
-		{Key: "status", Label: "Status", Width: "120px"},
-		{Key: "cost", Label: "Cost", Align: "right"},
+		{Key: "date", Label: labels.Columns.Date, Sortable: true},
+		{Key: "type", Label: labels.Columns.Type, Sortable: true},
+		{Key: "description", Label: labels.Columns.Description},
+		{Key: "status", Label: labels.Columns.Status, Width: "120px"},
+		{Key: "cost", Label: labels.Columns.Cost, Align: "right"},
 	}
 
 	rows := make([]types.TableRow, len(records))
@@ -297,11 +297,11 @@ func buildMaintenanceTable(records []MaintenanceRow, labels fycha.AssetLabels, t
 
 func buildTransactionTable(history []TransactionRow, labels fycha.AssetLabels, tableLabels types.TableLabels) *types.TableConfig {
 	columns := []types.TableColumn{
-		{Key: "date", Label: "Date", Sortable: true},
-		{Key: "type", Label: "Type", Sortable: true},
-		{Key: "description", Label: "Description"},
-		{Key: "amount", Label: "Amount", Align: "right"},
-		{Key: "reference", Label: "Reference"},
+		{Key: "date", Label: labels.Columns.Date, Sortable: true},
+		{Key: "type", Label: labels.Columns.Type, Sortable: true},
+		{Key: "description", Label: labels.Columns.Description},
+		{Key: "amount", Label: labels.Columns.Amount, Align: "right"},
+		{Key: "reference", Label: labels.Columns.Reference},
 	}
 
 	rows := make([]types.TableRow, len(history))
@@ -416,7 +416,7 @@ func getMockAsset(id string) MockAssetDetail {
 		return asset
 	}
 
-	// Default mock
+	// Default mock — "Unknown Asset" is a dev fallback; live data comes from DB
 	return MockAssetDetail{
 		ID: id, AssetNumber: "FA-???", Name: "Unknown Asset",
 		Description: "\u2014", CategoryName: "\u2014", LocationName: "\u2014",

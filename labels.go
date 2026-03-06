@@ -128,6 +128,10 @@ type GrossProfitLabels struct {
 	SummaryCogs        string `json:"summaryCogs"`
 	SummaryGrossProfit string `json:"summaryGrossProfit"`
 	SummaryMargin      string `json:"summaryMargin"`
+	// Summary row + empty state
+	Totals       string `json:"totals"`
+	EmptyTitle   string `json:"emptyTitle"`
+	EmptyMessage string `json:"emptyMessage"`
 }
 
 // RevenueLabels holds translatable strings for the revenue report.
@@ -143,17 +147,29 @@ type RevenueLabels struct {
 	SummaryTotal        string `json:"summaryTotal"`
 	SummaryTransactions string `json:"summaryTransactions"`
 	SummaryAverage      string `json:"summaryAverage"`
+	// Empty state
+	EmptyTitle   string `json:"emptyTitle"`
+	EmptyMessage string `json:"emptyMessage"`
 }
 
 // CostOfSalesLabels holds translatable strings for the cost of sales report.
 type CostOfSalesLabels struct {
 	Title    string `json:"title"`
 	Subtitle string `json:"subtitle"`
+	// Column headers
+	Item       string `json:"item"`
+	COGS       string `json:"cogs"`
+	NetRevenue string `json:"netRevenue"`
+	COGSPct    string `json:"cogsPct"`
+	Units      string `json:"units"`
 	// Summary
 	SummaryTotalCOGS string `json:"summaryTotalCogs"`
 	SummaryRevenue   string `json:"summaryRevenue"`
 	SummaryCOGSRatio string `json:"summaryCosRatio"`
 	SummaryUnits     string `json:"summaryUnits"`
+	// Empty state
+	EmptyTitle   string `json:"emptyTitle"`
+	EmptyMessage string `json:"emptyMessage"`
 }
 
 // ExpensesLabels holds translatable strings for the expenses report.
@@ -171,6 +187,9 @@ type ExpensesLabels struct {
 	SummaryCount    string `json:"summaryCount"`
 	SummaryApproved string `json:"summaryApproved"`
 	SummaryPending  string `json:"summaryPending"`
+	// Empty state
+	EmptyTitle   string `json:"emptyTitle"`
+	EmptyMessage string `json:"emptyMessage"`
 }
 
 // ---------------------------------------------------------------------------
@@ -210,6 +229,28 @@ type AssetColumnLabels struct {
 	AcquisitionCost string `json:"acquisitionCost"`
 	BookValue       string `json:"bookValue"`
 	Status          string `json:"status"`
+	// Sub-table columns (depreciation)
+	Period      string `json:"period"`
+	StartValue  string `json:"startValue"`
+	Depreciation string `json:"depreciation"`
+	EndValue    string `json:"endValue"`
+	Accumulated string `json:"accumulated"`
+	// Sub-table columns (maintenance)
+	Date        string `json:"date"`
+	Type        string `json:"type"`
+	Description string `json:"description"`
+	Cost        string `json:"cost"`
+	// Sub-table columns (transactions)
+	Amount    string `json:"amount"`
+	Reference string `json:"reference"`
+	// Cost of sales columns
+	Item       string `json:"item"`
+	COGS       string `json:"cogs"`
+	NetRevenue string `json:"netRevenue"`
+	COGSPct    string `json:"cogsPct"`
+	Units      string `json:"units"`
+	// Summary row
+	Totals string `json:"totals"`
 }
 
 type AssetEmptyLabels struct {
@@ -246,6 +287,20 @@ type AssetActionLabels struct {
 	Delete     string `json:"delete"`
 	Activate   string `json:"activate"`
 	Deactivate string `json:"deactivate"`
+	// Confirm messages
+	ConfirmActivate         string `json:"confirmActivate"`
+	ConfirmDeactivate       string `json:"confirmDeactivate"`
+	ConfirmDelete           string `json:"confirmDelete"`
+	ConfirmBulkActivate     string `json:"confirmBulkActivate"`
+	ConfirmBulkDeactivate   string `json:"confirmBulkDeactivate"`
+	ConfirmBulkDelete       string `json:"confirmBulkDelete"`
+	// Error messages
+	InvalidFormData    string `json:"invalidFormData"`
+	IDRequired         string `json:"idRequired"`
+	NoIDsProvided      string `json:"noIDsProvided"`
+	InvalidStatus      string `json:"invalidStatus"`
+	InvalidTargetStatus string `json:"invalidTargetStatus"`
+	NoPermission       string `json:"noPermission"`
 }
 
 type AssetDetailLabels struct {
@@ -292,6 +347,13 @@ type AssetDashboardLabels struct {
 	TotalBookValue   string `json:"totalBookValue"`
 	FullyDepreciated string `json:"fullyDepreciated"`
 	UnderMaintenance string `json:"underMaintenance"`
+	// Activity feed
+	ActivityAcquired     string `json:"activityAcquired"`
+	ActivityMaintenance  string `json:"activityMaintenance"`
+	ActivityDepreciation string `json:"activityDepreciation"`
+	RecentActivity       string `json:"recentActivity"`
+	NoRecentActivity     string `json:"noRecentActivity"`
+	UnknownAsset         string `json:"unknownAsset"`
 }
 
 // DefaultAssetLabels returns AssetLabels with hardcoded English defaults.
@@ -317,6 +379,23 @@ func DefaultAssetLabels() AssetLabels {
 			AcquisitionCost: "Acquisition Cost",
 			BookValue:       "Book Value",
 			Status:          "Status",
+			Period:          "Period",
+			StartValue:      "Start Value",
+			Depreciation:    "Depreciation",
+			EndValue:        "End Value",
+			Accumulated:     "Accumulated",
+			Date:            "Date",
+			Type:            "Type",
+			Description:     "Description",
+			Cost:            "Cost",
+			Amount:          "Amount",
+			Reference:       "Reference",
+			Item:            "Item",
+			COGS:            "COGS",
+			NetRevenue:      "Net Revenue",
+			COGSPct:         "COGS %",
+			Units:           "Units",
+			Totals:          "TOTALS",
 		},
 		Empty: AssetEmptyLabels{
 			ActiveTitle:     "No active assets",
@@ -350,6 +429,18 @@ func DefaultAssetLabels() AssetLabels {
 			Delete:     "Delete",
 			Activate:   "Activate",
 			Deactivate: "Deactivate",
+			ConfirmActivate:       "Are you sure you want to activate %s?",
+			ConfirmDeactivate:     "Are you sure you want to deactivate %s?",
+			ConfirmDelete:         "Are you sure you want to delete %s? This action cannot be undone.",
+			ConfirmBulkActivate:   "Are you sure you want to activate {{count}} asset(s)?",
+			ConfirmBulkDeactivate: "Are you sure you want to deactivate {{count}} asset(s)?",
+			ConfirmBulkDelete:     "Are you sure you want to delete {{count}} asset(s)? This action cannot be undone.",
+			InvalidFormData:       "Invalid form data",
+			IDRequired:            "Asset ID is required",
+			NoIDsProvided:         "No asset IDs provided",
+			InvalidStatus:         "Invalid status",
+			InvalidTargetStatus:   "Invalid target status",
+			NoPermission:          "No permission",
 		},
 		Detail: AssetDetailLabels{
 			BasicInfo: AssetDetailBasicInfoLabels{
@@ -382,12 +473,18 @@ func DefaultAssetLabels() AssetLabels {
 			},
 		},
 		Dashboard: AssetDashboardLabels{
-			Title:            "Assets Dashboard",
-			Subtitle:         "Overview of your fixed asset register",
-			TotalAssets:      "Total Assets",
-			TotalBookValue:   "Total Book Value",
-			FullyDepreciated: "Fully Depreciated",
-			UnderMaintenance: "Under Maintenance",
+			Title:                "Assets Dashboard",
+			Subtitle:             "Overview of your fixed asset register",
+			TotalAssets:          "Total Assets",
+			TotalBookValue:       "Total Book Value",
+			FullyDepreciated:     "Fully Depreciated",
+			UnderMaintenance:     "Under Maintenance",
+			ActivityAcquired:     "New asset acquired",
+			ActivityMaintenance:  "Maintenance completed",
+			ActivityDepreciation: "Depreciation recorded",
+			RecentActivity:       "Recent Activity",
+			NoRecentActivity:     "No recent asset activity",
+			UnknownAsset:         "Unknown Asset",
 		},
 	}
 }
