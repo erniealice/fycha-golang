@@ -1,13 +1,13 @@
 package fycha
 
 const (
-	ReportsBaseURL         = "/app/reports/"
-	ReportsDashboardURL    = "/app/reports/dashboard"
-	ReportsRevenueURL      = "/app/reports/revenue"
-	ReportsCostOfSalesURL  = "/app/reports/cost-of-sales"
-	ReportsGrossProfitURL  = "/app/reports/gross-profit"
-	ReportsExpensesURL     = "/app/reports/expenses"
-	ReportsNetProfitURL    = "/app/reports/net-profit"
+	ReportsBaseURL        = "/app/reports/"
+	ReportsDashboardURL   = "/app/reports/dashboard"
+	ReportsRevenueURL     = "/app/reports/revenue"
+	ReportsCostOfSalesURL = "/app/reports/cost-of-sales"
+	ReportsGrossProfitURL = "/app/reports/gross-profit"
+	ReportsExpensesURL    = "/app/reports/expenses"
+	ReportsNetProfitURL   = "/app/reports/net-profit"
 
 	// StorageImagesPrefix is the default route prefix for image serving.
 	StorageImagesPrefix = "/storage/images"
@@ -29,6 +29,6 @@ const (
 	AssetBulkSetStatusURL = "/action/assets/bulk-set-status"
 
 	// Asset report/settings routes
-	AssetLapsingScheduleURL       = "/app/assets/reports/lapsing-schedule"
-	AssetDepreciationPoliciesURL  = "/app/assets/settings/depreciation-policies"
+	AssetLapsingScheduleURL      = "/app/assets/reports/lapsing-schedule"
+	AssetDepreciationPoliciesURL = "/app/assets/settings/depreciation-policies"
 )

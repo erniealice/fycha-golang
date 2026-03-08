@@ -23,9 +23,9 @@ type DashboardStats struct {
 // ActivityItem represents a single entry in the recent activity feed.
 type ActivityItem struct {
 	IconHTML    template.HTML
-	Title      string
+	Title       string
 	Description string
-	TimeAgo    string
+	TimeAgo     string
 }
 
 // Deps holds view dependencies.
@@ -103,7 +103,7 @@ func NewView(deps *Deps) view.View {
 
 func formatCurrency(amount float64) string {
 	whole := int64(amount)
-	frac := int64((amount - float64(whole))*100 + 0.5)
+	frac := int64((amount-float64(whole))*100 + 0.5)
 	if frac >= 100 {
 		whole++
 		frac -= 100

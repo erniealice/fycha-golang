@@ -349,7 +349,7 @@ func getMockAsset(id string) MockAssetDetail {
 			SalvageValue: "\u20b15,000.00", SalvageValueRaw: "5000",
 			UsefulLifeMonths: "60", DepreciationMethod: "Straight Line",
 			DepreciationMethodKey: "straight_line",
-			BookValue: "\u20b142,500.00", Status: "active",
+			BookValue:             "\u20b142,500.00", Status: "active",
 			DepreciationSchedule: []DepreciationRow{
 				{Period: "Year 1 (2024)", StartValue: "\u20b185,000.00", Expense: "\u20b116,000.00", EndValue: "\u20b169,000.00", Accumulated: "\u20b116,000.00"},
 				{Period: "Year 2 (2025)", StartValue: "\u20b169,000.00", Expense: "\u20b116,000.00", EndValue: "\u20b153,000.00", Accumulated: "\u20b132,000.00"},
@@ -377,7 +377,7 @@ func getMockAsset(id string) MockAssetDetail {
 			SalvageValue: "\u20b12,000.00", SalvageValueRaw: "2000",
 			UsefulLifeMonths: "120", DepreciationMethod: "Straight Line",
 			DepreciationMethodKey: "straight_line",
-			BookValue: "\u20b118,750.00", Status: "active",
+			BookValue:             "\u20b118,750.00", Status: "active",
 			DepreciationSchedule: []DepreciationRow{
 				{Period: "Year 1 (2024)", StartValue: "\u20b125,000.00", Expense: "\u20b12,300.00", EndValue: "\u20b122,700.00", Accumulated: "\u20b12,300.00"},
 				{Period: "Year 2 (2025)", StartValue: "\u20b122,700.00", Expense: "\u20b12,300.00", EndValue: "\u20b120,400.00", Accumulated: "\u20b14,600.00"},
@@ -399,7 +399,7 @@ func getMockAsset(id string) MockAssetDetail {
 			SalvageValue: "\u20b11,000.00", SalvageValueRaw: "1000",
 			UsefulLifeMonths: "36", DepreciationMethod: "Straight Line",
 			DepreciationMethodKey: "straight_line",
-			BookValue: "\u20b16,000.00", Status: "active",
+			BookValue:             "\u20b16,000.00", Status: "active",
 			DepreciationSchedule: []DepreciationRow{
 				{Period: "Year 1 (2025)", StartValue: "\u20b112,000.00", Expense: "\u20b13,666.67", EndValue: "\u20b18,333.33", Accumulated: "\u20b13,666.67"},
 				{Period: "Year 2 (2026)", StartValue: "\u20b18,333.33", Expense: "\u20b13,666.67", EndValue: "\u20b14,666.66", Accumulated: "\u20b17,333.34"},
@@ -424,6 +424,6 @@ func getMockAsset(id string) MockAssetDetail {
 		SalvageValue: "\u20b10.00", SalvageValueRaw: "0",
 		UsefulLifeMonths: "\u2014", DepreciationMethod: "\u2014",
 		DepreciationMethodKey: "straight_line",
-		BookValue: "\u20b10.00", Status: "active",
+		BookValue:             "\u20b10.00", Status: "active",
 	}
 }

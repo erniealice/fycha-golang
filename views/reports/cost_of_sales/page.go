@@ -7,8 +7,8 @@ import (
 	"strconv"
 	"time"
 
-	fycha "github.com/erniealice/fycha-golang"
 	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
+	fycha "github.com/erniealice/fycha-golang"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -195,9 +195,9 @@ func NewView(deps *Deps) view.View {
 				HeaderIcon:     "icon-package",
 				CommonLabels:   deps.CommonLabels,
 			},
-			ContentTemplate: "cost-of-sales-content",
-			Summary:         summary,
-			Table:           tableConfig,
+			ContentTemplate:   "cost-of-sales-content",
+			Summary:           summary,
+			Table:             tableConfig,
 			Filter:            filter,
 			PeriodLabels:      pl,
 			ReportURL:         reportURL,
@@ -217,7 +217,7 @@ func formatCurrency(amount float64) string {
 		amount = -amount
 	}
 	whole := int64(amount)
-	frac := int64((amount - float64(whole)) * 100 + 0.5)
+	frac := int64((amount-float64(whole))*100 + 0.5)
 	if frac >= 100 {
 		whole++
 		frac -= 100

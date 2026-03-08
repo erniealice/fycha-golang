@@ -6,8 +6,8 @@ import (
 	"log"
 	"strconv"
 
-	fycha "github.com/erniealice/fycha-golang"
 	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
+	fycha "github.com/erniealice/fycha-golang"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -105,15 +105,15 @@ func NewView(deps *Deps) view.View {
 
 		pageData := &PageData{
 			PageData: types.PageData{
-				CacheVersion: viewCtx.CacheVersion,
-				Title:        l.Title,
-				CurrentPath:  viewCtx.CurrentPath,
-				ActiveNav:    "reports",
-				ActiveSubNav: "dashboard",
-				HeaderTitle:  l.Title,
+				CacheVersion:   viewCtx.CacheVersion,
+				Title:          l.Title,
+				CurrentPath:    viewCtx.CurrentPath,
+				ActiveNav:      "reports",
+				ActiveSubNav:   "dashboard",
+				HeaderTitle:    l.Title,
 				HeaderSubtitle: l.Subtitle,
-				HeaderIcon:   "icon-pie-chart",
-				CommonLabels: deps.CommonLabels,
+				HeaderIcon:     "icon-pie-chart",
+				CommonLabels:   deps.CommonLabels,
 			},
 			ContentTemplate: "reports-dashboard-content",
 			Summary:         summary,
@@ -149,7 +149,7 @@ func formatCurrency(amount float64) string {
 		amount = -amount
 	}
 	whole := int64(amount)
-	frac := int64((amount - float64(whole)) * 100 + 0.5)
+	frac := int64((amount-float64(whole))*100 + 0.5)
 	if frac >= 100 {
 		whole++
 		frac -= 100

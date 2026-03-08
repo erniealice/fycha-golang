@@ -188,12 +188,12 @@ func NewView(deps *Deps) view.View {
 				HeaderIcon:   "icon-bar-chart",
 				CommonLabels: deps.CommonLabels,
 			},
-			ContentTemplate: "gross-profit-content",
-			Labels:          l,
-			Summary:         summary,
-			Table:           table,
-			Filter:          filter,
-			PeriodLabels:    pl,
+			ContentTemplate:   "gross-profit-content",
+			Labels:            l,
+			Summary:           summary,
+			Table:             table,
+			Filter:            filter,
+			PeriodLabels:      pl,
 			ReportURL:         reportURL,
 			ActiveFilterCount: fycha.ActiveFilterCount(filter),
 			ProductID:         productID,
@@ -348,7 +348,7 @@ func formatCurrency(amount float64) string {
 		amount = -amount
 	}
 	whole := int64(amount)
-	frac := int64((amount - float64(whole)) * 100 + 0.5)
+	frac := int64((amount-float64(whole))*100 + 0.5)
 	if frac >= 100 {
 		whole++
 		frac -= 100

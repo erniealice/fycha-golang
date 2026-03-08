@@ -18,12 +18,12 @@ func MapTableLabels(common pyeza.CommonLabels) types.TableLabels {
 		ApplyFilters:       common.Table.ApplyFilters,
 		Sort:               common.Table.Sort,
 		Columns:            common.Table.Columns,
-		Export:              common.Table.Export,
+		Export:             common.Table.Export,
 		DensityDefault:     common.Table.Density.Default,
 		DensityComfortable: common.Table.Density.Comfortable,
 		DensityCompact:     common.Table.Density.Compact,
 		Show:               common.Table.Show,
-		Entries:             common.Table.Entries,
+		Entries:            common.Table.Entries,
 		Showing:            common.Table.Showing,
 		To:                 common.Table.To,
 		Of:                 common.Table.Of,
@@ -72,18 +72,18 @@ type PeriodLabels struct {
 
 // DashboardLabels holds translatable strings for the reports dashboard.
 type DashboardLabels struct {
-	Title              string `json:"title"`
-	Subtitle           string `json:"subtitle"`
-	RevenueCard        string `json:"revenueCard"`
-	ExpensesCard       string `json:"expensesCard"`
-	NetProfitCard      string `json:"netProfitCard"`
-	NetMarginCard      string `json:"netMarginCard"`
-	RevenueDesc        string `json:"revenueDesc"`
-	GrossProfitDesc    string `json:"grossProfitDesc"`
-	CostOfSalesDesc    string `json:"costOfSalesDesc"`
-	ExpensesDesc       string `json:"expensesDesc"`
-	NetProfitDesc      string `json:"netProfitDesc"`
-	ViewReport         string `json:"viewReport"`
+	Title           string `json:"title"`
+	Subtitle        string `json:"subtitle"`
+	RevenueCard     string `json:"revenueCard"`
+	ExpensesCard    string `json:"expensesCard"`
+	NetProfitCard   string `json:"netProfitCard"`
+	NetMarginCard   string `json:"netMarginCard"`
+	RevenueDesc     string `json:"revenueDesc"`
+	GrossProfitDesc string `json:"grossProfitDesc"`
+	CostOfSalesDesc string `json:"costOfSalesDesc"`
+	ExpensesDesc    string `json:"expensesDesc"`
+	NetProfitDesc   string `json:"netProfitDesc"`
+	ViewReport      string `json:"viewReport"`
 }
 
 // GrossProfitLabels holds translatable strings for the gross profit report.
@@ -198,13 +198,13 @@ type ExpensesLabels struct {
 
 // AssetLabels holds all translatable strings for the fixed asset module.
 type AssetLabels struct {
-	Page    AssetPageLabels    `json:"page"`
-	Buttons AssetButtonLabels  `json:"buttons"`
-	Columns AssetColumnLabels  `json:"columns"`
-	Empty   AssetEmptyLabels   `json:"empty"`
-	Form    AssetFormLabels    `json:"form"`
-	Actions AssetActionLabels  `json:"actions"`
-	Detail  AssetDetailLabels  `json:"detail"`
+	Page      AssetPageLabels      `json:"page"`
+	Buttons   AssetButtonLabels    `json:"buttons"`
+	Columns   AssetColumnLabels    `json:"columns"`
+	Empty     AssetEmptyLabels     `json:"empty"`
+	Form      AssetFormLabels      `json:"form"`
+	Actions   AssetActionLabels    `json:"actions"`
+	Detail    AssetDetailLabels    `json:"detail"`
 	Dashboard AssetDashboardLabels `json:"dashboard"`
 }
 
@@ -230,11 +230,11 @@ type AssetColumnLabels struct {
 	BookValue       string `json:"bookValue"`
 	Status          string `json:"status"`
 	// Sub-table columns (depreciation)
-	Period      string `json:"period"`
-	StartValue  string `json:"startValue"`
+	Period       string `json:"period"`
+	StartValue   string `json:"startValue"`
 	Depreciation string `json:"depreciation"`
-	EndValue    string `json:"endValue"`
-	Accumulated string `json:"accumulated"`
+	EndValue     string `json:"endValue"`
+	Accumulated  string `json:"accumulated"`
 	// Sub-table columns (maintenance)
 	Date        string `json:"date"`
 	Type        string `json:"type"`
@@ -288,19 +288,19 @@ type AssetActionLabels struct {
 	Activate   string `json:"activate"`
 	Deactivate string `json:"deactivate"`
 	// Confirm messages
-	ConfirmActivate         string `json:"confirmActivate"`
-	ConfirmDeactivate       string `json:"confirmDeactivate"`
-	ConfirmDelete           string `json:"confirmDelete"`
-	ConfirmBulkActivate     string `json:"confirmBulkActivate"`
-	ConfirmBulkDeactivate   string `json:"confirmBulkDeactivate"`
-	ConfirmBulkDelete       string `json:"confirmBulkDelete"`
+	ConfirmActivate       string `json:"confirmActivate"`
+	ConfirmDeactivate     string `json:"confirmDeactivate"`
+	ConfirmDelete         string `json:"confirmDelete"`
+	ConfirmBulkActivate   string `json:"confirmBulkActivate"`
+	ConfirmBulkDeactivate string `json:"confirmBulkDeactivate"`
+	ConfirmBulkDelete     string `json:"confirmBulkDelete"`
 	// Error messages
-	InvalidFormData    string `json:"invalidFormData"`
-	IDRequired         string `json:"idRequired"`
-	NoIDsProvided      string `json:"noIDsProvided"`
-	InvalidStatus      string `json:"invalidStatus"`
+	InvalidFormData     string `json:"invalidFormData"`
+	IDRequired          string `json:"idRequired"`
+	NoIDsProvided       string `json:"noIDsProvided"`
+	InvalidStatus       string `json:"invalidStatus"`
 	InvalidTargetStatus string `json:"invalidTargetStatus"`
-	NoPermission       string `json:"noPermission"`
+	NoPermission        string `json:"noPermission"`
 }
 
 type AssetDetailLabels struct {
@@ -325,10 +325,10 @@ type AssetDetailBasicInfoLabels struct {
 }
 
 type AssetDetailTabLabels struct {
-	Info          string `json:"info"`
-	Depreciation  string `json:"depreciation"`
-	Maintenance   string `json:"maintenance"`
-	Transactions  string `json:"transactions"`
+	Info         string `json:"info"`
+	Depreciation string `json:"depreciation"`
+	Maintenance  string `json:"maintenance"`
+	Transactions string `json:"transactions"`
 }
 
 type AssetDetailEmptyLabels struct {
@@ -424,11 +424,11 @@ func DefaultAssetLabels() AssetLabels {
 			Active:                     "Active",
 		},
 		Actions: AssetActionLabels{
-			View:       "View",
-			Edit:       "Edit",
-			Delete:     "Delete",
-			Activate:   "Activate",
-			Deactivate: "Deactivate",
+			View:                  "View",
+			Edit:                  "Edit",
+			Delete:                "Delete",
+			Activate:              "Activate",
+			Deactivate:            "Deactivate",
 			ConfirmActivate:       "Are you sure you want to activate %s?",
 			ConfirmDeactivate:     "Are you sure you want to deactivate %s?",
 			ConfirmDelete:         "Are you sure you want to delete %s? This action cannot be undone.",
@@ -494,16 +494,16 @@ type NetProfitLabels struct {
 	Title    string `json:"title"`
 	Subtitle string `json:"subtitle"`
 	// P&L line items
-	Revenue        string `json:"revenue"`
-	CostOfSales    string `json:"costOfSales"`
-	GrossProfit    string `json:"grossProfit"`
-	GrossMargin    string `json:"grossMargin"`
-	Expenses       string `json:"expenses"`
-	NetProfit      string `json:"netProfit"`
-	NetMargin      string `json:"netMargin"`
+	Revenue     string `json:"revenue"`
+	CostOfSales string `json:"costOfSales"`
+	GrossProfit string `json:"grossProfit"`
+	GrossMargin string `json:"grossMargin"`
+	Expenses    string `json:"expenses"`
+	NetProfit   string `json:"netProfit"`
+	NetMargin   string `json:"netMargin"`
 	// Summary
-	SummaryRevenue    string `json:"summaryRevenue"`
-	SummaryGross      string `json:"summaryGrossProfit"`
-	SummaryExpenses   string `json:"summaryExpenses"`
-	SummaryNetProfit  string `json:"summaryNetProfit"`
+	SummaryRevenue   string `json:"summaryRevenue"`
+	SummaryGross     string `json:"summaryGrossProfit"`
+	SummaryExpenses  string `json:"summaryExpenses"`
+	SummaryNetProfit string `json:"summaryNetProfit"`
 }

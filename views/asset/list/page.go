@@ -182,7 +182,7 @@ func buildTableRows(assets []MockAsset, status string, l fycha.AssetLabels, rout
 				URL: routes.SetStatusURL + "?status=inactive", ItemName: name,
 				ConfirmTitle:   l.Actions.Deactivate,
 				ConfirmMessage: fmt.Sprintf(l.Actions.ConfirmDeactivate, name),
-				Disabled: !canUpdate, DisabledTooltip: l.Actions.NoPermission,
+				Disabled:       !canUpdate, DisabledTooltip: l.Actions.NoPermission,
 			})
 		} else {
 			actions = append(actions, types.TableAction{
@@ -190,7 +190,7 @@ func buildTableRows(assets []MockAsset, status string, l fycha.AssetLabels, rout
 				URL: routes.SetStatusURL + "?status=active", ItemName: name,
 				ConfirmTitle:   l.Actions.Activate,
 				ConfirmMessage: fmt.Sprintf(l.Actions.ConfirmActivate, name),
-				Disabled: !canUpdate, DisabledTooltip: l.Actions.NoPermission,
+				Disabled:       !canUpdate, DisabledTooltip: l.Actions.NoPermission,
 			})
 		}
 		actions = append(actions, types.TableAction{
@@ -230,7 +230,7 @@ func buildTableRows(assets []MockAsset, status string, l fycha.AssetLabels, rout
 
 func formatCurrency(amount float64) string {
 	whole := int64(amount)
-	frac := int64((amount - float64(whole))*100 + 0.5)
+	frac := int64((amount-float64(whole))*100 + 0.5)
 	if frac >= 100 {
 		whole++
 		frac -= 100

@@ -4,7 +4,10 @@ go 1.25.1
 
 require github.com/erniealice/pyeza-golang v0.0.8-alpha
 
-require github.com/erniealice/esqyma v0.0.0
+require (
+	github.com/beevik/etree v1.6.0
+	github.com/erniealice/esqyma v0.0.0
+)
 
 require (
 	github.com/yuin/goldmark v1.7.16 // indirect
