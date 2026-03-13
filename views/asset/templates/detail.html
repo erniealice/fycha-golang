@@ -18,6 +18,8 @@
             {{template "asset-tab-maintenance" .}}
         {{else if eq .ActiveTab "transactions"}}
             {{template "asset-tab-transactions" .}}
+        {{else if eq .ActiveTab "attachments"}}
+            {{template "attachment-tab" .}}
         {{end}}
     </div>
 </div>
