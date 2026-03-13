@@ -3,8 +3,10 @@ package detail
 import (
 	"context"
 	"fmt"
+	"log"
 
 	pyeza "github.com/erniealice/pyeza-golang"
+	"github.com/erniealice/pyeza-golang/attachment"
 	"github.com/erniealice/pyeza-golang/route"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -76,6 +78,13 @@ type Deps struct {
 	Labels       fycha.AssetLabels
 	CommonLabels pyeza.CommonLabels
 	TableLabels  types.TableLabels
+
+	// Attachment operations (injected by composition root)
+	UploadFile       func(ctx context.Context, bucket, key string, content []byte, contentType string) error
+	ListAttachments  func(ctx context.Context, entityType, entityID string) ([]map[string]any, error)
+	CreateAttachment func(ctx context.Context, data map[string]any) error
+	DeleteAttachment func(ctx context.Context, id string) error
+	NewID            func() string
 }
 
 // PageData holds the data for the asset detail page.
@@ -106,6 +115,8 @@ type PageData struct {
 	DepreciationTable     *types.TableConfig
 	MaintenanceTable      *types.TableConfig
 	TransactionTable      *types.TableConfig
+	AttachmentTable       *types.TableConfig
+	AttachmentUploadURL   string
 }
 
 // ---------------------------------------------------------------------------
@@ -142,6 +153,9 @@ func NewTabAction(deps *Deps) view.View {
 
 		// Return only the tab partial template
 		templateName := "asset-tab-" + tab
+		if tab == "attachments" {
+			templateName = "attachment-tab"
+		}
 		return view.OK(templateName, pageData)
 	})
 }
@@ -160,7 +174,7 @@ func buildPageData(deps *Deps, id, activeTab string, viewCtx *view.ViewContext, 
 
 	tabItems := buildTabItems(id, deps.Labels, deps.Routes)
 
-	return &PageData{
+	pageData := &PageData{
 		PageData: types.PageData{
 			CacheVersion:   viewCtx.CacheVersion,
 			Title:          asset.Name,
@@ -198,6 +212,21 @@ func buildPageData(deps *Deps, id, activeTab string, viewCtx *view.ViewContext, 
 		MaintenanceTable:      buildMaintenanceTable(asset.MaintenanceRecords, deps.Labels, deps.TableLabels),
 		TransactionTable:      buildTransactionTable(asset.TransactionHistory, deps.Labels, deps.TableLabels),
 	}
+
+	if activeTab == "attachments" {
+		if deps.ListAttachments != nil {
+			cfg := attachmentConfig(deps)
+			atts, err := deps.ListAttachments(viewCtx.Request.Context(), cfg.EntityType, id)
+			if err != nil {
+				log.Printf("Failed to list attachments: %v", err)
+				atts = []map[string]any{}
+			}
+			pageData.AttachmentTable = attachment.BuildTable(atts, cfg, id)
+		}
+		pageData.AttachmentUploadURL = route.ResolveURL(deps.Routes.AttachmentUploadURL, "id", id)
+	}
+
+	return pageData
 }
 
 func buildTabItems(id string, labels fycha.AssetLabels, routes fycha.AssetRoutes) []pyeza.TabItem {
@@ -208,6 +237,7 @@ func buildTabItems(id string, labels fycha.AssetLabels, routes fycha.AssetRoutes
 		{Key: "depreciation", Label: labels.Detail.Tabs.Depreciation, Href: base + "?tab=depreciation", HxGet: action + "depreciation", Icon: "icon-trending-down", Count: 0, Disabled: false},
 		{Key: "maintenance", Label: labels.Detail.Tabs.Maintenance, Href: base + "?tab=maintenance", HxGet: action + "maintenance", Icon: "icon-tool", Count: 0, Disabled: false},
 		{Key: "transactions", Label: labels.Detail.Tabs.Transactions, Href: base + "?tab=transactions", HxGet: action + "transactions", Icon: "icon-clock", Count: 0, Disabled: false},
+		{Key: "attachments", Label: labels.Detail.Tabs.Attachments, Href: base + "?tab=attachments", HxGet: action + "attachments", Icon: "icon-paperclip", Count: 0, Disabled: false},
 	}
 }
 

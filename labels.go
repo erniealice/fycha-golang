@@ -304,9 +304,10 @@ type AssetActionLabels struct {
 }
 
 type AssetDetailLabels struct {
-	BasicInfo   AssetDetailBasicInfoLabels `json:"basicInfo"`
-	Tabs        AssetDetailTabLabels       `json:"tabs"`
-	EmptyStates AssetDetailEmptyLabels     `json:"emptyStates"`
+	BasicInfo        AssetDetailBasicInfoLabels `json:"basicInfo"`
+	Tabs             AssetDetailTabLabels       `json:"tabs"`
+	EmptyStates      AssetDetailEmptyLabels     `json:"emptyStates"`
+	AttachmentUpload string                     `json:"attachmentUpload"`
 }
 
 type AssetDetailBasicInfoLabels struct {
@@ -329,6 +330,7 @@ type AssetDetailTabLabels struct {
 	Depreciation string `json:"depreciation"`
 	Maintenance  string `json:"maintenance"`
 	Transactions string `json:"transactions"`
+	Attachments  string `json:"attachments"`
 }
 
 type AssetDetailEmptyLabels struct {
@@ -462,6 +464,7 @@ func DefaultAssetLabels() AssetLabels {
 				Depreciation: "Depreciation",
 				Maintenance:  "Maintenance",
 				Transactions: "Transactions",
+				Attachments:  "Attachments",
 			},
 			EmptyStates: AssetDetailEmptyLabels{
 				DepreciationTitle: "No depreciation records",
@@ -471,6 +474,7 @@ func DefaultAssetLabels() AssetLabels {
 				TransactionsTitle: "No transactions",
 				TransactionsDesc:  "Transaction audit trail for this asset will appear here.",
 			},
+			AttachmentUpload: "Upload Attachment",
 		},
 		Dashboard: AssetDashboardLabels{
 			Title:                "Assets Dashboard",

@@ -68,6 +68,10 @@ type AssetRoutes struct {
 	SetStatusURL     string `json:"set_status_url"`
 	BulkSetStatusURL string `json:"bulk_set_status_url"`
 
+	// Attachment routes
+	AttachmentUploadURL string `json:"attachment_upload_url"`
+	AttachmentDeleteURL string `json:"attachment_delete_url"`
+
 	// Report/settings routes
 	LapsingScheduleURL      string `json:"lapsing_schedule_url"`
 	DepreciationPoliciesURL string `json:"depreciation_policies_url"`
@@ -88,6 +92,9 @@ func DefaultAssetRoutes() AssetRoutes {
 		SetStatusURL:     AssetSetStatusURL,
 		BulkSetStatusURL: AssetBulkSetStatusURL,
 
+		AttachmentUploadURL: AssetAttachmentUploadURL,
+		AttachmentDeleteURL: AssetAttachmentDeleteURL,
+
 		LapsingScheduleURL:      AssetLapsingScheduleURL,
 		DepreciationPoliciesURL: AssetDepreciationPoliciesURL,
 	}
@@ -107,6 +114,9 @@ func (r AssetRoutes) RouteMap() map[string]string {
 		"asset.bulk_delete":     r.BulkDeleteURL,
 		"asset.set_status":      r.SetStatusURL,
 		"asset.bulk_set_status": r.BulkSetStatusURL,
+
+		"asset.attachment.upload": r.AttachmentUploadURL,
+		"asset.attachment.delete": r.AttachmentDeleteURL,
 
 		"asset.lapsing_schedule":      r.LapsingScheduleURL,
 		"asset.depreciation_policies": r.DepreciationPoliciesURL,
