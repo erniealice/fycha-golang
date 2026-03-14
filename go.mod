@@ -4,6 +4,8 @@ go 1.25.1
 
 require github.com/erniealice/pyeza-golang v0.0.8-alpha
 
+require github.com/erniealice/hybra-golang v0.0.0-00010101000000-000000000000
+
 require (
 	github.com/beevik/etree v1.6.0
 	github.com/erniealice/esqyma v0.0.0
@@ -25,6 +27,8 @@ require (
 replace github.com/erniealice/esqyma => ../esqyma-ryta
 
 replace github.com/erniealice/lyngua => ../lyngua-ryta
+
+replace github.com/erniealice/hybra-golang => ../hybra-golang-ryta
 
 replace github.com/erniealice/pyeza-golang => ../pyeza-golang-ryta
 
