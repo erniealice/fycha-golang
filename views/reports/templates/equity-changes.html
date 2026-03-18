@@ -14,7 +14,7 @@
             {{range .PeriodPresets}}
             <a class="period-preset-btn{{if .Selected}} active{{end}}"
                hx-get="{{$.CurrentPath}}?period={{.Value}}"
-               hx-target="closest .main"
+               hx-target="#main-content"
                hx-swap="innerHTML"
                hx-push-url="true"
                href="{{$.CurrentPath}}?period={{.Value}}">{{.Label}}</a>
@@ -49,7 +49,7 @@
             <div class="financial-statement-subtitle">{{.PeriodLabel}}</div>
         </div>
 
-        <div class="fs-equity-table-wrapper">
+        <div class="fs-table-scroll">
             <table class="financial-statement-table fs-equity-table">
                 <thead>
                     <tr class="fs-header-row">
@@ -88,6 +88,7 @@
                 </tbody>
             </table>
         </div>
+        <script src="/assets/js/fycha/fs-collapse.js?v={{.CacheVersion}}"></script>
 
         <div class="fs-equity-note">
             <p class="fs-note-text">

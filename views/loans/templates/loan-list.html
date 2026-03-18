@@ -5,10 +5,7 @@
 
 {{/* Content-only partial -- for HTMX navigation */}}
 {{define "loan-list-content"}}
-<div class="page-content page-content--table" data-page-css="fycha">
-
-  {{template "page-header" .}}
-
+<div class="page-content page-content--table">
   {{/* Status tabs: Active / Completed */}}
   <div class="page-tabs">
     {{template "tabs" dict "Variant" "sub" "Items" .StatusTabs "ActiveKey" .ActiveStatus}}

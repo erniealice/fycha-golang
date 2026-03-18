@@ -14,7 +14,7 @@
             {{range .PeriodPresets}}
             <a class="period-preset-btn{{if .Selected}} active{{end}}"
                hx-get="{{$.CurrentPath}}?period={{.Value}}"
-               hx-target="closest .main"
+               hx-target="#main-content"
                hx-swap="innerHTML"
                hx-push-url="true"
                href="{{$.CurrentPath}}?period={{.Value}}">{{.Label}}</a>
@@ -53,7 +53,8 @@
             <div class="financial-statement-subtitle">{{.PeriodLabel}}</div>
         </div>
 
-        <table class="financial-statement-table">
+        <div class="fs-table-scroll">
+        <table class="financial-statement-table fs-collapsible">
             <thead>
                 <tr class="fs-header-row">
                     <th class="fs-col-code">Code</th>
@@ -63,18 +64,22 @@
                     <th class="fs-col-change">Change</th>
                 </tr>
             </thead>
-            <tbody>
-                {{range .Sections}}
-                {{$section := .}}
-
-                {{/* Section header row */}}
-                <tr class="fs-section-header-row">
-                    <td colspan="5" class="fs-section-title">{{.Title}}</td>
+            {{range .Sections}}
+            <tbody class="fs-section">
+                {{/* Sticky + collapsible section header */}}
+                <tr class="fs-section-header-row" data-fs-toggle>
+                    <td colspan="5" class="fs-section-title">
+                        <div class="fs-section-title-inner">
+                            <span class="fs-toggle-icon">{{template "icon-chevron-down"}}</span>
+                            <span class="fs-section-label">{{.Title}}</span>
+                            {{if .Subtotal}}<span class="fs-section-amount">{{.Subtotal}}</span>{{end}}
+                        </div>
+                    </td>
                 </tr>
 
                 {{/* Direct lines (no sub-groups) */}}
                 {{range .Lines}}
-                <tr class="fs-line-row{{if .IsTotal}} fs-total-row{{end}}{{if .IsSeparator}} fs-separator-row{{end}}">
+                <tr class="fs-line-row fs-section-body{{if .IsTotal}} fs-total-row{{end}}{{if .IsSeparator}} fs-separator-row{{end}}">
                     <td class="fs-col-code">{{.Code}}</td>
                     <td class="fs-col-name{{if .IsTotal}} fs-total-label{{end}}">{{.Name}}</td>
                     <td class="fs-col-amount{{if .IsNegative}} fs-negative{{end}}">{{.CurrentPeriod}}</td>
@@ -85,11 +90,11 @@
 
                 {{/* Sub-groups within section */}}
                 {{range .Groups}}
-                <tr class="fs-group-header-row">
+                <tr class="fs-group-header-row fs-section-body">
                     <td colspan="5" class="fs-group-title">{{.Title}}</td>
                 </tr>
                 {{range .Lines}}
-                <tr class="fs-line-row fs-group-line">
+                <tr class="fs-line-row fs-group-line fs-section-body">
                     <td class="fs-col-code">{{.Code}}</td>
                     <td class="fs-col-name">{{.Name}}</td>
                     <td class="fs-col-amount{{if .IsNegative}} fs-negative{{end}}">{{.CurrentPeriod}}</td>
@@ -98,7 +103,7 @@
                 </tr>
                 {{end}}
                 {{/* Group subtotal */}}
-                <tr class="fs-group-subtotal-row">
+                <tr class="fs-group-subtotal-row fs-section-body">
                     <td class="fs-col-code"></td>
                     <td class="fs-col-name">Subtotal: {{.Title}}</td>
                     <td class="fs-col-amount">{{.Subtotal}}</td>
@@ -109,7 +114,7 @@
 
                 {{/* Section subtotal */}}
                 {{if .Subtotal}}
-                <tr class="fs-subtotal-row{{if .Bold}} fs-bold-total{{end}}">
+                <tr class="fs-subtotal-row fs-section-body{{if .Bold}} fs-bold-total{{end}}">
                     <td class="fs-col-code"></td>
                     <td class="fs-col-name">{{if .Bold}}{{.Title}}{{else}}Total {{.Title}}{{end}}</td>
                     <td class="fs-col-amount">{{.Subtotal}}</td>
@@ -117,10 +122,11 @@
                     <td class="fs-col-change"></td>
                 </tr>
                 {{end}}
-
-                {{end}}{{/* end range .Sections */}}
             </tbody>
+            {{end}}{{/* end range .Sections */}}
         </table>
+        </div>
+        <script src="/assets/js/fycha/fs-collapse.js?v={{.CacheVersion}}"></script>
     </div>
 
 </div>

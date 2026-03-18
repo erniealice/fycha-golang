@@ -399,3 +399,463 @@
         height: 2.25rem;
     }
 }
+
+/* ==========================================================================
+   FINANCIAL STATEMENTS — Income Statement, Balance Sheet, Cash Flow, Equity
+   Shared class system: fs-* (financial statement)
+   All 4 statements load this CSS via data-page-css
+   ========================================================================== */
+
+/* ── Financial Statement Layout ── */
+.financial-statement-layout {
+    overflow: hidden;
+}
+
+/* ── Equation Alert (Balance Sheet A = L + E) ── */
+.fs-equation-alert {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+.fs-alert-icon {
+    display: inline-flex;
+    flex-shrink: 0;
+    width: 1.25rem;
+    height: 1.25rem;
+}
+.fs-alert-icon svg {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+/* ── Period Bar ── */
+.report-period-bar {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    flex-wrap: wrap;
+    flex-shrink: 0;
+}
+
+.report-period-presets {
+    display: flex;
+    gap: 0.375rem;
+    flex-wrap: wrap;
+}
+
+.period-preset-btn {
+    height: 2rem;
+    padding: 0 0.75rem;
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-md);
+    background: var(--bg-input);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    font-weight: 500;
+    font-family: var(--font-body);
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+}
+.period-preset-btn:hover {
+    background: var(--bg-hover);
+    border-color: var(--border-focus);
+    color: var(--text-primary);
+}
+.period-preset-btn.active {
+    background: var(--accent-primary);
+    color: var(--text-inverse);
+    border-color: var(--accent-primary);
+}
+
+.report-period-label {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    margin-left: auto;
+}
+
+/* ── As-Of Date Form (Balance Sheet) ── */
+.report-asof-form {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.report-asof-label {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+.report-asof-input {
+    width: 10rem;
+}
+
+/* ── Financial Statement Card ── */
+.financial-statement-card {
+    background: var(--bg-card);
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.financial-statement-card .financial-statement-table {
+    /* Make only the table body scrollable while header stays pinned */
+}
+
+/* Scrollable table — use a wrapper div instead of display:block on table.
+   This preserves native table layout (colspan, column alignment). */
+.fs-table-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.fs-table-scroll .financial-statement-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.financial-statement-header {
+    padding: 1.25rem 1.5rem 1rem;
+    border-bottom: var(--border-width) solid var(--border);
+}
+
+.financial-statement-title {
+    font-size: 0.9375rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    font-family: var(--font-display);
+}
+
+.financial-statement-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-top: 0.25rem;
+}
+
+/* ── Financial Statement Table ── */
+.financial-statement-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+/* Header row */
+.fs-header-row th {
+    padding: 0.625rem 1.25rem;
+    font-size: 0.6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    border-bottom: 2px solid var(--border);
+    text-align: left;
+    background: var(--bg-base);
+}
+
+/* Column widths */
+.fs-col-code {
+    width: 5rem;
+    padding: 0.625rem 1.25rem;
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.75rem;
+}
+
+.fs-col-name {
+    padding: 0.625rem 1.25rem;
+    color: var(--text-primary);
+}
+
+.fs-col-amount {
+    width: 9rem;
+    padding: 0.625rem 1.25rem;
+    text-align: right;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--text-primary);
+}
+
+.fs-col-change {
+    width: 5.5rem;
+    padding: 0.625rem 1.25rem;
+    text-align: right;
+    font-size: 0.75rem;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+/* Change% — positive green, negative red */
+.fs-col-change.fs-change-up {
+    color: var(--status-success);
+}
+.fs-col-change.fs-change-down {
+    color: var(--accent-terracotta);
+}
+.fs-col-change.fs-change-flat {
+    color: var(--text-muted);
+}
+
+/* ── Section Headers (REVENUE, ASSETS, etc.) — Sticky + Collapsible ── */
+.fs-section-header-row td {
+    padding: 0.75rem 1.25rem;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent-primary);
+    border-top: 2px solid var(--border);
+    background: var(--bg-card);
+    box-shadow: 0 1px 0 var(--border);
+}
+
+
+/* Sticky positioning — thead pins at top, section headers pin below it.
+   Works because .fs-table-scroll is the scroll container. */
+.fs-collapsible thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: var(--bg-card);
+}
+.fs-collapsible .fs-section-header-row td {
+    position: sticky;
+    top: 2.35rem; /* = thead row height + border */
+    z-index: 2;
+}
+
+/* Clickable header */
+.fs-section-header-row[data-fs-toggle] {
+    cursor: pointer;
+    user-select: none;
+}
+.fs-section-header-row[data-fs-toggle]:hover td {
+    background: var(--bg-hover);
+}
+
+.fs-section-title {
+    font-size: 0.6875rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--accent-primary);
+    /* NO display:flex — breaks colspan. Use inner wrapper instead. */
+}
+.fs-section-title-inner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+/* Section amount — shown inline, visible only when collapsed */
+.fs-section-amount {
+    margin-left: auto;
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    letter-spacing: 0;
+    text-transform: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+.fs-collapsed .fs-section-amount {
+    opacity: 1;
+}
+
+/* Toggle chevron icon */
+.fs-toggle-icon {
+    display: inline-flex;
+    width: 0.875rem;
+    height: 0.875rem;
+    flex-shrink: 0;
+    transition: transform 0.2s ease;
+    color: var(--text-muted);
+}
+.fs-toggle-icon svg {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+.fs-collapsed .fs-toggle-icon {
+    transform: rotate(-90deg);
+}
+
+
+/* ── Collapse Animation ── */
+.fs-collapsed .fs-section-body {
+    display: none;
+}
+.fs-collapsed .fs-section-header-row td {
+    border-bottom: var(--border-width) solid var(--border-light);
+    box-shadow: none;
+}
+
+/* ── Group Headers (Selling Expenses, Current Assets, etc.) ── */
+.fs-group-header-row td {
+    padding: 0.5rem 1.25rem 0.25rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+.fs-group-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* ── Line Rows (individual accounts) ── */
+.fs-line-row td {
+    border-bottom: var(--border-width) solid var(--border-light);
+}
+.fs-line-row:hover td {
+    background: var(--bg-hover);
+}
+
+/* Indented group lines */
+.fs-group-line .fs-col-code,
+.fs-group-line .fs-col-name {
+    padding-left: 2.5rem;
+}
+
+/* ── Subtotal Rows ── */
+.fs-subtotal-row td {
+    font-weight: 600;
+    border-top: var(--border-width) solid var(--border);
+    border-bottom: var(--border-width) solid var(--border);
+    color: var(--text-primary);
+}
+
+.fs-group-subtotal-row td {
+    font-weight: 600;
+    font-size: 0.8125rem;
+    border-top: var(--border-width-thick) solid var(--border);
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+}
+
+/* ── Total Rows (Section totals like TOTAL ASSETS) ── */
+.fs-total-row td {
+    font-weight: 700;
+    border-top: 2px solid var(--border);
+    border-bottom: 2px solid var(--border);
+    background: var(--bg-base);
+}
+.fs-total-label {
+    font-weight: 700;
+}
+
+/* ── Bold Grand Totals (NET INCOME, TOTAL ASSETS) ── */
+.fs-bold-total td {
+    font-weight: 700;
+    font-size: 0.875rem;
+    border-top: 3px double var(--text-primary);
+    border-bottom: 3px double var(--text-primary);
+    background: var(--bg-base);
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+.fs-grand-total-row td {
+    font-weight: 700;
+    font-size: 0.875rem;
+    border-top: 3px double var(--text-primary);
+    background: var(--bg-base);
+    padding-top: 0.75rem;
+    padding-bottom: 0.75rem;
+}
+
+/* ── Negative Amounts (contra accounts, draws) ── */
+.fs-negative {
+    color: var(--accent-terracotta) !important;
+}
+.fs-contra-label {
+    font-style: italic;
+    color: var(--text-secondary);
+}
+
+/* ── Prior Period Column (slightly muted) ── */
+.fs-prior-period {
+    color: var(--text-muted) !important;
+}
+
+/* ── Separator & Spacer Rows ── */
+.fs-separator-row td {
+    border-top: 2px solid var(--border);
+}
+.fs-spacer-row td {
+    padding: 0.25rem;
+    border: none;
+}
+
+/* ── Change Column Formatting ── */
+.fs-col-change {
+    font-family: 'JetBrains Mono', 'Fira Code', monospace;
+}
+
+/* ── Print Styles ── */
+@media print {
+    .report-period-bar,
+    .report-header-actions {
+        break-after: avoid;
+    }
+    .financial-statement-card {
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+    .fs-line-row:hover td {
+        background: transparent;
+    }
+    .report-summary-bar {
+        break-inside: avoid;
+    }
+}
+
+/* ── Financial Statement Responsive ── */
+@media (max-width: 768px) {
+    .report-period-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .report-period-label {
+        margin-left: 0;
+    }
+    .financial-statement-header {
+        padding: 1rem;
+    }
+    .fs-col-code {
+        width: 3.5rem;
+        padding: 0.5rem 0.5rem;
+        font-size: 0.6875rem;
+    }
+    .fs-col-name {
+        padding: 0.5rem;
+    }
+    .fs-col-amount {
+        width: 6rem;
+        padding: 0.5rem;
+        font-size: 0.75rem;
+    }
+    .fs-col-change,
+    .fs-prior-period {
+        display: none;
+    }
+    .fs-group-line .fs-col-code,
+    .fs-group-line .fs-col-name {
+        padding-left: 1.5rem;
+    }
+    .report-asof-form {
+        flex-wrap: wrap;
+    }
+}

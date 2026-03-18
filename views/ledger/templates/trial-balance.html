@@ -24,8 +24,8 @@
                 <div class="ledger-filter-actions ledger-filter-actions--inline">
                     <button type="submit" class="btn btn-primary">Generate</button>
                     {{if .HasData}}
-                    <button type="button" class="btn btn-ghost btn-icon" onclick="window.print()" title="Print">
-                        {{template "icon-printer"}}
+                    <button type="button" class="btn btn-ghost" onclick="window.print()" title="Print">
+                        <span class="btn-icon-wrap">{{template "icon-printer"}}</span>
                         Print
                     </button>
                     {{end}}

@@ -12,7 +12,7 @@
     <div class="report-period-bar">
         <form class="report-asof-form"
               hx-get="{{.CurrentPath}}"
-              hx-target="closest .main"
+              hx-target="#main-content"
               hx-swap="innerHTML"
               hx-push-url="true">
             <label for="bs-asof" class="report-asof-label">As of:</label>
@@ -46,13 +46,13 @@
 
     {{/* ─── A = L + E Verification ─── */}}
     {{if .IsBalanced}}
-    <div class="alert alert--success">
-        {{template "icon-check-circle"}}
+    <div class="alert alert--success fs-equation-alert">
+        <span class="fs-alert-icon">{{template "icon-check-circle"}}</span>
         <span>{{.EquationMessage}}</span>
     </div>
     {{else}}
-    <div class="alert alert--danger">
-        {{template "icon-alert-triangle"}}
+    <div class="alert alert--danger fs-equation-alert">
+        <span class="fs-alert-icon">{{template "icon-alert-triangle"}}</span>
         <span>{{.EquationMessage}}</span>
     </div>
     {{end}}
@@ -64,7 +64,8 @@
             <div class="financial-statement-subtitle">As of {{.AsOfDate}}</div>
         </div>
 
-        <table class="financial-statement-table">
+        <div class="fs-table-scroll">
+        <table class="financial-statement-table fs-collapsible">
             <thead>
                 <tr class="fs-header-row">
                     <th class="fs-col-code">Code</th>
@@ -72,28 +73,33 @@
                     <th class="fs-col-amount">Amount</th>
                 </tr>
             </thead>
-            <tbody>
-                {{range .Sections}}
-
-                {{/* Element section header */}}
-                <tr class="fs-section-header-row">
-                    <td colspan="3" class="fs-section-title">{{.Title}}</td>
+            {{range .Sections}}
+            <tbody class="fs-section">
+                {{/* Sticky + collapsible section header */}}
+                <tr class="fs-section-header-row" data-fs-toggle>
+                    <td colspan="3" class="fs-section-title">
+                        <div class="fs-section-title-inner">
+                            <span class="fs-toggle-icon">{{template "icon-chevron-down"}}</span>
+                            <span class="fs-section-label">{{.Title}}</span>
+                            {{if .Total}}<span class="fs-section-amount">{{.Total}}</span>{{end}}
+                        </div>
+                    </td>
                 </tr>
 
                 {{/* Classifications (Current / Non-Current) */}}
                 {{range .Classifications}}
-                <tr class="fs-group-header-row">
+                <tr class="fs-group-header-row fs-section-body">
                     <td colspan="3" class="fs-group-title">{{.Title}}</td>
                 </tr>
                 {{range .Lines}}
-                <tr class="fs-line-row{{if .IsSubtotal}} fs-subtotal-row{{end}}{{if .IsSeparator}} fs-separator-row{{end}}">
+                <tr class="fs-line-row fs-section-body{{if .IsSubtotal}} fs-subtotal-row{{end}}{{if .IsSeparator}} fs-separator-row{{end}}">
                     <td class="fs-col-code">{{.Code}}</td>
                     <td class="fs-col-name{{if .IsNegative}} fs-contra-label{{end}}">{{.Name}}</td>
                     <td class="fs-col-amount{{if .IsNegative}} fs-negative{{end}}">{{.Amount}}</td>
                 </tr>
                 {{end}}
                 {{/* Classification subtotal */}}
-                <tr class="fs-group-subtotal-row">
+                <tr class="fs-group-subtotal-row fs-section-body">
                     <td class="fs-col-code"></td>
                     <td class="fs-col-name">Total {{.Title}}</td>
                     <td class="fs-col-amount">{{.Subtotal}}</td>
@@ -102,7 +108,7 @@
 
                 {{/* Direct lines (Equity section) */}}
                 {{range .Lines}}
-                <tr class="fs-line-row{{if .IsSubtotal}} fs-subtotal-row{{end}}">
+                <tr class="fs-line-row fs-section-body{{if .IsSubtotal}} fs-subtotal-row{{end}}">
                     <td class="fs-col-code">{{.Code}}</td>
                     <td class="fs-col-name{{if .IsNegative}} fs-contra-label{{end}}">{{.Name}}</td>
                     <td class="fs-col-amount{{if .IsNegative}} fs-negative{{end}}">{{.Amount}}</td>
@@ -110,16 +116,18 @@
                 {{end}}
 
                 {{/* Element total */}}
-                <tr class="fs-subtotal-row{{if .IsBold}} fs-bold-total{{end}}">
+                <tr class="fs-subtotal-row fs-section-body{{if .IsBold}} fs-bold-total{{end}}">
                     <td class="fs-col-code"></td>
                     <td class="fs-col-name">TOTAL {{.Title}}</td>
                     <td class="fs-col-amount">{{.Total}}</td>
                 </tr>
-                <tr class="fs-spacer-row"><td colspan="3"></td></tr>
+                <tr class="fs-spacer-row fs-section-body"><td colspan="3"></td></tr>
 
-                {{end}}{{/* end range .Sections */}}
+            </tbody>
+            {{end}}{{/* end range .Sections */}}
 
-                {{/* Grand total: Total Liabilities + Equity */}}
+            {{/* Grand total: Total Liabilities + Equity — outside collapsible sections */}}
+            <tbody>
                 <tr class="fs-grand-total-row">
                     <td class="fs-col-code"></td>
                     <td class="fs-col-name">TOTAL LIABILITIES + EQUITY</td>
@@ -127,6 +135,8 @@
                 </tr>
             </tbody>
         </table>
+        </div>
+        <script src="/assets/js/fycha/fs-collapse.js?v={{.CacheVersion}}"></script>
     </div>
 
 </div>

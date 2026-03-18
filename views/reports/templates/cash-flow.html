@@ -14,7 +14,7 @@
             {{range .PeriodPresets}}
             <a class="period-preset-btn{{if .Selected}} active{{end}}"
                hx-get="{{$.CurrentPath}}?period={{.Value}}"
-               hx-target="closest .main"
+               hx-target="#main-content"
                hx-swap="innerHTML"
                hx-push-url="true"
                href="{{$.CurrentPath}}?period={{.Value}}">{{.Label}}</a>
@@ -53,24 +53,30 @@
             <div class="financial-statement-subtitle">{{.PeriodLabel}}</div>
         </div>
 
-        <table class="financial-statement-table">
+        <div class="fs-table-scroll">
+        <table class="financial-statement-table fs-collapsible">
             <thead>
                 <tr class="fs-header-row">
                     <th class="fs-col-name">Description</th>
                     <th class="fs-col-amount">Amount</th>
                 </tr>
             </thead>
-            <tbody>
-                {{range .Activities}}
-
-                {{/* Activity section header */}}
-                <tr class="fs-section-header-row">
-                    <td colspan="2" class="fs-section-title">{{.Title}}</td>
+            {{range .Activities}}
+            <tbody class="fs-section">
+                {{/* Sticky + collapsible section header */}}
+                <tr class="fs-section-header-row" data-fs-toggle>
+                    <td colspan="2" class="fs-section-title">
+                        <div class="fs-section-title-inner">
+                            <span class="fs-toggle-icon">{{template "icon-chevron-down"}}</span>
+                            <span class="fs-section-label">{{.Title}}</span>
+                            {{if .NetTotal}}<span class="fs-section-amount">{{.NetTotal}}</span>{{end}}
+                        </div>
+                    </td>
                 </tr>
 
                 {{/* Line items */}}
                 {{range .Lines}}
-                <tr class="fs-line-row{{if .IsSubtotal}} fs-subtotal-row{{end}}{{if .IsLabel}} fs-label-row{{end}} fs-indent-{{.IndentLevel}}">
+                <tr class="fs-line-row fs-section-body{{if .IsSubtotal}} fs-subtotal-row{{end}}{{if .IsLabel}} fs-label-row{{end}} fs-indent-{{.IndentLevel}}">
                     <td class="fs-col-name">{{.Name}}</td>
                     <td class="fs-col-amount{{if .IsNegative}} fs-negative{{end}}">
                         {{if not .IsLabel}}{{.Amount}}{{end}}
@@ -79,16 +85,18 @@
                 {{end}}
 
                 {{/* Activity net total */}}
-                <tr class="fs-subtotal-row fs-bold-total">
+                <tr class="fs-subtotal-row fs-bold-total fs-section-body">
                     <td class="fs-col-name">{{.NetLabel}}</td>
                     <td class="fs-col-amount{{if not .IsPositive}} fs-negative{{end}}">{{.NetTotal}}</td>
                 </tr>
-                <tr class="fs-spacer-row"><td colspan="2"></td></tr>
+                <tr class="fs-spacer-row fs-section-body"><td colspan="2"></td></tr>
 
-                {{end}}{{/* end range .Activities */}}
+            </tbody>
+            {{end}}{{/* end range .Activities */}}
 
-                {{/* ─── Net Change Summary ─── */}}
-                {{if .Verification}}
+            {{/* ─── Net Change Summary — outside collapsible sections ─── */}}
+            {{if .Verification}}
+            <tbody>
                 <tr class="fs-grand-total-separator"><td colspan="2"></td></tr>
                 <tr class="fs-grand-total-row">
                     <td class="fs-col-name">NET CHANGE IN CASH</td>
@@ -128,9 +136,11 @@
                         {{end}}
                     </td>
                 </tr>
-                {{end}}
             </tbody>
+            {{end}}
         </table>
+        </div>
+        <script src="/assets/js/fycha/fs-collapse.js?v={{.CacheVersion}}"></script>
     </div>
 
 </div>
