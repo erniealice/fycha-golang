@@ -1,0 +1,91 @@
+{{/* Full page -- for direct access / non-HTMX */}}
+{{define "loan-payments"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial -- for HTMX navigation */}}
+{{define "loan-payments-content"}}
+<div class="page-content page-content--table" data-page-css="fycha">
+
+  {{template "page-header" .}}
+
+  <div class="page-body">
+    {{template "table-card" .Table}}
+  </div>
+
+  {{/* Record payment sheet-form */}}
+  {{template "sheet-form" dict
+    "ID"          "record-payment-sheet"
+    "Title"       "Record Payment"
+    "LoadURL"     .RecordPaymentURL
+    "FooterType"  "save"
+    "SaveLabel"   "Post Payment"
+    "CancelLabel" "Cancel"
+  }}
+
+</div>
+{{end}}
+
+{{/*---------------------------------------------------------------------------
+  Record Loan Payment form fragment (loaded into sheet via HTMX).
+  Template name: "loan-payment-form"
+  ---------------------------------------------------------------------------*/}}
+{{define "loan-payment-form"}}
+<form
+  id="loan-payment-form"
+  hx-post="{{.RecordPaymentURL}}"
+  hx-target="#record-payment-sheet"
+  hx-swap="outerHTML"
+  class="form"
+>
+  {{if .LoanID}}
+  <input type="hidden" name="loan_id" value="{{.LoanID}}">
+  {{end}}
+
+  <div class="form-section">
+    {{template "form-row" dict "Cols" 2 "Fields" (list
+      (dict "Type" "text"   "ID" "payment_number"   "Name" "payment_number"   "Label" "Payment #"      "Required" true  "Placeholder" "e.g. PAY-001")
+      (dict "Type" "date"   "ID" "payment_date"     "Name" "payment_date"     "Label" "Payment Date"   "Required" true)
+    )}}
+  </div>
+
+  <div class="form-section">
+    <p class="form-section__title">Payment Breakdown</p>
+    {{template "form-row" dict "Cols" 3 "Fields" (list
+      (dict "Type" "number" "ID" "principal_amount" "Name" "principal_amount" "Label" "Principal"      "Required" false "Placeholder" "0.00" "Step" "0.01" "Min" "0")
+      (dict "Type" "number" "ID" "interest_amount"  "Name" "interest_amount"  "Label" "Interest"       "Required" false "Placeholder" "0.00" "Step" "0.01" "Min" "0")
+      (dict "Type" "number" "ID" "fee_amount"       "Name" "fee_amount"       "Label" "Fees (PFRS 9)"  "Required" false "Placeholder" "0.00" "Step" "0.01" "Min" "0")
+    )}}
+    {{template "form-group" dict
+      "Type"        "number"
+      "ID"          "total_amount"
+      "Name"        "total_amount"
+      "Label"       "Total Payment"
+      "Required"    true
+      "Placeholder" "0.00"
+      "Step"        "0.01"
+      "Min"         "0.01"
+    }}
+    {{template "form-group" dict
+      "Type"        "number"
+      "ID"          "remaining_balance"
+      "Name"        "remaining_balance"
+      "Label"       "Remaining Balance After Payment"
+      "Required"    true
+      "Placeholder" "0.00"
+      "Step"        "0.01"
+      "Min"         "0"
+    }}
+  </div>
+
+  <div class="form-section">
+    {{template "form-group" dict
+      "Type"        "textarea"
+      "ID"          "notes"
+      "Name"        "notes"
+      "Label"       "Notes"
+      "Placeholder" "Optional payment notes or reference"
+    }}
+  </div>
+</form>
+{{end}}

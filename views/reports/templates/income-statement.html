@@ -1,0 +1,127 @@
+{{/* Full page — for direct access / non-HTMX */}}
+{{define "income-statement"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial — for HTMX navigation */}}
+{{define "income-statement-content"}}
+<div class="page-content report-layout financial-statement-layout"
+     data-page-css="/assets/css/fycha/fycha-report.css?v={{.CacheVersion}}">
+
+    {{/* ─── Period Selector ─── */}}
+    <div class="report-period-bar">
+        <div class="report-period-presets">
+            {{range .PeriodPresets}}
+            <a class="period-preset-btn{{if .Selected}} active{{end}}"
+               hx-get="{{$.CurrentPath}}?period={{.Value}}"
+               hx-target="closest .main"
+               hx-swap="innerHTML"
+               hx-push-url="true"
+               href="{{$.CurrentPath}}?period={{.Value}}">{{.Label}}</a>
+            {{end}}
+        </div>
+        <div class="report-period-label">
+            Showing: <strong>{{.PeriodLabel}}</strong>
+        </div>
+        <div class="report-header-actions">
+            <button type="button" class="btn btn--secondary btn--sm" disabled title="Export coming soon">
+                {{template "icon-download"}} Export
+            </button>
+        </div>
+    </div>
+
+    {{/* ─── KPI Summary Bar ─── */}}
+    <div class="report-summary-bar">
+        <div class="summary-metric">
+            <span class="summary-label">Total Revenue</span>
+            <span class="summary-value">{{.TotalRevenue}}</span>
+        </div>
+        <div class="summary-metric">
+            <span class="summary-label">Total Expenses</span>
+            <span class="summary-value">{{.TotalExpenses}}</span>
+        </div>
+        <div class="summary-metric highlight">
+            <span class="summary-label">Net Income</span>
+            <span class="summary-value badge {{.NetIncomeVariant}}">{{.NetIncome}}</span>
+        </div>
+    </div>
+
+    {{/* ─── Statement Body ─── */}}
+    <div class="financial-statement-card">
+        <div class="financial-statement-header">
+            <div class="financial-statement-title">Income Statement (Profit &amp; Loss)</div>
+            <div class="financial-statement-subtitle">{{.PeriodLabel}}</div>
+        </div>
+
+        <table class="financial-statement-table">
+            <thead>
+                <tr class="fs-header-row">
+                    <th class="fs-col-code">Code</th>
+                    <th class="fs-col-name">Account</th>
+                    <th class="fs-col-amount">This Period</th>
+                    <th class="fs-col-amount">Prior Period</th>
+                    <th class="fs-col-change">Change</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Sections}}
+                {{$section := .}}
+
+                {{/* Section header row */}}
+                <tr class="fs-section-header-row">
+                    <td colspan="5" class="fs-section-title">{{.Title}}</td>
+                </tr>
+
+                {{/* Direct lines (no sub-groups) */}}
+                {{range .Lines}}
+                <tr class="fs-line-row{{if .IsTotal}} fs-total-row{{end}}{{if .IsSeparator}} fs-separator-row{{end}}">
+                    <td class="fs-col-code">{{.Code}}</td>
+                    <td class="fs-col-name{{if .IsTotal}} fs-total-label{{end}}">{{.Name}}</td>
+                    <td class="fs-col-amount{{if .IsNegative}} fs-negative{{end}}">{{.CurrentPeriod}}</td>
+                    <td class="fs-col-amount fs-prior-period">{{.PriorPeriod}}</td>
+                    <td class="fs-col-change">{{.Change}}</td>
+                </tr>
+                {{end}}
+
+                {{/* Sub-groups within section */}}
+                {{range .Groups}}
+                <tr class="fs-group-header-row">
+                    <td colspan="5" class="fs-group-title">{{.Title}}</td>
+                </tr>
+                {{range .Lines}}
+                <tr class="fs-line-row fs-group-line">
+                    <td class="fs-col-code">{{.Code}}</td>
+                    <td class="fs-col-name">{{.Name}}</td>
+                    <td class="fs-col-amount{{if .IsNegative}} fs-negative{{end}}">{{.CurrentPeriod}}</td>
+                    <td class="fs-col-amount fs-prior-period">{{.PriorPeriod}}</td>
+                    <td class="fs-col-change">{{.Change}}</td>
+                </tr>
+                {{end}}
+                {{/* Group subtotal */}}
+                <tr class="fs-group-subtotal-row">
+                    <td class="fs-col-code"></td>
+                    <td class="fs-col-name">Subtotal: {{.Title}}</td>
+                    <td class="fs-col-amount">{{.Subtotal}}</td>
+                    <td class="fs-col-amount fs-prior-period"></td>
+                    <td class="fs-col-change"></td>
+                </tr>
+                {{end}}
+
+                {{/* Section subtotal */}}
+                {{if .Subtotal}}
+                <tr class="fs-subtotal-row{{if .Bold}} fs-bold-total{{end}}">
+                    <td class="fs-col-code"></td>
+                    <td class="fs-col-name">{{if .Bold}}{{.Title}}{{else}}Total {{.Title}}{{end}}</td>
+                    <td class="fs-col-amount">{{.Subtotal}}</td>
+                    <td class="fs-col-amount fs-prior-period"></td>
+                    <td class="fs-col-change"></td>
+                </tr>
+                {{end}}
+
+                {{end}}{{/* end range .Sections */}}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{{end}}

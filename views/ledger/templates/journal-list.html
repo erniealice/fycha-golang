@@ -1,0 +1,14 @@
+{{/* Full page -- for direct access / non-HTMX */}}
+{{define "journal-list"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial -- for HTMX navigation */}}
+{{define "journal-list-content"}}
+<div class="page-content page-content--table" data-page-css="/assets/css/fycha/fycha-journal-list.css?v={{.CacheVersion}}">
+  {{template "table-card" .Table}}
+</div>
+{{template "sheet-form" .}}
+<script src="/assets/js/pyeza/sheet.js?v={{.CacheVersion}}"></script>
+<script src="/assets/js/fycha/journal-form.js?v={{.CacheVersion}}"></script>
+{{end}}

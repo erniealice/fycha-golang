@@ -1,0 +1,77 @@
+{{/* Full page -- for direct access / non-HTMX */}}
+{{define "amortization"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial -- for HTMX navigation */}}
+{{define "amortization-content"}}
+<div class="page-content" data-page-css="fycha">
+
+  {{template "page-header" .}}
+
+  <div class="page-body">
+    {{if .Schedule}}
+    <div class="card">
+      <div class="card__header">
+        <h2 class="card__title">Amortization Schedule</h2>
+        <p class="card__subtitle">{{.LoanNumber}} — {{.LenderName}}</p>
+      </div>
+      <div class="card__body">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="column-label">#</th>
+              <th class="column-label">Due Date</th>
+              <th class="column-label text-right">Opening Balance</th>
+              <th class="column-label text-right">Principal</th>
+              <th class="column-label text-right">Interest</th>
+              <th class="column-label text-right">Payment</th>
+              <th class="column-label text-right">Closing Balance</th>
+              <th class="column-label">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range .Schedule}}
+            <tr>
+              <td>{{.Period}}</td>
+              <td>{{.DueDate}}</td>
+              <td class="text-right">{{.OpeningBalance}}</td>
+              <td class="text-right">{{.PrincipalPayment}}</td>
+              <td class="text-right">{{.InterestPayment}}</td>
+              <td class="text-right">{{.TotalPayment}}</td>
+              <td class="text-right">{{.ClosingBalance}}</td>
+              <td>
+                {{if eq .Status "paid"}}
+                  {{template "badge" dict "Variant" "sage" "Label" "Paid"}}
+                {{else if eq .Status "due"}}
+                  {{template "badge" dict "Variant" "amber" "Label" "Due"}}
+                {{else}}
+                  {{template "badge" dict "Variant" "default" "Label" "Upcoming"}}
+                {{end}}
+              </td>
+            </tr>
+            {{end}}
+          </tbody>
+          <tfoot>
+            <tr class="table-totals-row">
+              <td colspan="3"><strong>TOTALS</strong></td>
+              <td class="text-right"><strong>{{.TotalPrincipal}}</strong></td>
+              <td class="text-right"><strong>{{.TotalInterest}}</strong></td>
+              <td class="text-right"><strong>{{.TotalPayment}}</strong></td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+    {{else}}
+    {{template "empty-state" dict
+      "Icon"    "icon-table-cells"
+      "Title"   "No amortization schedule"
+      "Message" "Select a loan to view its amortization schedule."
+    }}
+    {{end}}
+  </div>
+
+</div>
+{{end}}

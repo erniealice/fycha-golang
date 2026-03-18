@@ -1,0 +1,133 @@
+{{/* Full page — for direct access / non-HTMX */}}
+{{define "balance-sheet"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial — for HTMX navigation */}}
+{{define "balance-sheet-content"}}
+<div class="page-content report-layout financial-statement-layout"
+     data-page-css="/assets/css/fycha/fycha-report.css?v={{.CacheVersion}}">
+
+    {{/* ─── As-of Date Selector ─── */}}
+    <div class="report-period-bar">
+        <form class="report-asof-form"
+              hx-get="{{.CurrentPath}}"
+              hx-target="closest .main"
+              hx-swap="innerHTML"
+              hx-push-url="true">
+            <label for="bs-asof" class="report-asof-label">As of:</label>
+            <input type="date" id="bs-asof" name="as_of"
+                   value="{{.AsOfDate}}"
+                   class="form-control form-control--sm report-asof-input" />
+            <button type="submit" class="btn btn--primary btn--sm">Generate</button>
+        </form>
+        <div class="report-header-actions">
+            <button type="button" class="btn btn--secondary btn--sm" disabled title="Export coming soon">
+                {{template "icon-download"}} Export
+            </button>
+        </div>
+    </div>
+
+    {{/* ─── KPI Summary Bar ─── */}}
+    <div class="report-summary-bar">
+        <div class="summary-metric">
+            <span class="summary-label">Total Assets</span>
+            <span class="summary-value">{{.TotalAssets}}</span>
+        </div>
+        <div class="summary-metric">
+            <span class="summary-label">Total Liabilities</span>
+            <span class="summary-value">{{.TotalLiabilities}}</span>
+        </div>
+        <div class="summary-metric highlight">
+            <span class="summary-label">Total Equity</span>
+            <span class="summary-value">{{.TotalEquity}}</span>
+        </div>
+    </div>
+
+    {{/* ─── A = L + E Verification ─── */}}
+    {{if .IsBalanced}}
+    <div class="alert alert--success">
+        {{template "icon-check-circle"}}
+        <span>{{.EquationMessage}}</span>
+    </div>
+    {{else}}
+    <div class="alert alert--danger">
+        {{template "icon-alert-triangle"}}
+        <span>{{.EquationMessage}}</span>
+    </div>
+    {{end}}
+
+    {{/* ─── Statement Body ─── */}}
+    <div class="financial-statement-card">
+        <div class="financial-statement-header">
+            <div class="financial-statement-title">Statement of Financial Position</div>
+            <div class="financial-statement-subtitle">As of {{.AsOfDate}}</div>
+        </div>
+
+        <table class="financial-statement-table">
+            <thead>
+                <tr class="fs-header-row">
+                    <th class="fs-col-code">Code</th>
+                    <th class="fs-col-name">Account</th>
+                    <th class="fs-col-amount">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Sections}}
+
+                {{/* Element section header */}}
+                <tr class="fs-section-header-row">
+                    <td colspan="3" class="fs-section-title">{{.Title}}</td>
+                </tr>
+
+                {{/* Classifications (Current / Non-Current) */}}
+                {{range .Classifications}}
+                <tr class="fs-group-header-row">
+                    <td colspan="3" class="fs-group-title">{{.Title}}</td>
+                </tr>
+                {{range .Lines}}
+                <tr class="fs-line-row{{if .IsSubtotal}} fs-subtotal-row{{end}}{{if .IsSeparator}} fs-separator-row{{end}}">
+                    <td class="fs-col-code">{{.Code}}</td>
+                    <td class="fs-col-name{{if .IsNegative}} fs-contra-label{{end}}">{{.Name}}</td>
+                    <td class="fs-col-amount{{if .IsNegative}} fs-negative{{end}}">{{.Amount}}</td>
+                </tr>
+                {{end}}
+                {{/* Classification subtotal */}}
+                <tr class="fs-group-subtotal-row">
+                    <td class="fs-col-code"></td>
+                    <td class="fs-col-name">Total {{.Title}}</td>
+                    <td class="fs-col-amount">{{.Subtotal}}</td>
+                </tr>
+                {{end}}
+
+                {{/* Direct lines (Equity section) */}}
+                {{range .Lines}}
+                <tr class="fs-line-row{{if .IsSubtotal}} fs-subtotal-row{{end}}">
+                    <td class="fs-col-code">{{.Code}}</td>
+                    <td class="fs-col-name{{if .IsNegative}} fs-contra-label{{end}}">{{.Name}}</td>
+                    <td class="fs-col-amount{{if .IsNegative}} fs-negative{{end}}">{{.Amount}}</td>
+                </tr>
+                {{end}}
+
+                {{/* Element total */}}
+                <tr class="fs-subtotal-row{{if .IsBold}} fs-bold-total{{end}}">
+                    <td class="fs-col-code"></td>
+                    <td class="fs-col-name">TOTAL {{.Title}}</td>
+                    <td class="fs-col-amount">{{.Total}}</td>
+                </tr>
+                <tr class="fs-spacer-row"><td colspan="3"></td></tr>
+
+                {{end}}{{/* end range .Sections */}}
+
+                {{/* Grand total: Total Liabilities + Equity */}}
+                <tr class="fs-grand-total-row">
+                    <td class="fs-col-code"></td>
+                    <td class="fs-col-name">TOTAL LIABILITIES + EQUITY</td>
+                    <td class="fs-col-amount">{{.TotalLandE}}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{{end}}

@@ -1,0 +1,101 @@
+{{/*
+Account drawer form -- loaded into #sheetContent via HTMX.
+Used by both Add and Edit actions.
+Data: .Code, .Name, .Element, .Class, .ParentCode, .Group,
+      .IsGroup, .Active, .Description, .CashFlowClass,
+      .ElementOptions, .ClassOptions, .CashFlowOptions,
+      .ID, .FormAction, .IsEdit, .Labels, .CommonLabels
+*/}}
+{{define "account-drawer-form"}}
+<form hx-post="{{.FormAction}}" hx-swap="none" hx-on::after-request="Sheet.handleResponse(event)">
+  {{if .ID}}<input type="hidden" name="id" value="{{.ID}}">{{end}}
+
+  <div class="sheet-body">
+
+    <div class="form-row">
+      {{template "form-group" (dict
+        "Type" "text"
+        "Name" "code"
+        "Label" .Labels.Code
+        "Value" .Code
+        "Required" true
+        "Placeholder" .Labels.CodePlaceholder
+      )}}
+      {{template "form-group" (dict
+        "Type" "text"
+        "Name" "name"
+        "Label" .Labels.Name
+        "Value" .Name
+        "Required" true
+        "Placeholder" .Labels.NamePlaceholder
+      )}}
+    </div>
+
+    <div class="form-row">
+      {{template "form-group" (dict
+        "Type" "select"
+        "Name" "element"
+        "Label" .Labels.Element
+        "Value" .Element
+        "Required" true
+        "Options" .ElementOptions
+      )}}
+      {{template "form-group" (dict
+        "Type" "select"
+        "Name" "class"
+        "Label" .Labels.Classification
+        "Value" .Class
+        "Required" true
+        "Options" .ClassOptions
+      )}}
+    </div>
+
+    <div class="form-row single">
+      {{template "form-group" (dict
+        "Type" "text"
+        "Name" "parent_code"
+        "Label" .Labels.ParentAccount
+        "Value" .ParentCode
+        "Placeholder" .Labels.ParentAccountPlaceholder
+      )}}
+    </div>
+
+    <div class="form-row single">
+      {{template "form-group" (dict
+        "Type" "text"
+        "Name" "group"
+        "Label" .Labels.Group
+        "Value" .Group
+      )}}
+    </div>
+
+    <div class="form-row">
+      {{template "toggle" (dict "Name" "is_group" "Label" .Labels.IsGroup "Checked" .IsGroup "Value" "true")}}
+      {{template "toggle" (dict "Name" "active" "Label" .Labels.Active "Checked" .Active "Value" "true")}}
+    </div>
+
+    <div class="form-row single">
+      {{template "form-group" (dict
+        "Type" "textarea"
+        "Name" "description"
+        "Label" .Labels.Description
+        "Value" .Description
+        "Placeholder" .Labels.DescriptionPlaceholder
+      )}}
+    </div>
+
+    <div class="form-section-title">{{.Labels.CashFlowSection}}</div>
+
+    <div class="form-row single">
+      {{template "form-group" (dict
+        "Type" "select"
+        "Name" "cash_flow_class"
+        "Label" .Labels.CashFlowClassification
+        "Value" .CashFlowClass
+        "Options" .CashFlowOptions
+      )}}
+    </div>
+
+  </div>
+</form>
+{{end}}

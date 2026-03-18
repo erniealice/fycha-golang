@@ -1,0 +1,87 @@
+{{/* Full page — for direct access / non-HTMX */}}
+{{define "trial-balance"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial — for HTMX navigation */}}
+{{define "trial-balance-content"}}
+<div class="page-content ledger-report-layout"
+     data-page-css="/assets/css/fycha/fycha-ledger-report.css?v={{.CacheVersion}}">
+
+    {{/* ─── Filter Bar ─── */}}
+    <div class="ledger-report-filters">
+        <form class="ledger-filter-form"
+              hx-get="{{.CurrentPath}}"
+              hx-target="closest .page-content"
+              hx-swap="innerHTML"
+              hx-push-url="true">
+
+            <div class="ledger-filter-row">
+                <div class="ledger-filter-group">
+                    <label class="ledger-filter-label" for="tb-as-of">As of Date *</label>
+                    <input type="date" class="ledger-filter-input" name="as_of" id="tb-as-of" value="{{.AsOfDate}}">
+                </div>
+                <div class="ledger-filter-actions ledger-filter-actions--inline">
+                    <button type="submit" class="btn btn-primary">Generate</button>
+                    {{if .HasData}}
+                    <button type="button" class="btn btn-ghost btn-icon" onclick="window.print()" title="Print">
+                        {{template "icon-printer"}}
+                        Print
+                    </button>
+                    {{end}}
+                </div>
+            </div>
+
+        </form>
+    </div>
+
+    {{/* ─── Balance indicator ─── */}}
+    {{if .HasData}}
+    {{if .Totals.IsBalanced}}
+    <div class="alert alert--success ledger-balance-alert">
+        <span class="alert__icon">{{template "icon-check-circle"}}</span>
+        <div class="alert__body">
+            <p class="alert__title">Trial Balance is BALANCED</p>
+            <p class="alert__message">Total Debits = Total Credits = {{.Totals.TotalDebitStr}}</p>
+        </div>
+    </div>
+    {{else}}
+    <div class="alert alert--danger ledger-balance-alert">
+        <span class="alert__icon">{{template "icon-alert-circle"}}</span>
+        <div class="alert__body">
+            <p class="alert__title">Trial Balance is UNBALANCED</p>
+            <p class="alert__message">
+                Debits: {{.Totals.TotalDebitStr}} &nbsp;|&nbsp;
+                Credits: {{.Totals.TotalCreditStr}} &nbsp;|&nbsp;
+                Difference: {{.Totals.DifferenceStr}}
+            </p>
+        </div>
+    </div>
+    {{end}}
+    {{end}}
+
+    {{/* ─── Report heading ─── */}}
+    {{if .HasData}}
+    <div class="ledger-report-account-heading">
+        <span class="ledger-account-name">As of {{.AsOfDate}}</span>
+    </div>
+    {{end}}
+
+    {{/* ─── Grouped table ─── */}}
+    {{if .HasData}}
+    <div class="report-table-wrapper">
+        {{template "table-card" .Table}}
+    </div>
+    {{else}}
+    <div class="ledger-report-info">
+        <div class="alert alert--info">
+            <span class="alert__icon">{{template "icon-info"}}</span>
+            <div class="alert__body">
+                <p class="alert__message">Select a date above and click Generate to view the trial balance.</p>
+            </div>
+        </div>
+    </div>
+    {{end}}
+
+</div>
+{{end}}

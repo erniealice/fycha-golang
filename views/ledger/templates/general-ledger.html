@@ -1,0 +1,120 @@
+{{/* Full page — for direct access / non-HTMX */}}
+{{define "general-ledger"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial — for HTMX navigation */}}
+{{define "general-ledger-content"}}
+<div class="page-content ledger-report-layout"
+     data-page-css="/assets/css/fycha/fycha-ledger-report.css?v={{.CacheVersion}}">
+
+    {{/* ─── Filter Bar ─── */}}
+    <div class="ledger-report-filters">
+        <form class="ledger-filter-form"
+              hx-get="{{.CurrentPath}}"
+              hx-target="closest .page-content"
+              hx-swap="innerHTML"
+              hx-push-url="true">
+
+            {{/* Account selector */}}
+            <div class="ledger-filter-group ledger-filter-group--account">
+                <label class="ledger-filter-label" for="gl-account">Account *</label>
+                <select class="ledger-filter-select" name="account_id" id="gl-account">
+                    <option value="">— Select an account —</option>
+                    {{/* Phase 3: options populated via mock; Phase 4: server-rendered from account list */}}
+                    <option value="acc-1110" {{if eq .AccountID "acc-1110"}}selected{{end}}>1110 — Cash on Hand</option>
+                    <option value="acc-1120" {{if eq .AccountID "acc-1120"}}selected{{end}}>1120 — BDO Savings</option>
+                    <option value="acc-1130" {{if eq .AccountID "acc-1130"}}selected{{end}}>1130 — BPI Checking</option>
+                    <option value="acc-1210" {{if eq .AccountID "acc-1210"}}selected{{end}}>1210 — Accounts Receivable</option>
+                    <option value="acc-2010" {{if eq .AccountID "acc-2010"}}selected{{end}}>2010 — Accounts Payable</option>
+                    <option value="acc-4010" {{if eq .AccountID "acc-4010"}}selected{{end}}>4010 — Service Revenue</option>
+                    <option value="acc-5010" {{if eq .AccountID "acc-5010"}}selected{{end}}>5010 — Cost of Goods Sold</option>
+                    <option value="acc-5020" {{if eq .AccountID "acc-5020"}}selected{{end}}>5020 — Salaries Expense</option>
+                </select>
+            </div>
+
+            {{/* Date range */}}
+            <div class="ledger-filter-row">
+                <div class="ledger-filter-group">
+                    <label class="ledger-filter-label" for="gl-start">Start Date</label>
+                    <input type="date" class="ledger-filter-input" name="start" id="gl-start" value="{{.StartDate}}">
+                </div>
+                <div class="ledger-filter-group">
+                    <label class="ledger-filter-label" for="gl-end">End Date</label>
+                    <input type="date" class="ledger-filter-input" name="end" id="gl-end" value="{{.EndDate}}">
+                </div>
+            </div>
+
+            <div class="ledger-filter-actions">
+                <button type="submit" class="btn btn-primary">Apply</button>
+                <a href="{{.CurrentPath}}" class="btn btn-ghost"
+                   hx-get="{{.CurrentPath}}"
+                   hx-target="closest .page-content"
+                   hx-swap="innerHTML"
+                   hx-push-url="true">Clear</a>
+                {{if .HasData}}
+                <button type="button" class="btn btn-ghost btn-icon" onclick="window.print()" title="Print">
+                    {{template "icon-printer"}}
+                    Print
+                </button>
+                {{end}}
+            </div>
+        </form>
+    </div>
+
+    {{/* ─── No account selected: info state ─── */}}
+    {{if not .HasData}}
+    {{if eq .AccountID ""}}
+    <div class="ledger-report-info">
+        <div class="alert alert--info">
+            <span class="alert__icon">{{template "icon-info"}}</span>
+            <div class="alert__body">
+                <p class="alert__message">Select an account above to view its detailed transaction history.</p>
+            </div>
+        </div>
+    </div>
+    {{else}}
+    <div class="ledger-report-info">
+        <div class="alert alert--default">
+            <span class="alert__icon">{{template "icon-search"}}</span>
+            <div class="alert__body">
+                <p class="alert__message">No transactions found for the selected account and date range.</p>
+            </div>
+        </div>
+    </div>
+    {{end}}
+    {{end}}
+
+    {{/* ─── Report content (only when account is selected and data exists) ─── */}}
+    {{if .HasData}}
+
+    {{/* ─── Account heading ─── */}}
+    <div class="ledger-report-account-heading">
+        <span class="ledger-account-code">{{.AccountCode}}</span>
+        <span class="ledger-account-name">{{.AccountName}}</span>
+        <span class="ledger-date-range">{{.StartDate}} to {{.EndDate}}</span>
+    </div>
+
+    {{/* ─── Summary stats ─── */}}
+    <div class="report-summary-bar">
+        {{range .SummaryMetrics}}
+        <div class="summary-metric{{if .Highlight}} highlight{{end}}">
+            <span class="summary-label">{{.Label}}</span>
+            {{if .Variant}}
+            <span class="summary-value badge {{.Variant}}">{{.Value}}</span>
+            {{else}}
+            <span class="summary-value">{{.Value}}</span>
+            {{end}}
+        </div>
+        {{end}}
+    </div>
+
+    {{/* ─── Entries table ─── */}}
+    <div class="report-table-wrapper">
+        {{template "table-card" .Table}}
+    </div>
+
+    {{end}}{{/* end .HasData */}}
+
+</div>
+{{end}}

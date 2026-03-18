@@ -1,0 +1,32 @@
+{{/* Full page -- for direct access / non-HTMX */}}
+{{define "loan-list"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial -- for HTMX navigation */}}
+{{define "loan-list-content"}}
+<div class="page-content page-content--table" data-page-css="fycha">
+
+  {{template "page-header" .}}
+
+  {{/* Status tabs: Active / Completed */}}
+  <div class="page-tabs">
+    {{template "tabs" dict "Variant" "sub" "Items" .StatusTabs "ActiveKey" .ActiveStatus}}
+  </div>
+
+  <div class="page-body">
+    {{template "table-card" .Table}}
+  </div>
+
+  {{/* Add loan sheet-form */}}
+  {{template "sheet-form" dict
+    "ID"          "add-loan-sheet"
+    "Title"       "Add Loan"
+    "LoadURL"     ""
+    "FooterType"  "save"
+    "SaveLabel"   "Save Loan"
+    "CancelLabel" "Cancel"
+  }}
+
+</div>
+{{end}}

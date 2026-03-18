@@ -1,0 +1,154 @@
+{{/*
+Journal entry drawer form -- loaded into #sheetContent via HTMX.
+Used by both Add (GET /action/ledger/journals/add) and Edit actions.
+
+Data: .FormAction, .IsEdit, .ID, .Date, .Description, .Notes, .Lines,
+      .Labels (JournalFormLabels), .CommonLabels
+
+Lines: []FormLine -- each has Index, AccountID, AccountCode, AccountName, Debit, Credit, Memo
+
+Balance check and running totals are computed client-side by journal-form.js.
+The "Post" submit button is disabled while the entry is unbalanced.
+*/}}
+{{define "journal-drawer-form"}}
+<form id="journal-entry-form" hx-post="{{.FormAction}}" hx-swap="none" hx-on::after-request="Sheet.handleResponse(event)">
+  {{if .ID}}<input type="hidden" name="id" value="{{.ID}}">{{end}}
+
+  <div class="sheet-body">
+
+    {{/* ---- Entry Details section ---- */}}
+    <div class="form-section-title">{{.Labels.EntryDetails}}</div>
+
+    <div class="form-row">
+      {{template "form-group" (dict
+        "Type" "date"
+        "Name" "date"
+        "Label" .Labels.Date
+        "Value" .Date
+        "Required" true
+        "Placeholder" .Labels.DatePlaceholder
+      )}}
+    </div>
+
+    <div class="form-row single">
+      {{template "form-group" (dict
+        "Type" "textarea"
+        "Name" "description"
+        "Label" .Labels.Description
+        "Value" .Description
+        "Required" true
+        "Placeholder" .Labels.DescriptionPlaceholder
+      )}}
+    </div>
+
+    <div class="form-row single">
+      {{template "form-group" (dict
+        "Type" "textarea"
+        "Name" "notes"
+        "Label" .Labels.Notes
+        "Value" .Notes
+        "Placeholder" .Labels.NotesPlaceholder
+      )}}
+    </div>
+
+    {{/* ---- Journal Lines section ---- */}}
+    <div class="form-section-title">{{.Labels.JournalLines}}</div>
+
+    <div class="journal-lines-editor" id="journal-lines-editor">
+      <table class="journal-lines-table">
+        <thead>
+          <tr>
+            <th class="col-num">{{.Labels.LineNumber}}</th>
+            <th class="col-account">{{.Labels.Account}}</th>
+            <th class="col-debit">{{.Labels.Debit}}</th>
+            <th class="col-credit">{{.Labels.Credit}}</th>
+            <th class="col-memo">{{.Labels.Memo}}</th>
+            <th class="col-remove"></th>
+          </tr>
+        </thead>
+        <tbody id="journal-lines-body">
+          {{range .Lines}}
+          <tr class="journal-line" data-line="{{.Index}}">
+            <td class="col-num">{{.Index}}</td>
+            <td class="col-account">
+              {{if .AccountID}}
+              <input type="hidden" name="account_id[{{.Index}}]" value="{{.AccountID}}" class="je-account-id">
+              {{else}}
+              <input type="hidden" name="account_id[{{.Index}}]" value="" class="je-account-id">
+              {{end}}
+              <input type="text" class="form-control je-account-search"
+                     placeholder="{{$.Labels.AccountPlaceholder}}"
+                     value="{{if .AccountCode}}{{.AccountCode}} — {{.AccountName}}{{end}}"
+                     autocomplete="off"
+                     data-line="{{.Index}}">
+            </td>
+            <td class="col-debit">
+              <input type="number" name="debit[{{.Index}}]" class="form-control je-debit"
+                     value="{{.Debit}}" min="0" step="0.01"
+                     placeholder="0.00"
+                     data-line="{{.Index}}">
+            </td>
+            <td class="col-credit">
+              <input type="number" name="credit[{{.Index}}]" class="form-control je-credit"
+                     value="{{.Credit}}" min="0" step="0.01"
+                     placeholder="0.00"
+                     data-line="{{.Index}}">
+            </td>
+            <td class="col-memo">
+              <input type="text" name="memo[{{.Index}}]" class="form-control je-memo"
+                     value="{{.Memo}}"
+                     placeholder="">
+            </td>
+            <td class="col-remove">
+              <button type="button" class="btn-icon btn-icon--danger je-remove-line"
+                      data-line="{{.Index}}" title="{{$.Labels.RemoveLine}}">
+                {{template "icon-x"}}
+              </button>
+            </td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+
+      <div class="journal-lines-footer">
+        <button type="button" class="btn btn--ghost btn--sm" id="je-add-line">
+          {{template "icon-plus"}}
+          {{.Labels.AddLine}}
+        </button>
+      </div>
+    </div>
+
+    {{/* ---- Balance alert (updated client-side) ---- */}}
+    <div id="je-balance-alert" class="alert alert--info je-balance-alert" aria-live="polite">
+      <span id="je-balance-icon">{{template "icon-info"}}</span>
+      <span id="je-balance-message">Enter debits and credits above</span>
+    </div>
+
+  </div>
+
+  {{/* ---- Sheet footer ---- */}}
+  <div class="sheet-footer">
+    <button type="button" class="btn btn--ghost" onclick="Sheet.close()">Cancel</button>
+    <div class="sheet-footer__actions">
+      <button type="submit" name="submit" value="draft" class="btn btn--secondary">
+        {{.Labels.SaveDraft}}
+      </button>
+      <button type="submit" name="submit" value="post" class="btn btn--primary" id="je-post-btn" disabled>
+        {{.Labels.PostEntry}}
+      </button>
+    </div>
+  </div>
+
+</form>
+
+{{/*
+journal-form.js handles:
+  - Running totals (debit sum, credit sum, difference)
+  - Balance alert variant switching (info → success/danger)
+  - Post button enable/disable when balanced
+  - Add line button: appends a new row with next index
+  - Remove line button: removes the row (minimum 2 lines)
+  - Debit/Credit mutual exclusion: entering debit clears credit on same line
+  - Account search autocomplete via GET /action/ledger/accounts/search?q=...
+*/}}
+{{end}}

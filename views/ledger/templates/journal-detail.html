@@ -1,0 +1,185 @@
+{{/* Full page -- for direct access / non-HTMX */}}
+{{define "journal-detail"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial -- for HTMX navigation */}}
+{{define "journal-detail-content"}}
+<div class="page-content detail-layout" data-page-css="/assets/css/fycha/fycha-journal-detail.css?v={{.CacheVersion}}">
+
+  {{/* ---- source alert (auto-generated entries only) ---- */}}
+  {{if and .SourceID (ne .SourceType "Manual")}}
+  <div class="alert alert--info">
+    {{template "icon-link"}}
+    <span>{{.Labels.Detail.SourceLabel}}: {{.SourceType}}</span>
+    {{if .SourceHref}}
+    <a href="{{.SourceHref}}" class="alert__link">{{.Labels.Detail.ViewSource}}</a>
+    {{end}}
+  </div>
+  {{end}}
+
+  {{/* ---- stat cards ---- */}}
+  <div class="detail-stats">
+    <div class="stat-card stat-card--terracotta">
+      <div class="stat-card__icon">{{template "icon-trending-up"}}</div>
+      <div class="stat-card__body">
+        <div class="stat-value">{{.TotalDebit}}</div>
+        <div class="stat-label">{{.Labels.Detail.Stats.TotalDebit}}</div>
+      </div>
+    </div>
+    <div class="stat-card stat-card--navy">
+      <div class="stat-card__icon">{{template "icon-trending-down"}}</div>
+      <div class="stat-card__body">
+        <div class="stat-value">{{.TotalCredit}}</div>
+        <div class="stat-label">{{.Labels.Detail.Stats.TotalCredit}}</div>
+      </div>
+    </div>
+  </div>
+
+  {{/* ---- entry metadata card ---- */}}
+  <div class="detail-cards">
+    <div class="card">
+      <div class="card__header">
+        <h4 class="card__title">{{.Labels.Detail.Info.Title}}</h4>
+        {{if .CanEdit}}
+        <a href="{{.EditURL}}" class="btn btn--secondary btn--sm"
+           hx-get="{{.EditURL}}" hx-target="#sheetContent" hx-swap="innerHTML" hx-push-url="false"
+           hx-on::after-request="Sheet.open()">
+          {{template "icon-edit"}}
+          <span>{{.Labels.Actions.Edit}}</span>
+        </a>
+        {{end}}
+      </div>
+      <dl class="card__fields">
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.Date}}</dt>
+          <dd>{{.EntryDate}}</dd>
+        </div>
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.Reference}}</dt>
+          <dd>{{.EntryNumber}}</dd>
+        </div>
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.Description}}</dt>
+          <dd>{{.Description}}</dd>
+        </div>
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.Status}}</dt>
+          <dd>
+            {{template "badge" (dict "Variant" .StatusVariant "Value" .Status)}}
+            {{if .IsBalanced}}
+              {{template "badge" (dict "Variant" "success" "Value" "Balanced")}}
+            {{else}}
+              {{template "badge" (dict "Variant" "danger" "Value" "Unbalanced")}}
+            {{end}}
+          </dd>
+        </div>
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.SourceType}}</dt>
+          <dd>{{.SourceType}}</dd>
+        </div>
+        {{if .PostedBy}}
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.PostedBy}}</dt>
+          <dd>{{.PostedBy}}</dd>
+        </div>
+        {{end}}
+        {{if .PostedAt}}
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.PostedAt}}</dt>
+          <dd>{{.PostedAt}}</dd>
+        </div>
+        {{end}}
+        {{if .ReversedBy}}
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.ReversedBy}}</dt>
+          <dd>{{.ReversedBy}}</dd>
+        </div>
+        {{end}}
+        {{if .ReversedAt}}
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.ReversedAt}}</dt>
+          <dd>{{.ReversedAt}}</dd>
+        </div>
+        {{end}}
+        {{if .ReversalEntryID}}
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.ReversalEntry}}</dt>
+          <dd><a href="{{.ReversalHref}}">{{.ReversalEntryID}}</a></dd>
+        </div>
+        {{end}}
+        {{if .Notes}}
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.Notes}}</dt>
+          <dd>{{.Notes}}</dd>
+        </div>
+        {{end}}
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.Created}}</dt>
+          <dd>{{.Created}}</dd>
+        </div>
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.LastModified}}</dt>
+          <dd>{{.LastModified}}</dd>
+        </div>
+      </dl>
+    </div>
+  </div>
+
+  {{/* ---- journal lines table ---- */}}
+  <div class="detail-body">
+    {{template "table-card" .LinesTable}}
+
+    {{/* ---- totals footer ---- */}}
+    <div class="journal-totals">
+      <div class="journal-totals__row journal-totals__row--total">
+        <span class="journal-totals__label">TOTALS</span>
+        <span class="journal-totals__debit">{{.TotalDebit}}</span>
+        <span class="journal-totals__credit">{{.TotalCredit}}</span>
+      </div>
+      <div class="journal-totals__row journal-totals__row--diff">
+        <span class="journal-totals__label">DIFFERENCE</span>
+        <span class="journal-totals__diff">{{.Difference}}</span>
+        {{if .IsBalanced}}
+          {{template "badge" (dict "Variant" "success" "Value" "Balanced")}}
+        {{else}}
+          {{template "badge" (dict "Variant" "danger" "Value" "Unbalanced")}}
+        {{end}}
+      </div>
+    </div>
+  </div>
+
+  {{/* ---- action buttons ---- */}}
+  {{if or .CanPost .CanReverse .CanDelete}}
+  <div class="detail-actions">
+    {{if .CanPost}}
+    <button class="btn btn--primary"
+            hx-post="{{.PostURL}}" hx-swap="none"
+            hx-confirm="Post this journal entry to the ledger?">
+      {{template "icon-check"}}
+      {{.Labels.Actions.Post}}
+    </button>
+    {{end}}
+    {{if .CanDelete}}
+    <button class="btn btn--danger"
+            hx-post="{{.DeleteURL}}?id={{.ID}}" hx-swap="none"
+            hx-confirm="Delete this journal entry? This action cannot be undone.">
+      {{template "icon-trash"}}
+      {{.Labels.Actions.Delete}}
+    </button>
+    {{end}}
+    {{if .CanReverse}}
+    <button class="btn btn--warning"
+            hx-post="{{.ReverseURL}}" hx-swap="none"
+            hx-confirm="This will create a new journal entry with reversed debits and credits. The original entry will be marked as Reversed. Continue?">
+      {{template "icon-rotate-ccw"}}
+      {{.Labels.Actions.Reverse}}
+    </button>
+    {{end}}
+  </div>
+  {{end}}
+
+</div>
+{{template "sheet-form" .}}
+<script src="/assets/js/pyeza/sheet.js?v={{.CacheVersion}}"></script>
+{{end}}

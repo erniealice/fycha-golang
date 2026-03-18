@@ -1,0 +1,37 @@
+{{/* Full page -- for direct access / non-HTMX */}}
+{{define "capital-accounts"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial -- for HTMX navigation */}}
+{{define "capital-accounts-content"}}
+<div class="page-content page-content--table" data-page-css="fycha">
+
+  {{template "page-header" .}}
+
+  <div class="page-body">
+    {{template "table-card" .Table}}
+  </div>
+
+  {{/* Add / Edit equity account sheet-form */}}
+  {{template "sheet-form" dict
+    "ID"          "equity-account-sheet"
+    "Title"       "Add Capital Account"
+    "LoadURL"     ""
+    "FooterType"  "save"
+    "SaveLabel"   "Save"
+    "CancelLabel" "Cancel"
+  }}
+
+  {{/* Guided transaction form sheet */}}
+  {{template "sheet-form" dict
+    "ID"          "equity-transaction-sheet"
+    "Title"       "Record Transaction"
+    "LoadURL"     ""
+    "FooterType"  "save"
+    "SaveLabel"   "Post"
+    "CancelLabel" "Cancel"
+  }}
+
+</div>
+{{end}}

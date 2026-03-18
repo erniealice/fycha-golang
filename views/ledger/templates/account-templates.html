@@ -1,0 +1,186 @@
+{{/* Full page -- for direct access / non-HTMX */}}
+{{define "account-templates"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* ============================================================
+     Content partial -- for HTMX navigation
+     Data: .Templates []CoATemplate, .CurrentAccountCount int,
+           .HasExistingAccounts bool
+     ============================================================ */}}
+{{define "account-templates-content"}}
+<div class="page-content" data-page-css="/assets/css/fycha/fycha-account-templates.css?v={{.CacheVersion}}">
+
+  {{/* ---- existing accounts info alert ---- */}}
+  {{if .HasExistingAccounts}}
+  <div class="alert alert--info" role="alert">
+    <div class="alert__icon">{{template "icon-info"}}</div>
+    <div class="alert__body">
+      <p>Your Chart of Accounts currently has <strong>{{.CurrentAccountCount}} accounts</strong>.</p>
+      <p>Applying a template will <strong>add</strong> new accounts. Existing accounts with matching codes will be skipped.</p>
+    </div>
+  </div>
+  {{else}}
+  <div class="alert alert--warning" role="alert">
+    <div class="alert__icon">{{template "icon-alert-triangle"}}</div>
+    <div class="alert__body">
+      <p><strong>Your Chart of Accounts is empty.</strong></p>
+      <p>Apply a template below to get started with a standard set of accounts for your business type.</p>
+    </div>
+  </div>
+  {{end}}
+
+  {{/* ---- template cards grid ---- */}}
+  <div class="template-cards-grid">
+    {{range .Templates}}
+    <div class="template-card {{if .IsApplied}}template-card--applied{{end}}{{if eq .AccountCount 0}} template-card--unavailable{{end}}">
+
+      {{/* ---- card header ---- */}}
+      <div class="template-card__header">
+        <div class="template-card__icon">
+          {{template "icon-layout"}}
+        </div>
+        <div class="template-card__meta">
+          <h3 class="template-card__name">{{.Name}}</h3>
+          {{if gt .AccountCount 0}}
+          <p class="template-card__count">{{.AccountCount}} accounts &middot; PFRS-compliant</p>
+          {{else}}
+          <p class="template-card__count template-card__count--soon">Coming soon</p>
+          {{end}}
+        </div>
+        {{if .IsApplied}}
+        <div class="template-card__badge">
+          {{template "badge" (dict "Variant" "success" "Value" "Applied")}}
+        </div>
+        {{end}}
+      </div>
+
+      {{/* ---- card body ---- */}}
+      <div class="template-card__body">
+        <p class="template-card__description">{{.Description}}</p>
+
+        {{if gt .AccountCount 0}}
+        <dl class="template-card__breakdown">
+          <div class="template-card__breakdown-item">
+            {{template "badge" (dict "Variant" "sage" "Value" "Assets")}}
+            <span>{{.AssetCount}}</span>
+          </div>
+          <div class="template-card__breakdown-item">
+            {{template "badge" (dict "Variant" "amber" "Value" "Liabilities")}}
+            <span>{{.LiabilityCount}}</span>
+          </div>
+          <div class="template-card__breakdown-item">
+            {{template "badge" (dict "Variant" "navy" "Value" "Equity")}}
+            <span>{{.EquityCount}}</span>
+          </div>
+          <div class="template-card__breakdown-item">
+            {{template "badge" (dict "Variant" "terracotta" "Value" "Revenue")}}
+            <span>{{.RevenueCount}}</span>
+          </div>
+          <div class="template-card__breakdown-item">
+            {{template "badge" (dict "Variant" "default" "Value" "Expenses")}}
+            <span>{{.ExpenseCount}}</span>
+          </div>
+        </dl>
+        {{end}}
+      </div>
+
+      {{/* ---- card actions ---- */}}
+      <div class="template-card__actions">
+        {{if gt .AccountCount 0}}
+          {{if .PreviewURL}}
+          <button type="button"
+            class="btn btn--secondary btn--sm"
+            hx-get="{{.PreviewURL}}"
+            hx-target="#dialogContent"
+            hx-swap="innerHTML"
+            hx-push-url="false"
+            hx-on::after-request="Dialog.open()">
+            Preview
+          </button>
+          {{end}}
+          {{if .IsApplied}}
+          <span class="btn btn--ghost btn--sm" aria-disabled="true">Already applied</span>
+          {{else}}
+            {{if .ApplyURL}}
+            <button type="button"
+              class="btn btn--primary btn--sm"
+              hx-post="{{.ApplyURL}}"
+              hx-confirm="This will create {{.AccountCount}} new accounts in your Chart of Accounts. Accounts with matching codes will be skipped. Continue?"
+              hx-swap="none"
+              hx-on::after-request="AccountTemplates.handleApplyResponse(event)">
+              Apply Template
+            </button>
+            {{end}}
+          {{end}}
+        {{else}}
+          <span class="btn btn--ghost btn--sm" aria-disabled="true">Coming Soon</span>
+        {{end}}
+      </div>
+
+    </div>
+    {{end}}
+  </div>
+
+</div>
+
+{{/* dialog container -- populated by Preview button HTMX */}}
+{{template "dialog" .}}
+
+<script src="/assets/js/pyeza/dialog.js?v={{.CacheVersion}}"></script>
+<script src="/assets/js/fycha/account-templates.js?v={{.CacheVersion}}"></script>
+{{end}}
+
+{{/* ============================================================
+     PREVIEW PARTIAL -- dialog body (read-only template tree)
+     Loaded via HTMX into #dialogContent
+     Data: .TemplateName string, .AccountCount int,
+           .Entries []PreviewEntry, .ApplyURL string
+     ============================================================ */}}
+{{define "account-templates-preview"}}
+<div class="dialog-header">
+  <h3 class="dialog-title">Preview: {{.TemplateName}}</h3>
+</div>
+<div class="dialog-body">
+  <p class="dialog-description">This template will create <strong>{{.AccountCount}} accounts</strong> organized as follows:</p>
+
+  <div class="template-preview-tree">
+    <table class="template-preview-table">
+      <thead>
+        <tr>
+          <th class="preview-col-code">Code</th>
+          <th class="preview-col-name">Account Name</th>
+          <th class="preview-col-element">Element</th>
+          <th class="preview-col-class">Class</th>
+          <th class="preview-col-group">Is Group</th>
+        </tr>
+      </thead>
+      <tbody>
+        {{range .Entries}}
+        <tr class="preview-row preview-row--level-{{.Level}}{{if .IsGroup}} preview-row--group{{end}}">
+          <td class="preview-col-code">{{.Code}}</td>
+          <td class="preview-col-name">{{.Name}}</td>
+          <td class="preview-col-element">{{if .Element}}{{.Element}}{{end}}</td>
+          <td class="preview-col-class">{{.Class}}</td>
+          <td class="preview-col-group">{{if .IsGroup}}Yes{{end}}</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+
+  <p class="dialog-note">Accounts with matching codes in your existing Chart of Accounts will be skipped.</p>
+</div>
+<div class="dialog-footer">
+  <button type="button" class="btn btn--secondary" onclick="Dialog.close()">Cancel</button>
+  {{if .ApplyURL}}
+  <button type="button"
+    class="btn btn--primary"
+    hx-post="{{.ApplyURL}}"
+    hx-swap="none"
+    hx-on::after-request="AccountTemplates.handleApplyResponse(event); Dialog.close();">
+    Apply Template
+  </button>
+  {{end}}
+</div>
+{{end}}

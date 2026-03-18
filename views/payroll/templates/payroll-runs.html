@@ -1,0 +1,12 @@
+{{/* Full page -- for direct access / non-HTMX */}}
+{{define "payroll-runs"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial -- for HTMX navigation */}}
+{{define "payroll-runs-content"}}
+<div class="page-content page-content--table">
+  {{template "tabs" (dict "Items" .StatusTabs "ActiveTab" .ActiveStatus "Variant" "category" "ID" "payroll-run-status-tabs")}}
+  {{template "table-card" .Table}}
+</div>
+{{end}}

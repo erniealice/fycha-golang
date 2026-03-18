@@ -1,0 +1,99 @@
+{{/* Full page -- for direct access / non-HTMX */}}
+{{define "equity-transactions"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial -- for HTMX navigation */}}
+{{define "equity-transactions-content"}}
+<div class="page-content page-content--table" data-page-css="fycha">
+
+  {{template "page-header" .}}
+
+  <div class="page-body">
+    {{template "table-card" .Table}}
+  </div>
+
+  {{/*
+    Guided transaction form sheet.
+
+    The form hides DR/CR from the user. The transaction type drives the journal entry:
+      - Contribution  → DR Cash / CR Owner's Capital
+      - Withdrawal    → DR Owner's Draw / CR Cash
+      - Distribution  → DR Retained Earnings / CR Cash
+      - Transfer      → DR Source Equity Account / CR Destination Equity Account
+  */}}
+  {{template "sheet-form" dict
+    "ID"          "record-equity-transaction-sheet"
+    "Title"       "Record Equity Transaction"
+    "LoadURL"     .AddFormURL
+    "FooterType"  "save"
+    "SaveLabel"   "Post Transaction"
+    "CancelLabel" "Cancel"
+  }}
+
+</div>
+{{end}}
+
+{{/* ---------------------------------------------------------------------------
+  Equity transaction guided form fragment (loaded into sheet via HTMX).
+  Template name: "equity-transaction-form"
+  ---------------------------------------------------------------------------*/}}
+{{define "equity-transaction-form"}}
+<form
+  id="equity-transaction-form"
+  hx-post="{{.AddFormURL}}"
+  hx-target="#equity-transaction-sheet"
+  hx-swap="outerHTML"
+  class="form"
+>
+  <div class="form-section">
+    {{template "form-group" dict
+      "Type"        "select"
+      "ID"          "transaction_type"
+      "Name"        "transaction_type"
+      "Label"       "Transaction Type"
+      "Required"    true
+      "Options"     (list
+        (dict "Value" "EQUITY_TRANSACTION_TYPE_CONTRIBUTION" "Label" "Contribution — Owner adds capital")
+        (dict "Value" "EQUITY_TRANSACTION_TYPE_WITHDRAWAL"   "Label" "Withdrawal — Owner draws cash")
+        (dict "Value" "EQUITY_TRANSACTION_TYPE_DISTRIBUTION" "Label" "Distribution — Profit distributed")
+        (dict "Value" "EQUITY_TRANSACTION_TYPE_TRANSFER"     "Label" "Transfer — Between equity accounts")
+      )
+    }}
+  </div>
+
+  <div class="form-section">
+    {{template "form-row" dict "Cols" 2 "Fields" (list
+      (dict "Type" "select" "ID" "equity_account_id"     "Name" "equity_account_id"     "Label" "Capital Account" "Required" true)
+      (dict "Type" "number" "ID" "amount"                "Name" "amount"                "Label" "Amount"          "Required" true "Placeholder" "0.00" "Step" "0.01" "Min" "0.01")
+    )}}
+    {{template "form-group" dict
+      "Type"        "date"
+      "ID"          "transaction_date"
+      "Name"        "transaction_date"
+      "Label"       "Transaction Date"
+      "Required"    true
+    }}
+    {{template "form-group" dict
+      "Type"        "textarea"
+      "ID"          "description"
+      "Name"        "description"
+      "Label"       "Description"
+      "Placeholder" "Optional memo for this transaction"
+    }}
+  </div>
+
+  {{/*
+    Journal entry hint — shown to accountants, hidden to owners.
+    The server auto-generates the JE from the transaction type.
+  */}}
+  <div class="form-section">
+    <div class="alert alert--info">
+      <p class="alert__message">
+        The corresponding journal entry will be auto-generated when you post this transaction.
+        Debits and credits are determined by the transaction type selected above.
+      </p>
+    </div>
+  </div>
+</form>
+{{end}}

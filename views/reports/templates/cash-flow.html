@@ -1,0 +1,137 @@
+{{/* Full page — for direct access / non-HTMX */}}
+{{define "cash-flow"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial — for HTMX navigation */}}
+{{define "cash-flow-content"}}
+<div class="page-content report-layout financial-statement-layout"
+     data-page-css="/assets/css/fycha/fycha-report.css?v={{.CacheVersion}}">
+
+    {{/* ─── Period Selector ─── */}}
+    <div class="report-period-bar">
+        <div class="report-period-presets">
+            {{range .PeriodPresets}}
+            <a class="period-preset-btn{{if .Selected}} active{{end}}"
+               hx-get="{{$.CurrentPath}}?period={{.Value}}"
+               hx-target="closest .main"
+               hx-swap="innerHTML"
+               hx-push-url="true"
+               href="{{$.CurrentPath}}?period={{.Value}}">{{.Label}}</a>
+            {{end}}
+        </div>
+        <div class="report-period-label">
+            Showing: <strong>{{.PeriodLabel}}</strong>
+        </div>
+        <div class="report-header-actions">
+            <button type="button" class="btn btn--secondary btn--sm" disabled title="Export coming soon">
+                {{template "icon-download"}} Export
+            </button>
+        </div>
+    </div>
+
+    {{/* ─── KPI Summary Bar ─── */}}
+    <div class="report-summary-bar">
+        <div class="summary-metric highlight">
+            <span class="summary-label">Operating Cash Flow</span>
+            <span class="summary-value">{{.OperatingCF}}</span>
+        </div>
+        <div class="summary-metric">
+            <span class="summary-label">Net Change in Cash</span>
+            <span class="summary-value">{{.NetChange}}</span>
+        </div>
+        <div class="summary-metric">
+            <span class="summary-label">Ending Cash Balance</span>
+            <span class="summary-value">{{.EndingCash}}</span>
+        </div>
+    </div>
+
+    {{/* ─── Statement Body ─── */}}
+    <div class="financial-statement-card">
+        <div class="financial-statement-header">
+            <div class="financial-statement-title">Statement of Cash Flows (Direct Method)</div>
+            <div class="financial-statement-subtitle">{{.PeriodLabel}}</div>
+        </div>
+
+        <table class="financial-statement-table">
+            <thead>
+                <tr class="fs-header-row">
+                    <th class="fs-col-name">Description</th>
+                    <th class="fs-col-amount">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Activities}}
+
+                {{/* Activity section header */}}
+                <tr class="fs-section-header-row">
+                    <td colspan="2" class="fs-section-title">{{.Title}}</td>
+                </tr>
+
+                {{/* Line items */}}
+                {{range .Lines}}
+                <tr class="fs-line-row{{if .IsSubtotal}} fs-subtotal-row{{end}}{{if .IsLabel}} fs-label-row{{end}} fs-indent-{{.IndentLevel}}">
+                    <td class="fs-col-name">{{.Name}}</td>
+                    <td class="fs-col-amount{{if .IsNegative}} fs-negative{{end}}">
+                        {{if not .IsLabel}}{{.Amount}}{{end}}
+                    </td>
+                </tr>
+                {{end}}
+
+                {{/* Activity net total */}}
+                <tr class="fs-subtotal-row fs-bold-total">
+                    <td class="fs-col-name">{{.NetLabel}}</td>
+                    <td class="fs-col-amount{{if not .IsPositive}} fs-negative{{end}}">{{.NetTotal}}</td>
+                </tr>
+                <tr class="fs-spacer-row"><td colspan="2"></td></tr>
+
+                {{end}}{{/* end range .Activities */}}
+
+                {{/* ─── Net Change Summary ─── */}}
+                {{if .Verification}}
+                <tr class="fs-grand-total-separator"><td colspan="2"></td></tr>
+                <tr class="fs-grand-total-row">
+                    <td class="fs-col-name">NET CHANGE IN CASH</td>
+                    <td class="fs-col-amount">{{.Verification.NetChange}}</td>
+                </tr>
+                <tr class="fs-spacer-row"><td colspan="2"></td></tr>
+
+                {{/* Beginning and Ending Cash */}}
+                <tr class="fs-line-row">
+                    <td class="fs-col-name">Cash at Beginning of Period</td>
+                    <td class="fs-col-amount">{{.Verification.BeginningBalance}}</td>
+                </tr>
+                <tr class="fs-subtotal-row fs-bold-total">
+                    <td class="fs-col-name">Cash at End of Period</td>
+                    <td class="fs-col-amount">{{.Verification.EndingBalance}}</td>
+                </tr>
+                <tr class="fs-spacer-row"><td colspan="2"></td></tr>
+
+                {{/* Cash account reconciliation */}}
+                <tr class="fs-group-header-row">
+                    <td colspan="2" class="fs-group-title">Reconciliation: Cash per Balance Sheet</td>
+                </tr>
+                {{range .Verification.CashAccounts}}
+                <tr class="fs-line-row">
+                    <td class="fs-col-name">{{.Code}} {{.Name}}</td>
+                    <td class="fs-col-amount">{{.Amount}}</td>
+                </tr>
+                {{end}}
+                <tr class="fs-group-subtotal-row">
+                    <td class="fs-col-name">Total Cash per Balance Sheet</td>
+                    <td class="fs-col-amount">
+                        {{.Verification.EndingBalance}}
+                        {{if .Verification.IsVerified}}
+                        <span class="badge success" style="margin-left:0.5rem;">Verified</span>
+                        {{else}}
+                        <span class="badge danger" style="margin-left:0.5rem;">Mismatch</span>
+                        {{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{{end}}

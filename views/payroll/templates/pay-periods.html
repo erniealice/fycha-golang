@@ -1,0 +1,56 @@
+{{/* Full page -- for direct access / non-HTMX */}}
+{{define "pay-periods"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial -- for HTMX navigation */}}
+{{define "pay-periods-content"}}
+<div class="page-content">
+  <div class="page-header">
+    <h1 class="page-title">{{.Title}}</h1>
+  </div>
+  <div class="settings-section">
+    <div class="settings-card">
+      <div class="settings-card__header">
+        <h2 class="settings-card__title">Pay Period Schedules</h2>
+        <p class="settings-card__caption">Configure how often employees are paid and when cut-off dates apply.</p>
+      </div>
+      <div class="settings-card__body">
+        {{range .Schedules}}
+        <div class="pay-period-item{{if .Active}} pay-period-item--active{{end}}">
+          <div class="pay-period-item__header">
+            <span class="pay-period-item__name">{{.Name}}</span>
+            {{if .Active}}
+            <span class="badge badge--success">Active</span>
+            {{else}}
+            <span class="badge badge--warning">Inactive</span>
+            {{end}}
+          </div>
+          <div class="pay-period-item__details">
+            <div class="pay-period-detail">
+              <span class="pay-period-detail__label">Frequency</span>
+              <span class="pay-period-detail__value">{{.Frequency}}</span>
+            </div>
+            <div class="pay-period-detail">
+              <span class="pay-period-detail__label">Cut-off Dates</span>
+              <span class="pay-period-detail__value">{{.CutOffDay1}} / {{.CutOffDay2}}</span>
+            </div>
+            <div class="pay-period-detail">
+              <span class="pay-period-detail__label">Pay Dates</span>
+              <span class="pay-period-detail__value">{{.PayDay1}} / {{.PayDay2}}</span>
+            </div>
+          </div>
+        </div>
+        {{else}}
+        <div class="empty-state empty-state--compact">
+          <p class="empty-state__description">No pay period schedules configured.</p>
+        </div>
+        {{end}}
+      </div>
+    </div>
+    <div class="settings-notice settings-notice--info">
+      <p>Semi-monthly payroll is the standard in the Philippines: 1st–15th and 16th–end of month cut-offs, with paydays on the 20th and 5th of the following month respectively.</p>
+    </div>
+  </div>
+</div>
+{{end}}

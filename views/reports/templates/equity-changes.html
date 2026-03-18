@@ -1,0 +1,100 @@
+{{/* Full page — for direct access / non-HTMX */}}
+{{define "equity-changes"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial — for HTMX navigation */}}
+{{define "equity-changes-content"}}
+<div class="page-content report-layout financial-statement-layout"
+     data-page-css="/assets/css/fycha/fycha-report.css?v={{.CacheVersion}}">
+
+    {{/* ─── Period Selector ─── */}}
+    <div class="report-period-bar">
+        <div class="report-period-presets">
+            {{range .PeriodPresets}}
+            <a class="period-preset-btn{{if .Selected}} active{{end}}"
+               hx-get="{{$.CurrentPath}}?period={{.Value}}"
+               hx-target="closest .main"
+               hx-swap="innerHTML"
+               hx-push-url="true"
+               href="{{$.CurrentPath}}?period={{.Value}}">{{.Label}}</a>
+            {{end}}
+        </div>
+        <div class="report-period-label">
+            Showing: <strong>{{.PeriodLabel}}</strong>
+        </div>
+        <div class="report-header-actions">
+            <button type="button" class="btn btn--secondary btn--sm" disabled title="Export coming soon">
+                {{template "icon-download"}} Export
+            </button>
+        </div>
+    </div>
+
+    {{/* ─── KPI Summary Bar ─── */}}
+    <div class="report-summary-bar">
+        <div class="summary-metric">
+            <span class="summary-label">Opening Equity</span>
+            <span class="summary-value">{{.OpeningEquity}}</span>
+        </div>
+        <div class="summary-metric highlight">
+            <span class="summary-label">Closing Equity</span>
+            <span class="summary-value badge {{.EquityChangeVariant}}">{{.ClosingEquity}}</span>
+        </div>
+    </div>
+
+    {{/* ─── Statement Body ─── */}}
+    <div class="financial-statement-card">
+        <div class="financial-statement-header">
+            <div class="financial-statement-title">Statement of Changes in Equity</div>
+            <div class="financial-statement-subtitle">{{.PeriodLabel}}</div>
+        </div>
+
+        <div class="fs-equity-table-wrapper">
+            <table class="financial-statement-table fs-equity-table">
+                <thead>
+                    <tr class="fs-header-row">
+                        <th class="fs-col-name fs-equity-row-label"></th>
+                        {{range .Columns}}
+                        <th class="fs-col-amount{{if .IsTotal}} fs-equity-total-col{{end}}">{{.AccountName}}</th>
+                        {{end}}
+                    </tr>
+                    <tr class="fs-subheader-row">
+                        <th class="fs-col-name fs-equity-row-label"></th>
+                        {{range .Columns}}
+                        <th class="fs-col-code fs-equity-code">{{.AccountCode}}</th>
+                        {{end}}
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Rows}}
+                    {{if .IsSpacer}}
+                    <tr class="fs-spacer-row">
+                        <td colspan="999"></td>
+                    </tr>
+                    {{else}}
+                    <tr class="fs-equity-row{{if .IsTotal}} fs-bold-total fs-equity-closing{{end}}">
+                        <td class="fs-col-name fs-equity-row-label">
+                            <span class="fs-equity-row-title">{{.Label}}</span>
+                            {{if .SubLabel}}<span class="fs-equity-row-sub">{{.SubLabel}}</span>{{end}}
+                        </td>
+                        {{range .Cells}}
+                        <td class="fs-col-amount{{if .IsNegative}} fs-negative{{end}}{{if .IsBold}} fs-cell-bold{{end}}">
+                            {{if .Value}}{{.Value}}{{else}}&mdash;{{end}}
+                        </td>
+                        {{end}}
+                    </tr>
+                    {{end}}
+                    {{end}}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="fs-equity-note">
+            <p class="fs-note-text">
+                Note: Negative values in parentheses represent contra-equity accounts (e.g., Owner's Draw reduces total equity).
+            </p>
+        </div>
+    </div>
+
+</div>
+{{end}}

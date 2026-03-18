@@ -1,0 +1,20 @@
+{{/* Full page -- for direct access / non-HTMX */}}
+{{define "bad-debt-policy"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial -- for HTMX navigation */}}
+{{define "bad-debt-policy-content"}}
+<div class="page-content">
+    <div class="page-header">
+        <h1 class="page-title">{{.Title}}</h1>
+    </div>
+    <div class="empty-state">
+        <div class="empty-state__icon">
+            {{.HeaderIconHTML}}
+        </div>
+        <h2 class="empty-state__title">Coming Soon</h2>
+        <p class="empty-state__description">This feature is under development and will be available in a future update.</p>
+    </div>
+</div>
+{{end}}

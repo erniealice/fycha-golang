@@ -1,0 +1,137 @@
+{{/* Full page -- for direct access / non-HTMX */}}
+{{define "account-detail"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial -- for HTMX navigation */}}
+{{define "account-detail-content"}}
+<div class="page-content detail-layout" data-page-css="/assets/css/fycha/fycha-account-detail.css?v={{.CacheVersion}}">
+
+  {{/* ---- stat cards ---- */}}
+  <div class="detail-stats">
+    <div class="stat-card stat-card--{{.BalanceColor}}">
+      <div class="stat-card__icon">{{template "icon-dollar-sign"}}</div>
+      <div class="stat-card__body">
+        <div class="stat-value">{{.CurrentBalance}}</div>
+        <div class="stat-label">{{.Labels.Detail.Stats.CurrentBalance}}</div>
+      </div>
+    </div>
+    <div class="stat-card stat-card--terracotta">
+      <div class="stat-card__icon">{{template "icon-trending-up"}}</div>
+      <div class="stat-card__body">
+        <div class="stat-value">{{.PeriodDebits}}</div>
+        <div class="stat-label">{{.Labels.Detail.Stats.PeriodDebits}}</div>
+      </div>
+    </div>
+    <div class="stat-card stat-card--navy">
+      <div class="stat-card__icon">{{template "icon-trending-down"}}</div>
+      <div class="stat-card__body">
+        <div class="stat-value">{{.PeriodCredits}}</div>
+        <div class="stat-label">{{.Labels.Detail.Stats.PeriodCredits}}</div>
+      </div>
+    </div>
+  </div>
+
+  {{/* ---- tabs ---- */}}
+  <div class="detail-tabs">
+    {{template "tabs" (dict "Items" .TabItems "ActiveTab" .ActiveTab "Variant" "default" "ID" "account-detail-tabs")}}
+  </div>
+
+  {{/* ---- tab content ---- */}}
+  <div id="tabContent" class="detail-body">
+    {{if eq .ActiveTab "entries"}}
+      {{template "account-tab-entries" .}}
+    {{else if eq .ActiveTab "details"}}
+      {{template "account-tab-details" .}}
+    {{end}}
+  </div>
+</div>
+{{end}}
+
+{{/* =============================================
+     TAB PARTIAL: Journal Entries (table-card)
+     ============================================= */}}
+{{define "account-tab-entries"}}
+<div class="tab-scroll">
+  {{template "table-card" .EntriesTable}}
+</div>
+{{end}}
+
+{{/* =============================================
+     TAB PARTIAL: Details (account metadata cards)
+     ============================================= */}}
+{{define "account-tab-details"}}
+<div class="tab-scroll">
+  <div class="detail-cards">
+
+    {{/* Account Information card */}}
+    <div class="card">
+      <div class="card__header">
+        <h4 class="card__title">{{.Labels.Detail.Info.Title}}</h4>
+        {{if .CanEdit}}
+        <a href="{{.EditURL}}" class="btn btn--secondary btn--sm" hx-get="{{.EditURL}}" hx-target="#sheetContent" hx-swap="innerHTML" hx-push-url="false"
+           hx-on::after-request="Sheet.open()">
+          {{template "icon-edit"}}
+          <span>{{.Labels.Actions.Edit}}</span>
+        </a>
+        {{end}}
+      </div>
+      <dl class="card__fields">
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.Code}}</dt>
+          <dd>{{.AccountCode}}</dd>
+        </div>
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.Name}}</dt>
+          <dd>{{.AccountName}}</dd>
+        </div>
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.Element}}</dt>
+          <dd>{{template "badge" (dict "Variant" .ElementVariant "Value" .Element)}}</dd>
+        </div>
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.Classification}}</dt>
+          <dd>{{.Classification}}</dd>
+        </div>
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.Group}}</dt>
+          <dd>{{.Group}}</dd>
+        </div>
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.ParentAccount}}</dt>
+          <dd>{{.ParentAccount}}</dd>
+        </div>
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.NormalBalance}}</dt>
+          <dd>{{.NormalBalance}}</dd>
+        </div>
+        {{if .CashFlowTag}}
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.CashFlowTag}}</dt>
+          <dd>{{.CashFlowTag}}</dd>
+        </div>
+        {{end}}
+        {{if .Description}}
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.Description}}</dt>
+          <dd>{{.Description}}</dd>
+        </div>
+        {{end}}
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.Status}}</dt>
+          <dd>{{template "badge" (dict "Variant" .StatusVariant "Value" .AccountStatus)}}</dd>
+        </div>
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.Created}}</dt>
+          <dd>{{.Created}}</dd>
+        </div>
+        <div class="card__field">
+          <dt>{{.Labels.Detail.Info.LastModified}}</dt>
+          <dd>{{.LastModified}}</dd>
+        </div>
+      </dl>
+    </div>
+
+  </div>
+</div>
+{{end}}

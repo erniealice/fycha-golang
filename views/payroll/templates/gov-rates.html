@@ -1,0 +1,50 @@
+{{/* Full page -- for direct access / non-HTMX */}}
+{{define "gov-rates"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial -- for HTMX navigation */}}
+{{define "gov-rates-content"}}
+<div class="page-content">
+  <div class="page-header">
+    <h1 class="page-title">{{.Title}}</h1>
+  </div>
+  <div class="settings-section">
+    <div class="settings-card">
+      <div class="settings-card__header">
+        <h2 class="settings-card__title">Philippine Mandatory Contribution Rates</h2>
+        <p class="settings-card__caption">Current contribution rates for government-mandated benefits. Rates are set by law and updated periodically by each agency.</p>
+      </div>
+      <div class="settings-card__body">
+        <table class="data-table data-table--settings">
+          <thead>
+            <tr>
+              <th>Agency</th>
+              <th>Rate Type</th>
+              <th>Employee Share</th>
+              <th>Employer Share</th>
+              <th>Effective Date</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{range .Rates}}
+            <tr>
+              <td><strong>{{.Agency}}</strong></td>
+              <td>{{.RateType}}</td>
+              <td class="text--right">{{.EmployeeRate}}</td>
+              <td class="text--right">{{.EmployerRate}}</td>
+              <td>{{.EffectiveDate}}</td>
+              <td class="text--muted">{{.Notes}}</td>
+            </tr>
+            {{end}}
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="settings-notice settings-notice--info">
+      <p>Contribution rates are governed by Philippine law (RA 11199 for SSS, RA 11223 for PhilHealth, RA 9679 for Pag-IBIG, TRAIN Law for BIR). Contact your accounting team to update rates when new circulars are issued.</p>
+    </div>
+  </div>
+</div>
+{{end}}
