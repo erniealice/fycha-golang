@@ -36,8 +36,6 @@ type Deps struct {
 type PageData struct {
 	types.PageData
 	ContentTemplate string
-	ActiveStatus    string       // "active" or "completed"
-	StatusTabs      []pyeza.TabItem
 	Table           *types.TableConfig
 }
 
@@ -70,7 +68,6 @@ func NewView(deps *Deps) view.View {
 
 		loans := fetchLoans(ctx, deps, status)
 		perms := view.GetUserPermissions(ctx)
-		statusTabs := buildStatusTabs(deps)
 		tableConfig := buildTableConfig(deps, loans, status, perms)
 
 		heading, caption := headingForStatus(deps.Labels, status)
@@ -87,8 +84,6 @@ func NewView(deps *Deps) view.View {
 				CommonLabels:   deps.CommonLabels,
 			},
 			ContentTemplate: "loan-list-content",
-			ActiveStatus:    status,
-			StatusTabs:      statusTabs,
 			Table:           tableConfig,
 		}
 
@@ -106,7 +101,6 @@ func NewContentView(deps *Deps) view.View {
 
 		loans := fetchLoans(ctx, deps, status)
 		perms := view.GetUserPermissions(ctx)
-		statusTabs := buildStatusTabs(deps)
 		tableConfig := buildTableConfig(deps, loans, status, perms)
 
 		heading, caption := headingForStatus(deps.Labels, status)
@@ -123,8 +117,6 @@ func NewContentView(deps *Deps) view.View {
 				CommonLabels:   deps.CommonLabels,
 			},
 			ContentTemplate: "loan-list-content",
-			ActiveStatus:    status,
-			StatusTabs:      statusTabs,
 			Table:           tableConfig,
 		}
 
@@ -187,19 +179,6 @@ func protoToRow(l *loanpb.Loan) LoanRow {
 		StartDate:        startDate,
 		MaturityDate:     maturityDate,
 		Active:           l.GetActive(),
-	}
-}
-
-// ---------------------------------------------------------------------------
-// Tab builder
-// ---------------------------------------------------------------------------
-
-func buildStatusTabs(deps *Deps) []pyeza.TabItem {
-	l := deps.Labels.Tabs
-	listBase := deps.Routes.ListURL
-	return []pyeza.TabItem{
-		{Key: "active", Label: l.Active, Href: route.ResolveURL(listBase, "status", "active"), Icon: "", Count: 0, Disabled: false},
-		{Key: "completed", Label: l.Completed, Href: route.ResolveURL(listBase, "status", "completed"), Icon: "", Count: 0, Disabled: false},
 	}
 }
 
