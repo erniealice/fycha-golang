@@ -264,6 +264,6 @@
 
     .table-card {
         box-shadow: none;
-        border: 1px solid #ddd;
+        border: var(--border-width) solid var(--border);
     }
 }

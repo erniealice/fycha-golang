@@ -32,7 +32,7 @@
 <div class="tab-scroll">
     <h4 class="detail-section-title">{{.Labels.Detail.BasicInfo.Title}}</h4>
 
-    <div id="info-result" style="display:none;" class="form-result"></div>
+    <div id="info-result" class="form-result" style="display:none;"></div>
 
     <form id="info-edit-form"
           hx-post="{{.EditURL}}"
@@ -71,7 +71,7 @@
             {{template "toggle" (dict "Name" "active" "Label" .Labels.Form.Active "Checked" (eq .AssetStatus "active") "Value" "true")}}
         </div>
 
-        <div style="margin-top: 1.5rem;">
+        <div class="asset-section-spacer">
             <button type="submit" class="btn btn--primary btn--sm">
                 {{template "icon-save"}}
                 <span>Save Changes</span>
