@@ -261,9 +261,4 @@
     .ledger-report-filters {
         break-after: avoid;
     }
-
-    .table-card {
-        box-shadow: none;
-        border: var(--border-width) solid var(--border);
-    }
 }
