@@ -40,7 +40,7 @@
 
 .detail-section-title {
     font-family: var(--font-display);
-    font-size: 1.0625rem;
+    font-size: var(--text-lg);
     font-weight: 600;
     color: var(--text-primary);
     margin: 0 0 1.25rem 0;
@@ -73,7 +73,7 @@
 }
 
 .detail-info-label {
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
@@ -82,7 +82,7 @@
 }
 
 .detail-info-value {
-    font-size: 1rem;
+    font-size: var(--text-base);
     font-weight: 500;
     color: var(--text-primary);
     font-family: var(--font-body);
@@ -95,7 +95,7 @@
 .form-result {
     padding: 0.75rem 1rem;
     border-radius: var(--radius-md);
-    font-size: 0.875rem;
+    font-size: var(--text-md);
     font-weight: 500;
     margin-bottom: 1rem;
 }
@@ -125,7 +125,7 @@
 .detail-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.875rem;
+    font-size: var(--text-md);
 }
 
 .detail-table thead {
@@ -136,7 +136,7 @@
 
 .detail-table thead th {
     padding: 0.75rem 1rem;
-    font-size: 0.75rem;
+    font-size: var(--text-xs);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
@@ -170,7 +170,7 @@
 
 .detail-table tbody td.font-mono {
     font-family: var(--font-mono, monospace);
-    font-size: 0.8125rem;
+    font-size: var(--text-sm);
 }
 
 .detail-table tbody tr:last-child td {
@@ -187,7 +187,7 @@
     font-weight: 600;
     color: var(--text-primary);
     background: var(--bg-surface);
-    border-top: 2px solid var(--border);
+    border-top: var(--border-width-thick) solid var(--border);
     font-family: var(--font-body);
 }
 
@@ -197,7 +197,7 @@
 
 /* Mini status badges in tables */
 .detail-table .badge {
-    font-size: 0.6875rem;
+    font-size: var(--text-2xs);
     padding: 0.125rem 0.5rem;
 }
 
@@ -216,14 +216,14 @@
 
 .coming-soon-title {
     font-family: var(--font-display);
-    font-size: 1.25rem;
+    font-size: var(--text-xl);
     font-weight: 600;
     color: var(--text-primary);
     margin-bottom: 0.5rem;
 }
 
 .coming-soon-text {
-    font-size: 0.9375rem;
+    font-size: var(--text-base);
     color: var(--text-muted);
     max-width: 24rem;
 }
@@ -249,7 +249,7 @@
         grid-template-columns: 1fr 1fr;
     }
     .detail-table {
-        font-size: 0.8125rem;
+        font-size: var(--text-sm);
     }
     .detail-table thead th,
     .detail-table tbody td,
