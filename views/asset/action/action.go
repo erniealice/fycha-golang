@@ -30,6 +30,10 @@ type FormLabels struct {
 	UsefulLifeMonths           string
 	UsefulLifePlaceholder      string
 	DepreciationMethod         string
+	DepMethodStraightLine      string
+	DepMethodDecliningBalance  string
+	DepMethodSumOfYears        string
+	DepMethodUnitsOfProduction string
 	Active                     string
 }
 
@@ -77,6 +81,10 @@ func formLabelsFromStruct(l fycha.AssetFormLabels) FormLabels {
 		UsefulLifeMonths:           l.UsefulLifeMonths,
 		UsefulLifePlaceholder:      l.UsefulLifePlaceholder,
 		DepreciationMethod:         l.DepreciationMethod,
+		DepMethodStraightLine:      l.DepMethodStraightLine,
+		DepMethodDecliningBalance:  l.DepMethodDecliningBalance,
+		DepMethodSumOfYears:        l.DepMethodSumOfYears,
+		DepMethodUnitsOfProduction: l.DepMethodUnitsOfProduction,
 		Active:                     l.Active,
 	}
 }

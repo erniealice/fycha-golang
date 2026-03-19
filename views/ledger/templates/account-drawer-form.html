@@ -97,5 +97,7 @@ Data: .Code, .Name, .Element, .Class, .ParentCode, .Group,
     </div>
 
   </div>
+
+  {{template "sheet-form-footer" (dict "CommonLabels" .CommonLabels "ShowCancel" true "IsEdit" .IsEdit)}}
 </form>
 {{end}}

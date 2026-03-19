@@ -38,7 +38,7 @@
         <div class="groupby-options">
             {{range .Filter.GroupByOptions}}
             <label class="groupby-option{{if .Selected}} active{{end}}">
-                <input type="radio" name="group-by" value="{{.Value}}"{{if .Selected}} checked{{end}}>
+                <input type="radio" id="groupby-{{.Value}}" name="group-by" value="{{.Value}}"{{if .Selected}} checked{{end}}>
                 {{.Label}}
             </label>
             {{end}}

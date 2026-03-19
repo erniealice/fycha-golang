@@ -29,7 +29,7 @@
     {{/* ─── P&L Statement ─── */}}
     <div class="report-table-wrapper">
         <div class="card">
-            <table class="pl-statement">
+            <table id="net-profit-table" class="pl-statement">
                 <tbody>
                     {{range .LineItems}}
                     <tr class="pl-row{{if .IsTotal}} pl-total{{end}}">
