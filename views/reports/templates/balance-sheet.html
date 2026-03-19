@@ -76,13 +76,13 @@
             {{range .Sections}}
             <tbody class="fs-section">
                 {{/* Sticky + collapsible section header */}}
-                <tr class="fs-section-header-row" data-fs-toggle>
+                <tr class="fs-section-header-row">
                     <td colspan="3" class="fs-section-title">
-                        <div class="fs-section-title-inner">
+                        <button type="button" class="fs-section-title-inner" aria-expanded="true" aria-controls="section-body-{{.ID}}" data-fs-toggle>
                             <span class="fs-toggle-icon">{{template "icon-chevron-down"}}</span>
                             <span class="fs-section-label">{{.Title}}</span>
                             {{if .Total}}<span class="fs-section-amount">{{.Total}}</span>{{end}}
-                        </div>
+                        </button>
                     </td>
                 </tr>
 

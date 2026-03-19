@@ -133,12 +133,12 @@ func NewBalanceSheetView(deps *BalanceSheetDeps) view.View {
 		pageData := &BalanceSheetPageData{
 			PageData: types.PageData{
 				CacheVersion:   viewCtx.CacheVersion,
-				Title:          "Balance Sheet",
+				Title:          deps.Labels.BalanceSheet.Title,
 				CurrentPath:    viewCtx.CurrentPath,
 				ActiveNav:      "reports",
 				ActiveSubNav:   "balance-sheet",
-				HeaderTitle:    "Balance Sheet",
-				HeaderSubtitle: "Statement of Financial Position",
+				HeaderTitle:    deps.Labels.BalanceSheet.Title,
+				HeaderSubtitle: deps.Labels.BalanceSheet.Subtitle,
 				HeaderIcon:     "icon-layers",
 				CommonLabels:   deps.CommonLabels,
 			},

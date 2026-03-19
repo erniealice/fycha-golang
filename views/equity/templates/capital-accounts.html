@@ -11,21 +11,21 @@
   {{/* Add / Edit equity account sheet-form */}}
   {{template "sheet-form" dict
     "ID"          "equity-account-sheet"
-    "Title"       "Add Capital Account"
+    "Title"       .Labels.Sheet.AddCapitalAccount
     "LoadURL"     ""
     "FooterType"  "save"
-    "SaveLabel"   "Save"
-    "CancelLabel" "Cancel"
+    "SaveLabel"   .Labels.Sheet.RecordTransaction
+    "CancelLabel" .CommonLabels.Buttons.Cancel
   }}
 
   {{/* Guided transaction form sheet */}}
   {{template "sheet-form" dict
     "ID"          "equity-transaction-sheet"
-    "Title"       "Record Transaction"
+    "Title"       .Labels.Sheet.RecordTransaction
     "LoadURL"     ""
     "FooterType"  "save"
-    "SaveLabel"   "Post"
-    "CancelLabel" "Cancel"
+    "SaveLabel"   .Labels.Sheet.PostTransaction
+    "CancelLabel" .CommonLabels.Buttons.Cancel
   }}
 
 </div>

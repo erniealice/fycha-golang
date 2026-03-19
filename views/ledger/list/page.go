@@ -114,19 +114,19 @@ func fetchAccounts(ctx context.Context, deps *Deps) []AccountRow {
 
 	rows := make([]AccountRow, 0, len(resp.GetAccountList()))
 	for _, a := range resp.GetAccountList() {
-		rows = append(rows, protoToRow(a))
+		rows = append(rows, protoToRow(a, deps.Labels))
 	}
 	return rows
 }
 
 // protoToRow converts a proto Account to a view-model AccountRow.
-func protoToRow(a *accountpb.Account) AccountRow {
+func protoToRow(a *accountpb.Account, l fycha.AccountLabels) AccountRow {
 	return AccountRow{
 		ID:             a.GetId(),
 		Code:           a.GetCode(),
 		Name:           a.GetName(),
 		Element:        elementString(a.GetElement()),
-		Classification: classificationLabel(a.GetClassification()),
+		Classification: classificationLabel(a.GetClassification(), l.Form),
 		IsGroup:        false, // leaf accounts returned by use case
 		Level:          3,
 		ParentCode:     a.GetParentId(),
@@ -284,32 +284,32 @@ func elementString(e accountpb.AccountElement) string {
 	}
 }
 
-func classificationLabel(c accountpb.AccountClassification) string {
+func classificationLabel(c accountpb.AccountClassification, l fycha.AccountFormLabels) string {
 	switch c {
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_CURRENT_ASSET:
-		return "Current Asset"
+		return l.ClassCurrentAsset
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_NON_CURRENT_ASSET:
-		return "Non-Current Asset"
+		return l.ClassNonCurrentAsset
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_CURRENT_LIABILITY:
-		return "Current Liability"
+		return l.ClassCurrentLiability
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_NON_CURRENT_LIABILITY:
-		return "Non-Current Liability"
+		return l.ClassNonCurrentLiability
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_EQUITY:
-		return "Equity"
+		return l.ClassEquity
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_OPERATING_REVENUE:
-		return "Operating Revenue"
+		return l.ClassOperatingRevenue
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_OTHER_INCOME:
-		return "Other Income"
+		return l.ClassOtherIncome
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_COST_OF_SALES:
-		return "Cost of Sales"
+		return l.ClassCostOfSales
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_OPERATING_EXPENSE:
-		return "Operating Expense"
+		return l.ClassOperatingExpense
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_FINANCE_COST:
-		return "Finance Cost"
+		return l.ClassFinanceCost
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_INCOME_TAX:
-		return "Income Tax"
+		return l.ClassIncomeTax
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_OTHER_EXPENSE:
-		return "Other Expense"
+		return l.ClassOtherExpense
 	default:
 		return ""
 	}
@@ -394,7 +394,7 @@ func boolStr(b bool) string {
 //
 // When the DB is fully wired this function replaces the hardcoded mockAccounts()
 // flow. Until then the view falls back to mockAccounts() via fetchAccounts().
-func BuildAccountTree(accounts []AccountRow) []AccountRow {
+func BuildAccountTree(accounts []AccountRow, l fycha.AccountFormLabels) []AccountRow {
 	if len(accounts) == 0 {
 		return accounts
 	}
@@ -445,11 +445,11 @@ func BuildAccountTree(accounts []AccountRow) []AccountRow {
 		accounts []AccountRow
 	}
 	elementGroups := map[string]*elementGroup{
-		"asset":     {element: "asset", label: "ASSETS", codeBase: "1000"},
-		"liability": {element: "liability", label: "LIABILITIES", codeBase: "2000"},
-		"equity":    {element: "equity", label: "EQUITY", codeBase: "3000"},
-		"revenue":   {element: "revenue", label: "REVENUE", codeBase: "4000"},
-		"expense":   {element: "expense", label: "EXPENSES", codeBase: "5000"},
+		"asset":     {element: "asset", label: l.GroupAssets, codeBase: "1000"},
+		"liability": {element: "liability", label: l.GroupLiabilities, codeBase: "2000"},
+		"equity":    {element: "equity", label: l.GroupEquity, codeBase: "3000"},
+		"revenue":   {element: "revenue", label: l.GroupRevenue, codeBase: "4000"},
+		"expense":   {element: "expense", label: l.GroupExpenses, codeBase: "5000"},
 	}
 
 	for _, a := range accounts {

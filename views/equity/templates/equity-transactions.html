@@ -19,11 +19,11 @@
   */}}
   {{template "sheet-form" dict
     "ID"          "record-equity-transaction-sheet"
-    "Title"       "Record Equity Transaction"
+    "Title"       .Labels.Sheet.RecordEquityTransaction
     "LoadURL"     .AddFormURL
     "FooterType"  "save"
-    "SaveLabel"   "Post Transaction"
-    "CancelLabel" "Cancel"
+    "SaveLabel"   .Labels.Sheet.PostTransaction
+    "CancelLabel" .CommonLabels.Buttons.Cancel
   }}
 
 </div>
@@ -46,35 +46,35 @@
       "Type"        "select"
       "ID"          "transaction_type"
       "Name"        "transaction_type"
-      "Label"       "Transaction Type"
+      "Label"       .Labels.Transactions.Form.TransactionType
       "Required"    true
       "Options"     (list
-        (dict "Value" "EQUITY_TRANSACTION_TYPE_CONTRIBUTION" "Label" "Contribution — Owner adds capital")
-        (dict "Value" "EQUITY_TRANSACTION_TYPE_WITHDRAWAL"   "Label" "Withdrawal — Owner draws cash")
-        (dict "Value" "EQUITY_TRANSACTION_TYPE_DISTRIBUTION" "Label" "Distribution — Profit distributed")
-        (dict "Value" "EQUITY_TRANSACTION_TYPE_TRANSFER"     "Label" "Transfer — Between equity accounts")
+        (dict "Value" "EQUITY_TRANSACTION_TYPE_CONTRIBUTION" "Label" .Labels.Transactions.Form.TransactionContribution)
+        (dict "Value" "EQUITY_TRANSACTION_TYPE_WITHDRAWAL"   "Label" .Labels.Transactions.Form.TransactionWithdrawal)
+        (dict "Value" "EQUITY_TRANSACTION_TYPE_DISTRIBUTION" "Label" .Labels.Transactions.Form.TransactionDistribution)
+        (dict "Value" "EQUITY_TRANSACTION_TYPE_TRANSFER"     "Label" .Labels.Transactions.Form.TransactionTransfer)
       )
     }}
   </div>
 
   <div class="form-section">
     {{template "form-row" dict "Cols" 2 "Fields" (list
-      (dict "Type" "select" "ID" "equity_account_id"     "Name" "equity_account_id"     "Label" "Capital Account" "Required" true)
-      (dict "Type" "number" "ID" "amount"                "Name" "amount"                "Label" "Amount"          "Required" true "Placeholder" "0.00" "Step" "0.01" "Min" "0.01")
+      (dict "Type" "select" "ID" "equity_account_id"     "Name" "equity_account_id"     "Label" .Labels.Transactions.Form.EquityAccount "Required" true)
+      (dict "Type" "number" "ID" "amount"                "Name" "amount"                "Label" .Labels.Transactions.Form.Amount          "Required" true "Placeholder" "0.00" "Step" "0.01" "Min" "0.01")
     )}}
     {{template "form-group" dict
       "Type"        "date"
       "ID"          "transaction_date"
       "Name"        "transaction_date"
-      "Label"       "Transaction Date"
+      "Label"       .Labels.Transactions.Form.TransactionDate
       "Required"    true
     }}
     {{template "form-group" dict
       "Type"        "textarea"
       "ID"          "description"
       "Name"        "description"
-      "Label"       "Description"
-      "Placeholder" "Optional memo for this transaction"
+      "Label"       .Labels.Transactions.Form.Description
+      "Placeholder" .Labels.Transactions.Form.MemoPlaceholder
     }}
   </div>
 
@@ -85,8 +85,7 @@
   <div class="form-section">
     <div class="alert alert--info">
       <p class="alert__message">
-        The corresponding journal entry will be auto-generated when you post this transaction.
-        Debits and credits are determined by the transaction type selected above.
+        {{.Labels.Transactions.Form.JournalEntryNote}}
       </p>
     </div>
   </div>

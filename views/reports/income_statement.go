@@ -141,12 +141,12 @@ func NewIncomeStatementView(deps *IncomeStatementDeps) view.View {
 		pageData := &IncomeStatementPageData{
 			PageData: types.PageData{
 				CacheVersion:   viewCtx.CacheVersion,
-				Title:          "Income Statement",
+				Title:          deps.Labels.IncomeStatement.Title,
 				CurrentPath:    viewCtx.CurrentPath,
 				ActiveNav:      "reports",
 				ActiveSubNav:   "income-statement",
-				HeaderTitle:    "Income Statement",
-				HeaderSubtitle: "Revenue and expenses for the period",
+				HeaderTitle:    deps.Labels.IncomeStatement.Title,
+				HeaderSubtitle: deps.Labels.IncomeStatement.Subtitle,
 				HeaderIcon:     "icon-trending-up",
 				CommonLabels:   deps.CommonLabels,
 			},

@@ -17,7 +17,7 @@ The "Post" submit button is disabled while the entry is unbalanced.
   <div class="sheet-body">
 
     {{/* ---- Entry Details section ---- */}}
-    <div class="form-section-title">{{.Labels.EntryDetails}}</div>
+    <h3 class="form-section-title">{{.Labels.EntryDetails}}</h3>
 
     <div class="form-row">
       {{template "form-group" (dict
@@ -52,7 +52,7 @@ The "Post" submit button is disabled while the entry is unbalanced.
     </div>
 
     {{/* ---- Journal Lines section ---- */}}
-    <div class="form-section-title">{{.Labels.JournalLines}}</div>
+    <h3 class="form-section-title">{{.Labels.JournalLines}}</h3>
 
     <div class="journal-lines-editor" id="journal-lines-editor">
       <table class="journal-lines-table">
@@ -78,6 +78,7 @@ The "Post" submit button is disabled while the entry is unbalanced.
               {{end}}
               <input type="text" class="form-control je-account-search"
                      placeholder="{{$.Labels.AccountPlaceholder}}"
+                     aria-label="{{$.Labels.Account}}, line {{.Index}}"
                      value="{{if .AccountCode}}{{.AccountCode}} — {{.AccountName}}{{end}}"
                      autocomplete="off"
                      data-line="{{.Index}}">
@@ -86,12 +87,14 @@ The "Post" submit button is disabled while the entry is unbalanced.
               <input type="number" name="debit[{{.Index}}]" class="form-control je-debit"
                      value="{{.Debit}}" min="0" step="0.01"
                      placeholder="0.00"
+                     aria-label="{{$.Labels.Debit}}, line {{.Index}}"
                      data-line="{{.Index}}">
             </td>
             <td class="col-credit">
               <input type="number" name="credit[{{.Index}}]" class="form-control je-credit"
                      value="{{.Credit}}" min="0" step="0.01"
                      placeholder="0.00"
+                     aria-label="{{$.Labels.Credit}}, line {{.Index}}"
                      data-line="{{.Index}}">
             </td>
             <td class="col-memo">
@@ -119,16 +122,16 @@ The "Post" submit button is disabled while the entry is unbalanced.
     </div>
 
     {{/* ---- Balance alert (updated client-side) ---- */}}
-    <div id="je-balance-alert" class="alert alert--info je-balance-alert" aria-live="polite">
+    <div id="je-balance-alert" class="alert alert--info je-balance-alert" aria-live="polite" aria-atomic="true">
       <span id="je-balance-icon">{{template "icon-info"}}</span>
-      <span id="je-balance-message">Enter debits and credits above</span>
+      <span id="je-balance-message">{{.Labels.BalanceHint}}</span>
     </div>
 
   </div>
 
   {{/* ---- Sheet footer ---- */}}
   <div class="sheet-footer">
-    <button type="button" class="btn btn--ghost" onclick="Sheet.close()">Cancel</button>
+    <button type="button" class="btn btn--ghost" onclick="Sheet.close()">{{.CommonLabels.Buttons.Cancel}}</button>
     <div class="sheet-footer__actions">
       <button type="submit" name="submit" value="draft" class="btn btn--secondary">
         {{.Labels.SaveDraft}}

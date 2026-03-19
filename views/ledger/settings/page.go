@@ -70,6 +70,7 @@ type PageData struct {
 	types.PageData
 	ContentTemplate string
 	Templates       []CoATemplate
+	Labels          fycha.AccountTemplatesLabels
 	// Summary info about the current CoA state (for the info alert)
 	CurrentAccountCount int
 	HasExistingAccounts bool
@@ -82,6 +83,7 @@ type PreviewPageData struct {
 	AccountCount int
 	Entries      []PreviewEntry
 	ApplyURL     string
+	Labels       fycha.AccountTemplatesLabels
 }
 
 // ---------------------------------------------------------------------------
@@ -114,15 +116,16 @@ func NewView(deps *Deps) view.View {
 		pageData := &PageData{
 			PageData: types.PageData{
 				CacheVersion:   viewCtx.CacheVersion,
-				Title:          "Account Templates",
+				Title:          deps.Labels.Templates.PageTitle,
 				CurrentPath:    viewCtx.CurrentPath,
 				ActiveNav:      deps.Routes.ActiveNav,
 				ActiveSubNav:   "account-templates",
-				HeaderTitle:    "Account Templates",
-				HeaderSubtitle: "Pre-built Chart of Accounts for your business type",
+				HeaderTitle:    deps.Labels.Templates.PageTitle,
+				HeaderSubtitle: deps.Labels.Templates.PageSubtitle,
 				HeaderIcon:     "icon-layout",
 				CommonLabels:   deps.CommonLabels,
 			},
+			Labels:              deps.Labels.Templates,
 			ContentTemplate:     "account-templates-content",
 			Templates:           templates,
 			CurrentAccountCount: 0, // Phase 3: replace with DB query
@@ -146,9 +149,10 @@ func NewPreviewAction(deps *Deps) view.View {
 			applyURL = defaultApplyURL
 		}
 
-		entries := buildPreviewEntries()
+		entries := buildPreviewEntries(deps.Labels.Form)
 		pageData := &PreviewPageData{
 			PageData:     types.PageData{CommonLabels: deps.CommonLabels},
+			Labels:       deps.Labels.Templates,
 			TemplateName: templateName(templateID),
 			AccountCount: len(entries),
 			Entries:      entries,
@@ -243,7 +247,7 @@ func templateName(id string) string {
 // seeder data, suitable for rendering as a read-only tree in the preview dialog.
 // The seeder data is flat (no explicit group rows), so we synthesize group rows
 // for each classification grouping.
-func buildPreviewEntries() []PreviewEntry {
+func buildPreviewEntries(l fycha.AccountFormLabels) []PreviewEntry {
 	accounts := seeder.DefaultCoA()
 
 	// We emit synthetic element-level headers + classification headers
@@ -256,11 +260,11 @@ func buildPreviewEntries() []PreviewEntry {
 		code    string
 	}
 	elements := []elementGroup{
-		{"ACCOUNT_ELEMENT_ASSET", "ASSETS", "1000"},
-		{"ACCOUNT_ELEMENT_LIABILITY", "LIABILITIES", "2000"},
-		{"ACCOUNT_ELEMENT_EQUITY", "EQUITY", "3000"},
-		{"ACCOUNT_ELEMENT_REVENUE", "REVENUE", "4000"},
-		{"ACCOUNT_ELEMENT_EXPENSE", "EXPENSES", "5000"},
+		{"ACCOUNT_ELEMENT_ASSET", l.GroupAssets, "1000"},
+		{"ACCOUNT_ELEMENT_LIABILITY", l.GroupLiabilities, "2000"},
+		{"ACCOUNT_ELEMENT_EQUITY", l.GroupEquity, "3000"},
+		{"ACCOUNT_ELEMENT_REVENUE", l.GroupRevenue, "4000"},
+		{"ACCOUNT_ELEMENT_EXPENSE", l.GroupExpenses, "5000"},
 	}
 
 	for _, eg := range elements {
@@ -279,7 +283,7 @@ func buildPreviewEntries() []PreviewEntry {
 		entries = append(entries, PreviewEntry{
 			Code:    eg.code,
 			Name:    eg.label,
-			Element: elementLabel(eg.element),
+			Element: elementLabel(eg.element, l),
 			IsGroup: true,
 			Level:   0,
 		})
@@ -287,13 +291,13 @@ func buildPreviewEntries() []PreviewEntry {
 		// Group by classification
 		seen := map[string]bool{}
 		for _, a := range elementAccounts {
-			classLabel := classificationLabel(a.Classification.String())
+			classLabel := classificationLabel(a.Classification.String(), l)
 			if !seen[classLabel] {
 				seen[classLabel] = true
 				entries = append(entries, PreviewEntry{
 					Code:    "",
 					Name:    classLabel,
-					Element: elementLabel(eg.element),
+					Element: elementLabel(eg.element, l),
 					Class:   classLabel,
 					IsGroup: true,
 					Level:   1,
@@ -302,8 +306,8 @@ func buildPreviewEntries() []PreviewEntry {
 			entries = append(entries, PreviewEntry{
 				Code:    a.Code,
 				Name:    a.Name,
-				Element: elementLabel(eg.element),
-				Class:   classificationLabel(a.Classification.String()),
+				Element: elementLabel(eg.element, l),
+				Class:   classificationLabel(a.Classification.String(), l),
 				IsGroup: false,
 				Level:   2,
 			})
@@ -313,45 +317,45 @@ func buildPreviewEntries() []PreviewEntry {
 	return entries
 }
 
-func elementLabel(pbElement string) string {
+func elementLabel(pbElement string, l fycha.AccountFormLabels) string {
 	switch pbElement {
 	case "ACCOUNT_ELEMENT_ASSET":
-		return "Asset"
+		return l.ElementAsset
 	case "ACCOUNT_ELEMENT_LIABILITY":
-		return "Liability"
+		return l.ElementLiability
 	case "ACCOUNT_ELEMENT_EQUITY":
-		return "Equity"
+		return l.ElementEquity
 	case "ACCOUNT_ELEMENT_REVENUE":
-		return "Revenue"
+		return l.ElementRevenue
 	case "ACCOUNT_ELEMENT_EXPENSE":
-		return "Expense"
+		return l.ElementExpense
 	default:
 		return pbElement
 	}
 }
 
-func classificationLabel(pbClass string) string {
+func classificationLabel(pbClass string, l fycha.AccountFormLabels) string {
 	switch pbClass {
 	case "ACCOUNT_CLASSIFICATION_CURRENT_ASSET":
-		return "Current Assets"
+		return l.ClassCurrentAsset
 	case "ACCOUNT_CLASSIFICATION_NON_CURRENT_ASSET":
-		return "Non-Current Assets"
+		return l.ClassNonCurrentAsset
 	case "ACCOUNT_CLASSIFICATION_CURRENT_LIABILITY":
-		return "Current Liabilities"
+		return l.ClassCurrentLiability
 	case "ACCOUNT_CLASSIFICATION_NON_CURRENT_LIABILITY":
-		return "Non-Current Liabilities"
+		return l.ClassNonCurrentLiability
 	case "ACCOUNT_CLASSIFICATION_EQUITY":
-		return "Equity"
+		return l.ClassEquity
 	case "ACCOUNT_CLASSIFICATION_OPERATING_REVENUE":
-		return "Operating Revenue"
+		return l.ClassOperatingRevenue
 	case "ACCOUNT_CLASSIFICATION_OTHER_INCOME":
-		return "Other Income"
+		return l.ClassOtherIncome
 	case "ACCOUNT_CLASSIFICATION_COST_OF_SALES":
-		return "Cost of Sales"
+		return l.ClassCostOfSales
 	case "ACCOUNT_CLASSIFICATION_OPERATING_EXPENSE":
-		return "Operating Expenses"
+		return l.ClassOperatingExpense
 	case "ACCOUNT_CLASSIFICATION_FINANCE_COST":
-		return "Finance Costs"
+		return l.ClassFinanceCost
 	default:
 		return pbClass
 	}

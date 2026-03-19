@@ -9,7 +9,7 @@
     <div class="detail-tabs">
         {{template "tabs" (dict "Items" .TabItems "ActiveTab" .ActiveTab "Variant" "default" "ID" "asset-detail-tabs")}}
     </div>
-    <div id="tabContent" class="detail-body">
+    <div id="tabContent" class="detail-body" role="tabpanel" aria-labelledby="tab-{{.ActiveTab}}">
         {{if eq .ActiveTab "info"}}
             {{template "asset-tab-info" .}}
         {{else if eq .ActiveTab "depreciation"}}
@@ -32,7 +32,7 @@
 <div class="tab-scroll">
     <h4 class="detail-section-title">{{.Labels.Detail.BasicInfo.Title}}</h4>
 
-    <div id="info-result" class="form-result" style="display:none;"></div>
+    <div id="info-result" class="form-result" style="display:none;" aria-live="polite" aria-atomic="true"></div>
 
     <form id="info-edit-form"
           hx-post="{{.EditURL}}"
@@ -64,7 +64,7 @@
 
         <div class="form-row">
             {{template "form-group" (dict "Type" "number" "Name" "useful_life_months" "Label" .Labels.Form.UsefulLifeMonths "Value" .UsefulLifeMonths "Required" true "Placeholder" .Labels.Form.UsefulLifePlaceholder)}}
-            {{template "form-group" (dict "Type" "select" "Name" "depreciation_method" "Label" .Labels.Form.DepreciationMethod "Value" .DepreciationMethodKey "Options" (list (dict "Value" "straight_line" "Label" "Straight Line") (dict "Value" "declining_balance" "Label" "Declining Balance") (dict "Value" "sum_of_years" "Label" "Sum of Years' Digits") (dict "Value" "units_of_production" "Label" "Units of Production")))}}
+            {{template "form-group" (dict "Type" "select" "Name" "depreciation_method" "Label" .Labels.Form.DepreciationMethod "Value" .DepreciationMethodKey "Options" (list (dict "Value" "straight_line" "Label" .Labels.Form.DepMethodStraightLine) (dict "Value" "declining_balance" "Label" .Labels.Form.DepMethodDecliningBalance) (dict "Value" "sum_of_years" "Label" .Labels.Form.DepMethodSumOfYears) (dict "Value" "units_of_production" "Label" .Labels.Form.DepMethodUnitsOfProduction)))}}
         </div>
 
         <div class="form-row single">

@@ -11,11 +11,11 @@
   {{/* Record payment sheet-form */}}
   {{template "sheet-form" dict
     "ID"          "record-payment-sheet"
-    "Title"       "Record Payment"
+    "Title"       .Labels.Sheet.RecordPayment
     "LoadURL"     .RecordPaymentURL
     "FooterType"  "save"
-    "SaveLabel"   "Post Payment"
-    "CancelLabel" "Cancel"
+    "SaveLabel"   .Labels.Sheet.PostPayment
+    "CancelLabel" .CommonLabels.Buttons.Cancel
   }}
 
 </div>
@@ -39,23 +39,23 @@
 
   <div class="form-section">
     {{template "form-row" dict "Cols" 2 "Fields" (list
-      (dict "Type" "text"   "ID" "payment_number"   "Name" "payment_number"   "Label" "Payment #"      "Required" true  "Placeholder" "e.g. PAY-001")
-      (dict "Type" "date"   "ID" "payment_date"     "Name" "payment_date"     "Label" "Payment Date"   "Required" true)
+      (dict "Type" "text"   "ID" "payment_number"   "Name" "payment_number"   "Label" .Labels.Form.PaymentNumber  "Required" true  "Placeholder" .Labels.Form.PaymentNumberPlaceholder)
+      (dict "Type" "date"   "ID" "payment_date"     "Name" "payment_date"     "Label" .Labels.Form.PaymentDate    "Required" true)
     )}}
   </div>
 
   <div class="form-section">
-    <p class="form-section__title">Payment Breakdown</p>
+    <p class="form-section__title">{{.Labels.Form.PaymentBreakdown}}</p>
     {{template "form-row" dict "Cols" 3 "Fields" (list
-      (dict "Type" "number" "ID" "principal_amount" "Name" "principal_amount" "Label" "Principal"      "Required" false "Placeholder" "0.00" "Step" "0.01" "Min" "0")
-      (dict "Type" "number" "ID" "interest_amount"  "Name" "interest_amount"  "Label" "Interest"       "Required" false "Placeholder" "0.00" "Step" "0.01" "Min" "0")
-      (dict "Type" "number" "ID" "fee_amount"       "Name" "fee_amount"       "Label" "Fees (PFRS 9)"  "Required" false "Placeholder" "0.00" "Step" "0.01" "Min" "0")
+      (dict "Type" "number" "ID" "principal_amount" "Name" "principal_amount" "Label" .Labels.Form.PrincipalAmount "Required" false "Placeholder" "0.00" "Step" "0.01" "Min" "0")
+      (dict "Type" "number" "ID" "interest_amount"  "Name" "interest_amount"  "Label" .Labels.Form.InterestAmount  "Required" false "Placeholder" "0.00" "Step" "0.01" "Min" "0")
+      (dict "Type" "number" "ID" "fee_amount"       "Name" "fee_amount"       "Label" .Labels.Form.FeeAmount       "Required" false "Placeholder" "0.00" "Step" "0.01" "Min" "0")
     )}}
     {{template "form-group" dict
       "Type"        "number"
       "ID"          "total_amount"
       "Name"        "total_amount"
-      "Label"       "Total Payment"
+      "Label"       .Labels.Form.TotalAmount
       "Required"    true
       "Placeholder" "0.00"
       "Step"        "0.01"
@@ -65,7 +65,7 @@
       "Type"        "number"
       "ID"          "remaining_balance"
       "Name"        "remaining_balance"
-      "Label"       "Remaining Balance After Payment"
+      "Label"       .Labels.Form.RemainingBalance
       "Required"    true
       "Placeholder" "0.00"
       "Step"        "0.01"
@@ -78,8 +78,8 @@
       "Type"        "textarea"
       "ID"          "notes"
       "Name"        "notes"
-      "Label"       "Notes"
-      "Placeholder" "Optional payment notes or reference"
+      "Label"       .Labels.Form.Notes
+      "Placeholder" .Labels.Form.NotesPlaceholder
     }}
   </div>
 </form>

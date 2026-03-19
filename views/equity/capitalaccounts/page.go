@@ -36,6 +36,7 @@ type PageData struct {
 	types.PageData
 	ContentTemplate string
 	Table           *types.TableConfig
+	Labels          fycha.EquityLabels
 }
 
 // EquityAccountRow is the view-model for a single equity account row.
@@ -71,6 +72,7 @@ func NewView(deps *Deps) view.View {
 				CommonLabels:   deps.CommonLabels,
 			},
 			ContentTemplate: "capital-accounts-content",
+			Labels:          deps.Labels,
 			Table:           tableConfig,
 		}
 
@@ -97,6 +99,7 @@ func NewContentView(deps *Deps) view.View {
 				CommonLabels:   deps.CommonLabels,
 			},
 			ContentTemplate: "capital-accounts-content",
+			Labels:          deps.Labels,
 			Table:           tableConfig,
 		}
 

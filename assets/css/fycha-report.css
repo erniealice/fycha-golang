@@ -192,7 +192,7 @@
     font-size: 0.8125rem;
     font-family: var(--font-body);
 }
-.filter-input:focus {
+.filter-input:focus-visible {
     outline: none;
     border-color: var(--accent-primary);
     box-shadow: 0 0 0 2px var(--accent-primary-light);

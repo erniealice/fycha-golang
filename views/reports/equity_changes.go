@@ -147,12 +147,12 @@ func NewEquityChangesView(deps *EquityChangesDeps) view.View {
 		pageData := &EquityChangesPageData{
 			PageData: types.PageData{
 				CacheVersion:   viewCtx.CacheVersion,
-				Title:          "Statement of Changes in Equity",
+				Title:          deps.Labels.EquityChanges.Title,
 				CurrentPath:    viewCtx.CurrentPath,
 				ActiveNav:      "reports",
 				ActiveSubNav:   "equity-changes",
-				HeaderTitle:    "Statement of Changes in Equity",
-				HeaderSubtitle: "Equity movements for the period",
+				HeaderTitle:    deps.Labels.EquityChanges.Title,
+				HeaderSubtitle: deps.Labels.EquityChanges.Subtitle,
 				HeaderIcon:     "icon-percent",
 				CommonLabels:   deps.CommonLabels,
 			},

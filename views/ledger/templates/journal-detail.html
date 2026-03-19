@@ -68,9 +68,9 @@
           <dd>
             {{template "badge" (dict "Variant" .StatusVariant "Value" .Status)}}
             {{if .IsBalanced}}
-              {{template "badge" (dict "Variant" "success" "Value" "Balanced")}}
+              {{template "badge" (dict "Variant" "success" "Value" .Labels.Detail.Balanced)}}
             {{else}}
-              {{template "badge" (dict "Variant" "danger" "Value" "Unbalanced")}}
+              {{template "badge" (dict "Variant" "danger" "Value" .Labels.Detail.Unbalanced)}}
             {{end}}
           </dd>
         </div>
@@ -133,17 +133,17 @@
     {{/* ---- totals footer ---- */}}
     <div class="journal-totals">
       <div class="journal-totals__row journal-totals__row--total">
-        <span class="journal-totals__label">TOTALS</span>
+        <span class="journal-totals__label">{{.Labels.Detail.Totals}}</span>
         <span class="journal-totals__debit">{{.TotalDebit}}</span>
         <span class="journal-totals__credit">{{.TotalCredit}}</span>
       </div>
       <div class="journal-totals__row journal-totals__row--diff">
-        <span class="journal-totals__label">DIFFERENCE</span>
+        <span class="journal-totals__label">{{.Labels.Detail.Difference}}</span>
         <span class="journal-totals__diff">{{.Difference}}</span>
         {{if .IsBalanced}}
-          {{template "badge" (dict "Variant" "success" "Value" "Balanced")}}
+          {{template "badge" (dict "Variant" "success" "Value" .Labels.Detail.Balanced)}}
         {{else}}
-          {{template "badge" (dict "Variant" "danger" "Value" "Unbalanced")}}
+          {{template "badge" (dict "Variant" "danger" "Value" .Labels.Detail.Unbalanced)}}
         {{end}}
       </div>
     </div>

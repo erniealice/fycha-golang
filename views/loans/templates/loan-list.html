@@ -11,11 +11,11 @@
   {{/* Add loan sheet-form */}}
   {{template "sheet-form" dict
     "ID"          "add-loan-sheet"
-    "Title"       "Add Loan"
+    "Title"       .Labels.Sheet.AddLoan
     "LoadURL"     ""
     "FooterType"  "save"
-    "SaveLabel"   "Save Loan"
-    "CancelLabel" "Cancel"
+    "SaveLabel"   .Labels.Sheet.SaveLoan
+    "CancelLabel" .CommonLabels.Buttons.Cancel
   }}
 
 </div>

@@ -33,10 +33,11 @@ type Deps struct {
 // PageData holds the data for the loan payments list page.
 type PageData struct {
 	types.PageData
-	ContentTemplate string
-	LoanID          string
-	Table           *types.TableConfig
+	ContentTemplate  string
+	LoanID           string
+	Table            *types.TableConfig
 	RecordPaymentURL string
+	Labels           fycha.LoanPaymentLabels
 }
 
 // LoanPaymentRow is the view-model for a single loan payment row.
@@ -80,6 +81,7 @@ func NewView(deps *Deps) view.View {
 			LoanID:           loanID,
 			Table:            tableConfig,
 			RecordPaymentURL: deps.Routes.AddURL,
+			Labels:           deps.Labels,
 		}
 
 		return view.OK("loan-payments", pageData)
@@ -109,6 +111,7 @@ func NewContentView(deps *Deps) view.View {
 			LoanID:           loanID,
 			Table:            tableConfig,
 			RecordPaymentURL: deps.Routes.AddURL,
+			Labels:           deps.Labels,
 		}
 
 		return view.OK("loan-payments-content", pageData)

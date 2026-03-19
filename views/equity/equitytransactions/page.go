@@ -35,6 +35,7 @@ type PageData struct {
 	types.PageData
 	ContentTemplate string
 	Table           *types.TableConfig
+	Labels          fycha.EquityLabels
 	// Guided transaction form data
 	AddFormURL string
 }
@@ -73,6 +74,7 @@ func NewView(deps *Deps) view.View {
 				CommonLabels:   deps.CommonLabels,
 			},
 			ContentTemplate: "equity-transactions-content",
+			Labels:          deps.Labels,
 			Table:           tableConfig,
 			AddFormURL:      deps.Routes.TransactionAddURL,
 		}
@@ -100,6 +102,7 @@ func NewContentView(deps *Deps) view.View {
 				CommonLabels:   deps.CommonLabels,
 			},
 			ContentTemplate: "equity-transactions-content",
+			Labels:          deps.Labels,
 			Table:           tableConfig,
 			AddFormURL:      deps.Routes.TransactionAddURL,
 		}

@@ -92,10 +92,10 @@ Data: .Name, .AssetNumber, .Description, .CategoryID, .LocationID,
                 "Label" .Labels.DepreciationMethod
                 "Value" .DepreciationMethod
                 "Options" (list
-                    (dict "Value" "straight_line" "Label" "Straight Line")
-                    (dict "Value" "declining_balance" "Label" "Declining Balance")
-                    (dict "Value" "sum_of_years" "Label" "Sum of Years' Digits")
-                    (dict "Value" "units_of_production" "Label" "Units of Production")
+                    (dict "Value" "straight_line" "Label" .Labels.DepMethodStraightLine)
+                    (dict "Value" "declining_balance" "Label" .Labels.DepMethodDecliningBalance)
+                    (dict "Value" "sum_of_years" "Label" .Labels.DepMethodSumOfYears)
+                    (dict "Value" "units_of_production" "Label" .Labels.DepMethodUnitsOfProduction)
                 )
             )}}
         </div>

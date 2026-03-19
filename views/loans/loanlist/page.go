@@ -37,6 +37,7 @@ type PageData struct {
 	types.PageData
 	ContentTemplate string
 	Table           *types.TableConfig
+	Labels          fycha.LoanLabels
 }
 
 // LoanRow is the view-model for a single loan row.
@@ -85,6 +86,7 @@ func NewView(deps *Deps) view.View {
 			},
 			ContentTemplate: "loan-list-content",
 			Table:           tableConfig,
+			Labels:          deps.Labels,
 		}
 
 		return view.OK("loan-list", pageData)
@@ -118,6 +120,7 @@ func NewContentView(deps *Deps) view.View {
 			},
 			ContentTemplate: "loan-list-content",
 			Table:           tableConfig,
+			Labels:          deps.Labels,
 		}
 
 		return view.OK("loan-list-content", pageData)

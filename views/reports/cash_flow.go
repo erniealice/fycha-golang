@@ -154,12 +154,12 @@ func NewCashFlowView(deps *CashFlowDeps) view.View {
 		pageData := &CashFlowPageData{
 			PageData: types.PageData{
 				CacheVersion:   viewCtx.CacheVersion,
-				Title:          "Statement of Cash Flows",
+				Title:          deps.Labels.CashFlow.Title,
 				CurrentPath:    viewCtx.CurrentPath,
 				ActiveNav:      "reports",
 				ActiveSubNav:   "cash-flow",
-				HeaderTitle:    "Statement of Cash Flows",
-				HeaderSubtitle: "Cash movements by activity type",
+				HeaderTitle:    deps.Labels.CashFlow.Title,
+				HeaderSubtitle: deps.Labels.CashFlow.Subtitle,
 				HeaderIcon:     "icon-activity",
 				CommonLabels:   deps.CommonLabels,
 			},

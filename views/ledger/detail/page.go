@@ -106,7 +106,7 @@ func NewTabAction(deps *Deps) view.View {
 // ---------------------------------------------------------------------------
 
 func buildPageData(ctx context.Context, deps *Deps, id, activeTab string, viewCtx *view.ViewContext, perms *types.UserPermissions) *PageData {
-	acct := fetchAccount(ctx, deps, id)
+	acct := fetchAccount(ctx, deps, id, deps.Labels)
 
 	tabItems := buildTabItems(id, deps.Labels, deps.Routes)
 
@@ -192,7 +192,7 @@ type accountViewModel struct {
 
 // fetchAccount loads a single account by ID via ReadAccount use case.
 // Returns a placeholder view-model on error so the page renders with an empty state.
-func fetchAccount(ctx context.Context, deps *Deps, id string) accountViewModel {
+func fetchAccount(ctx context.Context, deps *Deps, id string, l fycha.AccountLabels) accountViewModel {
 	placeholder := accountViewModel{
 		AccountCode:    "\u2014",
 		AccountName:    "Account not found",
@@ -229,11 +229,11 @@ func fetchAccount(ctx context.Context, deps *Deps, id string) accountViewModel {
 		return placeholder
 	}
 
-	return protoToViewModel(resp.GetData()[0])
+	return protoToViewModel(resp.GetData()[0], l)
 }
 
 // protoToViewModel converts a proto Account to accountViewModel.
-func protoToViewModel(a *accountpb.Account) accountViewModel {
+func protoToViewModel(a *accountpb.Account, l fycha.AccountLabels) accountViewModel {
 	element := elementString(a.GetElement())
 	elementVariant := elementBadgeVariant(element)
 
@@ -250,11 +250,11 @@ func protoToViewModel(a *accountpb.Account) accountViewModel {
 		AccountName:    a.GetName(),
 		Element:        element,
 		ElementVariant: elementVariant,
-		Classification: classificationLabel(a.GetClassification()),
+		Classification: classificationLabel(a.GetClassification(), l.Form),
 		Group:          a.GetGroupId(),
 		ParentAccount:  a.GetParentId(),
-		NormalBalance:  normalBalanceLabel(a.GetNormalBalance()),
-		CashFlowTag:    cashFlowLabel(a.GetCashFlowActivity()),
+		NormalBalance:  normalBalanceLabel(a.GetNormalBalance(), l.Form),
+		CashFlowTag:    cashFlowLabel(a.GetCashFlowActivity(), l.Form),
 		Description:    a.GetDescription(),
 		AccountStatus:  status,
 		StatusVariant:  statusVariant,
@@ -344,58 +344,58 @@ func elementString(e accountpb.AccountElement) string {
 	}
 }
 
-func classificationLabel(c accountpb.AccountClassification) string {
+func classificationLabel(c accountpb.AccountClassification, l fycha.AccountFormLabels) string {
 	switch c {
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_CURRENT_ASSET:
-		return "Current Asset"
+		return l.ClassCurrentAsset
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_NON_CURRENT_ASSET:
-		return "Non-Current Asset"
+		return l.ClassNonCurrentAsset
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_CURRENT_LIABILITY:
-		return "Current Liability"
+		return l.ClassCurrentLiability
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_NON_CURRENT_LIABILITY:
-		return "Non-Current Liability"
+		return l.ClassNonCurrentLiability
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_EQUITY:
-		return "Equity"
+		return l.ClassEquity
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_OPERATING_REVENUE:
-		return "Operating Revenue"
+		return l.ClassOperatingRevenue
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_OTHER_INCOME:
-		return "Other Income"
+		return l.ClassOtherIncome
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_COST_OF_SALES:
-		return "Cost of Sales"
+		return l.ClassCostOfSales
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_OPERATING_EXPENSE:
-		return "Operating Expense"
+		return l.ClassOperatingExpense
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_FINANCE_COST:
-		return "Finance Cost"
+		return l.ClassFinanceCost
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_INCOME_TAX:
-		return "Income Tax"
+		return l.ClassIncomeTax
 	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_OTHER_EXPENSE:
-		return "Other Expense"
+		return l.ClassOtherExpense
 	default:
 		return ""
 	}
 }
 
-func normalBalanceLabel(n accountpb.NormalBalance) string {
+func normalBalanceLabel(n accountpb.NormalBalance, l fycha.AccountFormLabels) string {
 	switch n {
 	case accountpb.NormalBalance_NORMAL_BALANCE_DEBIT:
-		return "Debit"
+		return l.NormalBalanceDebit
 	case accountpb.NormalBalance_NORMAL_BALANCE_CREDIT:
-		return "Credit"
+		return l.NormalBalanceCredit
 	default:
 		return "\u2014"
 	}
 }
 
-func cashFlowLabel(c accountpb.CashFlowActivity) string {
+func cashFlowLabel(c accountpb.CashFlowActivity, l fycha.AccountFormLabels) string {
 	switch c {
 	case accountpb.CashFlowActivity_CASH_FLOW_ACTIVITY_OPERATING:
-		return "Operating Activities"
+		return l.CashFlowOperating
 	case accountpb.CashFlowActivity_CASH_FLOW_ACTIVITY_INVESTING:
-		return "Investing Activities"
+		return l.CashFlowInvesting
 	case accountpb.CashFlowActivity_CASH_FLOW_ACTIVITY_FINANCING:
-		return "Financing Activities"
+		return l.CashFlowFinancing
 	case accountpb.CashFlowActivity_CASH_FLOW_ACTIVITY_NONE:
-		return "None"
+		return l.CashFlowNone
 	default:
 		return "\u2014"
 	}

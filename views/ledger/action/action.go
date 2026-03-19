@@ -69,9 +69,9 @@ func NewAddAction(deps *Deps) view.View {
 				Active:          true,
 				Labels:          deps.Labels.Form,
 				CommonLabels:    nil, // injected by ViewAdapter
-				ElementOptions:  elementOptions(),
-				ClassOptions:    classOptions(""),
-				CashFlowOptions: cashFlowOptions(),
+				ElementOptions:  elementOptions(deps.Labels.Form),
+				ClassOptions:    classOptions("", deps.Labels.Form),
+				CashFlowOptions: cashFlowOptions(deps.Labels.Form),
 			})
 		}
 
@@ -241,9 +241,9 @@ func loadEditFormData(ctx context.Context, deps *Deps, id string) *FormData {
 		Active:          true,
 		Labels:          deps.Labels.Form,
 		CommonLabels:    nil,
-		ElementOptions:  elementOptions(),
-		ClassOptions:    classOptions(""),
-		CashFlowOptions: cashFlowOptions(),
+		ElementOptions:  elementOptions(deps.Labels.Form),
+		ClassOptions:    classOptions("", deps.Labels.Form),
+		CashFlowOptions: cashFlowOptions(deps.Labels.Form),
 	}
 
 	if deps.ReadAccount == nil {
@@ -279,9 +279,9 @@ func loadEditFormData(ctx context.Context, deps *Deps, id string) *FormData {
 		Active:          a.GetActive(),
 		Labels:          deps.Labels.Form,
 		CommonLabels:    nil,
-		ElementOptions:  elementOptions(),
-		ClassOptions:    classOptions(element),
-		CashFlowOptions: cashFlowOptions(),
+		ElementOptions:  elementOptions(deps.Labels.Form),
+		ClassOptions:    classOptions(element, deps.Labels.Form),
+		CashFlowOptions: cashFlowOptions(deps.Labels.Form),
 	}
 }
 
@@ -420,64 +420,64 @@ func cashFlowStringFromProto(c accountpb.CashFlowActivity) string {
 // Option list helpers
 // ---------------------------------------------------------------------------
 
-func elementOptions() []SelectOption {
+func elementOptions(l fycha.AccountFormLabels) []SelectOption {
 	return []SelectOption{
-		{Value: "asset", Label: "Asset"},
-		{Value: "liability", Label: "Liability"},
-		{Value: "equity", Label: "Equity"},
-		{Value: "revenue", Label: "Revenue"},
-		{Value: "expense", Label: "Expense"},
+		{Value: "asset", Label: l.ElementAsset},
+		{Value: "liability", Label: l.ElementLiability},
+		{Value: "equity", Label: l.ElementEquity},
+		{Value: "revenue", Label: l.ElementRevenue},
+		{Value: "expense", Label: l.ElementExpense},
 	}
 }
 
-func classOptions(element string) []SelectOption {
+func classOptions(element string, l fycha.AccountFormLabels) []SelectOption {
 	switch element {
 	case "asset":
 		return []SelectOption{
-			{Value: "current_asset", Label: "Current Asset"},
-			{Value: "non_current_asset", Label: "Non-Current Asset"},
+			{Value: "current_asset", Label: l.ClassCurrentAsset},
+			{Value: "non_current_asset", Label: l.ClassNonCurrentAsset},
 		}
 	case "liability":
 		return []SelectOption{
-			{Value: "current_liability", Label: "Current Liability"},
-			{Value: "non_current_liability", Label: "Non-Current Liability"},
+			{Value: "current_liability", Label: l.ClassCurrentLiability},
+			{Value: "non_current_liability", Label: l.ClassNonCurrentLiability},
 		}
 	case "equity":
 		return []SelectOption{
-			{Value: "equity", Label: "Equity"},
+			{Value: "equity", Label: l.ClassEquity},
 		}
 	case "revenue":
 		return []SelectOption{
-			{Value: "operating_revenue", Label: "Operating Revenue"},
-			{Value: "other_income", Label: "Other Income"},
+			{Value: "operating_revenue", Label: l.ClassOperatingRevenue},
+			{Value: "other_income", Label: l.ClassOtherIncome},
 		}
 	case "expense":
 		return []SelectOption{
-			{Value: "cost_of_sales", Label: "Cost of Sales"},
-			{Value: "operating_expense", Label: "Operating Expense"},
+			{Value: "cost_of_sales", Label: l.ClassCostOfSales},
+			{Value: "operating_expense", Label: l.ClassOperatingExpense},
 		}
 	default:
 		// Return all classes when element is not yet selected
 		return []SelectOption{
-			{Value: "current_asset", Label: "Current Asset"},
-			{Value: "non_current_asset", Label: "Non-Current Asset"},
-			{Value: "current_liability", Label: "Current Liability"},
-			{Value: "non_current_liability", Label: "Non-Current Liability"},
-			{Value: "equity", Label: "Equity"},
-			{Value: "operating_revenue", Label: "Operating Revenue"},
-			{Value: "other_income", Label: "Other Income"},
-			{Value: "cost_of_sales", Label: "Cost of Sales"},
-			{Value: "operating_expense", Label: "Operating Expense"},
+			{Value: "current_asset", Label: l.ClassCurrentAsset},
+			{Value: "non_current_asset", Label: l.ClassNonCurrentAsset},
+			{Value: "current_liability", Label: l.ClassCurrentLiability},
+			{Value: "non_current_liability", Label: l.ClassNonCurrentLiability},
+			{Value: "equity", Label: l.ClassEquity},
+			{Value: "operating_revenue", Label: l.ClassOperatingRevenue},
+			{Value: "other_income", Label: l.ClassOtherIncome},
+			{Value: "cost_of_sales", Label: l.ClassCostOfSales},
+			{Value: "operating_expense", Label: l.ClassOperatingExpense},
 		}
 	}
 }
 
-func cashFlowOptions() []SelectOption {
+func cashFlowOptions(l fycha.AccountFormLabels) []SelectOption {
 	return []SelectOption{
-		{Value: "", Label: "None"},
-		{Value: "operating", Label: "Operating Activities"},
-		{Value: "investing", Label: "Investing Activities"},
-		{Value: "financing", Label: "Financing Activities"},
+		{Value: "", Label: l.CashFlowNone},
+		{Value: "operating", Label: l.CashFlowOperating},
+		{Value: "investing", Label: l.CashFlowInvesting},
+		{Value: "financing", Label: l.CashFlowFinancing},
 	}
 }
 

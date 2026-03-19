@@ -38,7 +38,7 @@
   </div>
 
   {{/* ---- tab content ---- */}}
-  <div id="tabContent" class="detail-body">
+  <div id="tabContent" class="detail-body" role="tabpanel" aria-labelledby="tab-{{.ActiveTab}}">
     {{if eq .ActiveTab "entries"}}
       {{template "account-tab-entries" .}}
     {{else if eq .ActiveTab "details"}}
