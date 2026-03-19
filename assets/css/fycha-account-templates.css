@@ -7,8 +7,8 @@
 .template-cards-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-    gap: 1.5rem;
-    margin-top: 1.5rem;
+    gap: var(--spacing-2xl);
+    margin-top: var(--spacing-2xl);
 }
 
 /* ========================================
@@ -46,13 +46,13 @@
     display: flex;
     align-items: flex-start;
     gap: 0.875rem;
-    padding: 1.25rem 1.25rem 0;
+    padding: var(--spacing-xl) var(--spacing-xl) 0;
 }
 
 .template-card__icon {
     flex-shrink: 0;
-    width: 2.5rem;
-    height: 2.5rem;
+    width: var(--icon-2xl);
+    height: var(--icon-2xl);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -62,8 +62,8 @@
 }
 
 .template-card__icon svg {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: var(--icon-sm);
+    height: var(--icon-sm);
 }
 
 .template-card__meta {
@@ -72,11 +72,11 @@
 }
 
 .template-card__name {
-    margin: 0 0 0.25rem 0;
+    margin: 0 0 var(--spacing-2xs) 0;
     font-size: var(--text-base);
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     color: var(--text-primary);
-    line-height: 1.3;
+    line-height: var(--leading-tight);
 }
 
 .template-card__count {
@@ -98,23 +98,23 @@
 
 .template-card__body {
     flex: 1 1 0;
-    padding: 1rem 1.25rem;
+    padding: var(--spacing-lg) var(--spacing-xl);
 }
 
 .template-card__description {
-    margin: 0 0 1rem 0;
+    margin: 0 0 var(--spacing-lg) 0;
     font-size: var(--text-md);
     color: var(--text-secondary);
-    line-height: 1.5;
+    line-height: var(--leading-normal);
 }
 
 /* Account breakdown by element */
 .template-card__breakdown {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
     margin: 0;
-    padding: 0.75rem;
+    padding: var(--spacing-md);
     background: var(--bg-sidebar);
     border-radius: var(--radius-sm);
     border: var(--border-width) solid var(--border-light);
@@ -123,7 +123,7 @@
 .template-card__breakdown-item {
     display: flex;
     align-items: center;
-    gap: 0.375rem;
+    gap: var(--spacing-xs);
     font-size: var(--text-sm);
     color: var(--text-secondary);
     font-variant-numeric: tabular-nums;
@@ -136,7 +136,7 @@
     align-items: center;
     justify-content: flex-end;
     gap: 0.625rem;
-    padding: 1rem 1.25rem;
+    padding: var(--spacing-lg) var(--spacing-xl);
     border-top: var(--border-width) solid var(--border-light);
     background: var(--bg-sidebar);
 }
@@ -150,7 +150,7 @@
     overflow-y: auto;
     border: var(--border-width) solid var(--border);
     border-radius: var(--radius-md);
-    margin: 1rem 0;
+    margin: var(--spacing-lg) 0;
 }
 
 .template-preview-table {
@@ -163,9 +163,9 @@
     position: sticky;
     top: 0;
     background: var(--bg-sidebar);
-    padding: 0.5rem 0.75rem;
+    padding: var(--spacing-sm) var(--spacing-md);
     text-align: left;
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     color: var(--text-secondary);
     border-bottom: var(--border-width) solid var(--border);
     font-size: var(--text-xs);
@@ -174,18 +174,18 @@
 }
 
 .template-preview-table tbody td {
-    padding: 0.375rem 0.75rem;
+    padding: var(--spacing-xs) var(--spacing-md);
     color: var(--text-primary);
     border-bottom: var(--border-width) solid var(--border-light);
 }
 
 /* Level indentation for preview tree */
-.preview-row--level-0 td:nth-child(2) { padding-left: 0.75rem; }
-.preview-row--level-1 td:nth-child(2) { padding-left: 1.75rem; }
+.preview-row--level-0 td:nth-child(2) { padding-left: var(--spacing-md); }
+.preview-row--level-1 td:nth-child(2) { padding-left: var(--spacing-3xl); }
 .preview-row--level-2 td:nth-child(2) { padding-left: 3rem; }
 
 .preview-row--group td {
-    font-weight: 600;
+    font-weight: var(--font-weight-semibold);
     background: var(--bg-base);
 }
 

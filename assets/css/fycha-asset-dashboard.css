@@ -8,8 +8,8 @@
 .fycha-asset-stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 1.25rem;
-    margin-bottom: 2rem;
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-4xl);
 }
 
 /* ========================================
@@ -19,7 +19,7 @@
 .fycha-asset-dashboard-grid {
     display: grid;
     grid-template-columns: 2fr 1fr;
-    gap: 1.5rem;
+    gap: var(--spacing-2xl);
 }
 
 /* ========================================
@@ -27,7 +27,7 @@
    ======================================== */
 
 .fycha-asset-chart-area {
-    padding: 1.5rem;
+    padding: var(--spacing-2xl);
     height: 20rem;
     position: relative;
 }
@@ -61,7 +61,7 @@
     right: 0;
     display: flex;
     justify-content: space-between;
-    padding: 0 1rem;
+    padding: 0 var(--spacing-lg);
 }
 
 .fycha-asset-chart-label {
@@ -74,14 +74,14 @@
    ======================================== */
 
 .fycha-asset-activity-list {
-    padding: 0.5rem;
+    padding: var(--spacing-sm);
 }
 
 .fycha-asset-activity-item {
     display: flex;
     align-items: flex-start;
     gap: 0.875rem;
-    padding: 1rem;
+    padding: var(--spacing-lg);
     border-radius: var(--radius-lg);
     transition: background var(--transition-base);
 }
@@ -91,8 +91,8 @@
 }
 
 .fycha-asset-activity-icon {
-    width: 2.5rem;
-    height: 2.5rem;
+    width: var(--icon-2xl);
+    height: var(--icon-2xl);
     border-radius: var(--radius-md);
     display: flex;
     align-items: center;
@@ -103,8 +103,8 @@
 }
 
 .fycha-asset-activity-icon svg {
-    width: 1.25rem;
-    height: 1.25rem;
+    width: var(--icon-sm);
+    height: var(--icon-sm);
 }
 
 .fycha-asset-activity-content {
@@ -114,7 +114,7 @@
 
 .fycha-asset-activity-title {
     font-size: var(--text-base);
-    font-weight: 500;
+    font-weight: var(--font-weight-medium);
     color: var(--text-primary);
     margin-bottom: 0.125rem;
 }
@@ -131,7 +131,7 @@
 }
 
 .fycha-asset-activity-empty {
-    padding: 2rem;
+    padding: var(--spacing-4xl);
     text-align: center;
     color: var(--text-muted);
 }
