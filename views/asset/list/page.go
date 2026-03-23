@@ -24,8 +24,8 @@ type MockAsset struct {
 	Active          bool
 }
 
-// Deps holds view dependencies.
-type Deps struct {
+// ListViewDeps holds view dependencies.
+type ListViewDeps struct {
 	Routes       fycha.AssetRoutes
 	Labels       fycha.AssetLabels
 	CommonLabels pyeza.CommonLabels
@@ -40,7 +40,7 @@ type PageData struct {
 }
 
 // NewView creates the asset list view (full page).
-func NewView(deps *Deps) view.View {
+func NewView(deps *ListViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		status := viewCtx.Request.PathValue("status")
 		if status == "" {
@@ -72,7 +72,7 @@ func NewView(deps *Deps) view.View {
 
 // NewTableView creates a view that returns only the table-card HTML.
 // Used as the refresh target after CRUD operations.
-func NewTableView(deps *Deps) view.View {
+func NewTableView(deps *ListViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		status := viewCtx.Request.PathValue("status")
 		if status == "" {
@@ -98,7 +98,7 @@ func mockAssets() []MockAsset {
 	}
 }
 
-func buildTableConfig(deps *Deps, status string, perms *types.UserPermissions) *types.TableConfig {
+func buildTableConfig(deps *ListViewDeps, status string, perms *types.UserPermissions) *types.TableConfig {
 	l := deps.Labels
 	columns := assetColumns(l)
 	rows := buildTableRows(mockAssets(), status, l, deps.Routes, perms)

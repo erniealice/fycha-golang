@@ -35,14 +35,15 @@ const (
 	AssetDepreciationPoliciesURL = "/app/assets/settings/depreciation-policies"
 
 	// Ledger — Chart of Accounts
-	LedgerBaseURL   = "/app/ledger/"
-	AccountListURL  = "/app/ledger/accounts/list"
-	AccountDetailURL = "/app/ledger/accounts/detail/{id}"
-	AccountTreeURL  = "/app/ledger/accounts/tree"
-	AccountTemplatesURL = "/app/ledger/settings/account-templates"
-	AccountAddURL   = "/action/ledger/accounts/add"
-	AccountEditURL  = "/action/ledger/accounts/edit/{id}"
-	AccountDeleteURL = "/action/ledger/accounts/delete"
+	LedgerBaseURL        = "/app/ledger/"
+	AccountListURL       = "/app/ledger/accounts/list"
+	AccountDetailURL     = "/app/ledger/accounts/detail/{id}"
+	AccountTabActionURL  = "/action/ledger/accounts/{id}/tab/{tab}"
+	AccountTreeURL       = "/app/ledger/accounts/tree"
+	AccountTemplatesURL  = "/app/ledger/settings/account-templates"
+	AccountAddURL        = "/action/ledger/accounts/add"
+	AccountEditURL       = "/action/ledger/accounts/edit/{id}"
+	AccountDeleteURL     = "/action/ledger/accounts/delete"
 
 	// Ledger — Journal Entries
 	JournalListURL    = "/app/ledger/journals/list/{status}"

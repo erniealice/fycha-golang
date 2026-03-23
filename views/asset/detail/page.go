@@ -8,6 +8,7 @@ import (
 	attachmentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/document/attachment"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/hybra-golang/views/attachment"
+	"github.com/erniealice/hybra-golang/views/auditlog"
 	"github.com/erniealice/pyeza-golang/route"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -73,19 +74,15 @@ type MockAssetDetail struct {
 // View dependencies + page data
 // ---------------------------------------------------------------------------
 
-// Deps holds view dependencies.
-type Deps struct {
+// DetailViewDeps holds view dependencies.
+type DetailViewDeps struct {
+	attachment.AttachmentOps
+	auditlog.AuditOps
+
 	Routes       fycha.AssetRoutes
 	Labels       fycha.AssetLabels
 	CommonLabels pyeza.CommonLabels
 	TableLabels  types.TableLabels
-
-	// Attachment operations (injected by composition root)
-	UploadFile       func(ctx context.Context, bucket, key string, content []byte, contentType string) error
-	ListAttachments  func(ctx context.Context, moduleKey, foreignKey string) (*attachmentpb.ListAttachmentsResponse, error)
-	CreateAttachment func(ctx context.Context, req *attachmentpb.CreateAttachmentRequest) (*attachmentpb.CreateAttachmentResponse, error)
-	DeleteAttachment func(ctx context.Context, req *attachmentpb.DeleteAttachmentRequest) (*attachmentpb.DeleteAttachmentResponse, error)
-	NewID            func() string
 }
 
 // PageData holds the data for the asset detail page.
@@ -118,6 +115,11 @@ type PageData struct {
 	TransactionTable      *types.TableConfig
 	AttachmentTable       *types.TableConfig
 	AttachmentUploadURL   string
+	// Audit history tab
+	AuditEntries    []auditlog.AuditEntryView
+	AuditHasNext    bool
+	AuditNextCursor string
+	AuditHistoryURL string
 }
 
 // ---------------------------------------------------------------------------
@@ -125,7 +127,7 @@ type PageData struct {
 // ---------------------------------------------------------------------------
 
 // NewView creates the asset detail view (full page).
-func NewView(deps *Deps) view.View {
+func NewView(deps *DetailViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		id := viewCtx.Request.PathValue("id")
 
@@ -141,7 +143,7 @@ func NewView(deps *Deps) view.View {
 }
 
 // NewTabAction creates the tab action view (partial -- returns only the tab content).
-func NewTabAction(deps *Deps) view.View {
+func NewTabAction(deps *DetailViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		id := viewCtx.Request.PathValue("id")
 		tab := viewCtx.Request.PathValue("tab")
@@ -157,6 +159,9 @@ func NewTabAction(deps *Deps) view.View {
 		if tab == "attachments" {
 			templateName = "attachment-tab"
 		}
+		if tab == "audit-history" {
+			templateName = "audit-history-tab"
+		}
 		return view.OK(templateName, pageData)
 	})
 }
@@ -165,7 +170,7 @@ func NewTabAction(deps *Deps) view.View {
 // Page data builder
 // ---------------------------------------------------------------------------
 
-func buildPageData(deps *Deps, id, activeTab string, viewCtx *view.ViewContext, perms *types.UserPermissions) *PageData {
+func buildPageData(deps *DetailViewDeps, id, activeTab string, viewCtx *view.ViewContext, perms *types.UserPermissions) *PageData {
 	asset := getMockAsset(id)
 
 	statusVariant := "success"
@@ -230,6 +235,27 @@ func buildPageData(deps *Deps, id, activeTab string, viewCtx *view.ViewContext, 
 		pageData.AttachmentUploadURL = route.ResolveURL(deps.Routes.AttachmentUploadURL, "id", id)
 	}
 
+	if activeTab == "audit-history" {
+		if deps.ListAuditHistory != nil {
+			cursor := viewCtx.Request.URL.Query().Get("cursor")
+			auditResp, err := deps.ListAuditHistory(viewCtx.Request.Context(), &auditlog.ListAuditRequest{
+				EntityType:  "asset",
+				EntityID:    id,
+				Limit:       20,
+				CursorToken: cursor,
+			})
+			if err != nil {
+				log.Printf("Failed to load audit history: %v", err)
+			}
+			if auditResp != nil {
+				pageData.AuditEntries = auditResp.Entries
+				pageData.AuditHasNext = auditResp.HasNext
+				pageData.AuditNextCursor = auditResp.NextCursor
+			}
+		}
+		pageData.AuditHistoryURL = route.ResolveURL(deps.Routes.TabActionURL, "id", id, "tab", "") + "audit-history"
+	}
+
 	return pageData
 }
 
@@ -242,6 +268,7 @@ func buildTabItems(id string, labels fycha.AssetLabels, routes fycha.AssetRoutes
 		{Key: "maintenance", Label: labels.Detail.Tabs.Maintenance, Href: base + "?tab=maintenance", HxGet: action + "maintenance", Icon: "icon-tool", Count: 0, Disabled: false},
 		{Key: "transactions", Label: labels.Detail.Tabs.Transactions, Href: base + "?tab=transactions", HxGet: action + "transactions", Icon: "icon-clock", Count: 0, Disabled: false},
 		{Key: "attachments", Label: labels.Detail.Tabs.Attachments, Href: base + "?tab=attachments", HxGet: action + "attachments", Icon: "icon-paperclip", Count: 0, Disabled: false},
+		{Key: "audit-history", Label: "History", Href: base + "?tab=audit-history", HxGet: action + "audit-history", Icon: "icon-clock", Count: 0, Disabled: false},
 	}
 }
 

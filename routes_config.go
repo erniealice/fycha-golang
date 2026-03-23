@@ -146,6 +146,7 @@ type AccountRoutes struct {
 	ActiveSubNav string `json:"active_sub_nav"`
 	ListURL      string `json:"list_url"`
 	DetailURL    string `json:"detail_url"`
+	TabActionURL string `json:"tab_action_url"`
 	TreeURL      string `json:"tree_url"`
 	TemplatesURL string `json:"templates_url"`
 	AddURL       string `json:"add_url"`
@@ -159,6 +160,7 @@ func DefaultAccountRoutes() AccountRoutes {
 		ActiveSubNav: "chart-of-accounts",
 		ListURL:      AccountListURL,
 		DetailURL:    AccountDetailURL,
+		TabActionURL: AccountTabActionURL,
 		TreeURL:      AccountTreeURL,
 		TemplatesURL: AccountTemplatesURL,
 		AddURL:       AccountAddURL,

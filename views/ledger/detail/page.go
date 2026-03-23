@@ -7,6 +7,7 @@ import (
 
 	accountpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/account"
 	pyeza "github.com/erniealice/pyeza-golang"
+	"github.com/erniealice/hybra-golang/views/auditlog"
 	"github.com/erniealice/pyeza-golang/route"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -20,6 +21,8 @@ import (
 
 // Deps holds view dependencies.
 type Deps struct {
+	auditlog.AuditOps
+
 	Routes       fycha.AccountRoutes
 	Labels       fycha.AccountLabels
 	CommonLabels pyeza.CommonLabels
@@ -62,6 +65,11 @@ type PageData struct {
 	// Actions
 	EditURL string
 	CanEdit bool
+	// Audit history tab
+	AuditEntries    []auditlog.AuditEntryView
+	AuditHasNext    bool
+	AuditNextCursor string
+	AuditHistoryURL string
 }
 
 // ---------------------------------------------------------------------------
@@ -97,6 +105,9 @@ func NewTabAction(deps *Deps) view.View {
 		pageData := buildPageData(ctx, deps, id, tab, viewCtx, perms)
 
 		templateName := "account-tab-" + tab
+		if tab == "audit-history" {
+			templateName = "audit-history-tab"
+		}
 		return view.OK(templateName, pageData)
 	})
 }
@@ -153,14 +164,37 @@ func buildPageData(ctx context.Context, deps *Deps, id, activeTab string, viewCt
 		pageData.EntriesTable = buildEntriesTable(nil, deps.Labels, deps.TableLabels, deps.Routes)
 	}
 
+	if activeTab == "audit-history" {
+		if deps.ListAuditHistory != nil {
+			cursor := viewCtx.Request.URL.Query().Get("cursor")
+			auditResp, err := deps.ListAuditHistory(ctx, &auditlog.ListAuditRequest{
+				EntityType:  "account",
+				EntityID:    id,
+				Limit:       20,
+				CursorToken: cursor,
+			})
+			if err != nil {
+				log.Printf("Failed to load audit history: %v", err)
+			}
+			if auditResp != nil {
+				pageData.AuditEntries = auditResp.Entries
+				pageData.AuditHasNext = auditResp.HasNext
+				pageData.AuditNextCursor = auditResp.NextCursor
+			}
+		}
+		pageData.AuditHistoryURL = route.ResolveURL(deps.Routes.TabActionURL, "id", id, "tab", "") + "audit-history"
+	}
+
 	return pageData
 }
 
 func buildTabItems(id string, labels fycha.AccountLabels, routes fycha.AccountRoutes) []pyeza.TabItem {
 	base := route.ResolveURL(routes.DetailURL, "id", id)
+	action := route.ResolveURL(routes.TabActionURL, "id", id, "tab", "")
 	return []pyeza.TabItem{
-		{Key: "entries", Label: labels.Detail.Tabs.JournalEntries, Href: base + "?tab=entries", Icon: "icon-file-text", Count: 0, Disabled: false},
-		{Key: "details", Label: labels.Detail.Tabs.Details, Href: base + "?tab=details", Icon: "icon-info", Count: 0, Disabled: false},
+		{Key: "entries", Label: labels.Detail.Tabs.JournalEntries, Href: base + "?tab=entries", HxGet: action + "entries", Icon: "icon-file-text", Count: 0, Disabled: false},
+		{Key: "details", Label: labels.Detail.Tabs.Details, Href: base + "?tab=details", HxGet: action + "details", Icon: "icon-info", Count: 0, Disabled: false},
+		{Key: "audit-history", Label: "History", Href: base + "?tab=audit-history", HxGet: action + "audit-history", Icon: "icon-clock", Count: 0, Disabled: false},
 	}
 }
 

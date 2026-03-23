@@ -17,8 +17,8 @@ import (
 // View dependencies + page data
 // ---------------------------------------------------------------------------
 
-// Deps holds view dependencies.
-type Deps struct {
+// ListViewDeps holds view dependencies.
+type ListViewDeps struct {
 	Routes       fycha.AccountRoutes
 	Labels       fycha.AccountLabels
 	CommonLabels pyeza.CommonLabels
@@ -56,7 +56,7 @@ type AccountRow struct {
 // ---------------------------------------------------------------------------
 
 // NewView creates the account list view (full page).
-func NewView(deps *Deps) view.View {
+func NewView(deps *ListViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		element := viewCtx.Request.URL.Query().Get("element")
 		if element == "" {
@@ -98,7 +98,7 @@ func NewView(deps *Deps) view.View {
 // fetchAccounts calls the use case and converts the response to view-model rows.
 // Falls back to empty slice on error (shows empty state rather than crashing).
 // Element filtering is applied at the view layer after fetching.
-func fetchAccounts(ctx context.Context, deps *Deps) []AccountRow {
+func fetchAccounts(ctx context.Context, deps *ListViewDeps) []AccountRow {
 	if deps.GetAccountListPageData == nil {
 		return []AccountRow{}
 	}
@@ -139,7 +139,7 @@ func protoToRow(a *accountpb.Account, l fycha.AccountLabels) AccountRow {
 // Tab builder
 // ---------------------------------------------------------------------------
 
-func buildElementTabs(deps *Deps) []pyeza.TabItem {
+func buildElementTabs(deps *ListViewDeps) []pyeza.TabItem {
 	l := deps.Labels.Tabs
 	base := deps.Routes.ListURL
 	return []pyeza.TabItem{
@@ -156,7 +156,7 @@ func buildElementTabs(deps *Deps) []pyeza.TabItem {
 // Table builder
 // ---------------------------------------------------------------------------
 
-func buildTableConfig(deps *Deps, element string, accounts []AccountRow, perms *types.UserPermissions) *types.TableConfig {
+func buildTableConfig(deps *ListViewDeps, element string, accounts []AccountRow, perms *types.UserPermissions) *types.TableConfig {
 	l := deps.Labels
 	columns := accountColumns(l)
 	rows := buildTableRows(accounts, element, l, deps.Routes, perms)
