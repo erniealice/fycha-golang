@@ -155,7 +155,7 @@
     {{if .CanPost}}
     <button class="btn btn--primary"
             hx-post="{{.PostURL}}" hx-swap="none"
-            hx-confirm="Post this journal entry to the ledger?">
+            hx-confirm="{{.Labels.Confirm.Post}}">
       {{template "icon-check"}}
       {{.Labels.Actions.Post}}
     </button>
@@ -163,7 +163,7 @@
     {{if .CanDelete}}
     <button class="btn btn--danger"
             hx-post="{{.DeleteURL}}?id={{.ID}}" hx-swap="none"
-            hx-confirm="Delete this journal entry? This action cannot be undone.">
+            hx-confirm="{{.Labels.Confirm.Delete}}">
       {{template "icon-trash"}}
       {{.Labels.Actions.Delete}}
     </button>
@@ -171,7 +171,7 @@
     {{if .CanReverse}}
     <button class="btn btn--warning"
             hx-post="{{.ReverseURL}}" hx-swap="none"
-            hx-confirm="This will create a new journal entry with reversed debits and credits. The original entry will be marked as Reversed. Continue?">
+            hx-confirm="{{.Labels.Confirm.Reverse}}">
       {{template "icon-rotate-ccw"}}
       {{.Labels.Actions.Reverse}}
     </button>
