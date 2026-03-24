@@ -49,17 +49,17 @@ func MapBulkConfig(common pyeza.CommonLabels) types.BulkActionsConfig {
 
 // ReportsLabels holds all translatable strings for the reports module.
 type ReportsLabels struct {
-	GrossProfit        GrossProfitLabels        `json:"grossProfit"`
-	Revenue            RevenueLabels            `json:"revenue"`
-	CostOfSales        CostOfSalesLabels        `json:"costOfSales"`
-	Expenses           ExpensesLabels           `json:"expenses"`
-	NetProfit          NetProfitLabels          `json:"netProfit"`
-	Dashboard          DashboardLabels          `json:"dashboard"`
-	Period             PeriodLabels             `json:"period"`
-	IncomeStatement    IncomeStatementLabels    `json:"incomeStatement"`
-	BalanceSheet       BalanceSheetLabels       `json:"balanceSheet"`
-	CashFlow           CashFlowLabels           `json:"cashFlow"`
-	EquityChanges      EquityChangesLabels      `json:"equityChanges"`
+	GrossProfit     GrossProfitLabels     `json:"grossProfit"`
+	Revenue         RevenueLabels         `json:"revenue"`
+	CostOfSales     CostOfSalesLabels     `json:"costOfSales"`
+	Expenses        ExpensesLabels        `json:"expenses"`
+	NetProfit       NetProfitLabels       `json:"netProfit"`
+	Dashboard       DashboardLabels       `json:"dashboard"`
+	Period          PeriodLabels          `json:"period"`
+	IncomeStatement IncomeStatementLabels `json:"incomeStatement"`
+	BalanceSheet    BalanceSheetLabels    `json:"balanceSheet"`
+	CashFlow        CashFlowLabels        `json:"cashFlow"`
+	EquityChanges   EquityChangesLabels   `json:"equityChanges"`
 }
 
 // IncomeStatementLabels holds translatable strings for the Income Statement page.
@@ -310,9 +310,9 @@ type AssetFormLabels struct {
 	DepreciationMethod         string `json:"depreciationMethod"`
 	Active                     string `json:"active"`
 	// Depreciation method option labels
-	DepMethodStraightLine    string `json:"depMethodStraightLine"`
-	DepMethodDecliningBalance string `json:"depMethodDecliningBalance"`
-	DepMethodSumOfYears      string `json:"depMethodSumOfYears"`
+	DepMethodStraightLine      string `json:"depMethodStraightLine"`
+	DepMethodDecliningBalance  string `json:"depMethodDecliningBalance"`
+	DepMethodSumOfYears        string `json:"depMethodSumOfYears"`
 	DepMethodUnitsOfProduction string `json:"depMethodUnitsOfProduction"`
 }
 
@@ -538,50 +538,72 @@ func DefaultAssetLabels() AssetLabels {
 
 // AccountLabels holds all translatable strings for the Chart of Accounts module.
 type AccountLabels struct {
-	Page      AccountPageLabels      `json:"page"`
-	Buttons   AccountButtonLabels    `json:"buttons"`
-	Columns   AccountColumnLabels    `json:"columns"`
-	Tabs      AccountTabLabels       `json:"tabs"`
-	Empty     AccountEmptyLabels     `json:"empty"`
-	Form      AccountFormLabels      `json:"form"`
-	Actions   AccountActionLabels    `json:"actions"`
-	Detail    AccountDetailLabels    `json:"detail"`
-	Templates AccountTemplatesLabels `json:"templates"`
+	Page          AccountPageLabels          `json:"page"`
+	Buttons       AccountButtonLabels        `json:"buttons"`
+	Columns       AccountColumnLabels        `json:"columns"`
+	Tabs          AccountTabLabels           `json:"tabs"`
+	Empty         AccountEmptyLabels         `json:"empty"`
+	Form          AccountFormLabels          `json:"form"`
+	Actions       AccountActionLabels        `json:"actions"`
+	Detail        AccountDetailLabels        `json:"detail"`
+	Templates     AccountTemplatesLabels     `json:"templates"`
+	GeneralLedger AccountGeneralLedgerLabels `json:"generalLedger"`
 }
 
 // AccountTemplatesLabels holds translatable strings for the Account Templates settings page.
 type AccountTemplatesLabels struct {
-	PageTitle          string `json:"pageTitle"`
-	PageSubtitle       string `json:"pageSubtitle"`
+	PageTitle           string `json:"pageTitle"`
+	PageSubtitle        string `json:"pageSubtitle"`
 	CurrentAccountCount string `json:"currentAccountCount"`
-	ApplyWarning       string `json:"applyWarning"`
-	Empty              string `json:"empty"`
-	EmptyDesc          string `json:"emptyDesc"`
-	AccountsSuffix     string `json:"accountsSuffix"`
-	ComingSoon         string `json:"comingSoon"`
-	BadgeApplied       string `json:"badgeApplied"`
-	BadgeAssets        string `json:"badgeAssets"`
-	BadgeLiabilities   string `json:"badgeLiabilities"`
-	BadgeEquity        string `json:"badgeEquity"`
-	BadgeRevenue       string `json:"badgeRevenue"`
-	BadgeExpenses      string `json:"badgeExpenses"`
-	Preview            string `json:"preview"`
-	AlreadyApplied     string `json:"alreadyApplied"`
-	ApplyTemplate      string `json:"applyTemplate"`
-	PreviewTitle       string `json:"previewTitle"`
-	PreviewDesc        string `json:"previewDesc"`
-	ColCode            string `json:"colCode"`
-	ColAccountName     string `json:"colAccountName"`
-	ColElement         string `json:"colElement"`
-	ColClass           string `json:"colClass"`
-	ColIsGroup         string `json:"colIsGroup"`
-	Yes                string `json:"yes"`
-	SkipNote           string `json:"skipNote"`
+	ApplyWarning        string `json:"applyWarning"`
+	Empty               string `json:"empty"`
+	EmptyDesc           string `json:"emptyDesc"`
+	AccountsSuffix      string `json:"accountsSuffix"`
+	ComingSoon          string `json:"comingSoon"`
+	BadgeApplied        string `json:"badgeApplied"`
+	BadgeAssets         string `json:"badgeAssets"`
+	BadgeLiabilities    string `json:"badgeLiabilities"`
+	BadgeEquity         string `json:"badgeEquity"`
+	BadgeRevenue        string `json:"badgeRevenue"`
+	BadgeExpenses       string `json:"badgeExpenses"`
+	Preview             string `json:"preview"`
+	AlreadyApplied      string `json:"alreadyApplied"`
+	ApplyTemplate       string `json:"applyTemplate"`
+	PreviewTitle        string `json:"previewTitle"`
+	PreviewDesc         string `json:"previewDesc"`
+	ColCode             string `json:"colCode"`
+	ColAccountName      string `json:"colAccountName"`
+	ColElement          string `json:"colElement"`
+	ColClass            string `json:"colClass"`
+	ColIsGroup          string `json:"colIsGroup"`
+	Yes                 string `json:"yes"`
+	SkipNote            string `json:"skipNote"`
+}
+
+type AccountGeneralLedgerLabels struct {
+	Title                 string `json:"title"`
+	Subtitle              string `json:"subtitle"`
+	Account               string `json:"account"`
+	AccountPlaceholder    string `json:"accountPlaceholder"`
+	StartDate             string `json:"startDate"`
+	EndDate               string `json:"endDate"`
+	Apply                 string `json:"apply"`
+	Clear                 string `json:"clear"`
+	Print                 string `json:"print"`
+	SelectAccountMessage  string `json:"selectAccountMessage"`
+	NoTransactionsMessage string `json:"noTransactionsMessage"`
+	DateRangeSeparator    string `json:"dateRangeSeparator"`
+	OpeningBalance        string `json:"openingBalance"`
+	PeriodDebits          string `json:"periodDebits"`
+	PeriodCredits         string `json:"periodCredits"`
+	RunningBalance        string `json:"runningBalance"`
+	NoTransactionsTitle   string `json:"noTransactionsTitle"`
+	NoTransactionsDetail  string `json:"noTransactionsDetail"`
 }
 
 type AccountPageLabels struct {
-	Heading  string `json:"heading"`
-	Caption  string `json:"caption"`
+	Heading string `json:"heading"`
+	Caption string `json:"caption"`
 }
 
 type AccountButtonLabels struct {
@@ -589,12 +611,12 @@ type AccountButtonLabels struct {
 }
 
 type AccountColumnLabels struct {
-	Code          string `json:"code"`
-	Name          string `json:"name"`
-	Element       string `json:"element"`
+	Code           string `json:"code"`
+	Name           string `json:"name"`
+	Element        string `json:"element"`
 	Classification string `json:"classification"`
-	Group         string `json:"group"`
-	Balance       string `json:"balance"`
+	Group          string `json:"group"`
+	Balance        string `json:"balance"`
 	// Entry sub-table columns
 	Date        string `json:"date"`
 	EntryNumber string `json:"entryNumber"`
@@ -602,16 +624,16 @@ type AccountColumnLabels struct {
 	Debit       string `json:"debit"`
 	Credit      string `json:"credit"`
 	// Status
-	Status      string `json:"status"`
+	Status string `json:"status"`
 }
 
 type AccountTabLabels struct {
-	All         string `json:"all"`
-	Asset       string `json:"asset"`
-	Liability   string `json:"liability"`
-	Equity      string `json:"equity"`
-	Revenue     string `json:"revenue"`
-	Expense     string `json:"expense"`
+	All       string `json:"all"`
+	Asset     string `json:"asset"`
+	Liability string `json:"liability"`
+	Equity    string `json:"equity"`
+	Revenue   string `json:"revenue"`
+	Expense   string `json:"expense"`
 }
 
 type AccountEmptyLabels struct {
@@ -620,21 +642,21 @@ type AccountEmptyLabels struct {
 }
 
 type AccountFormLabels struct {
-	Code                    string `json:"code"`
-	CodePlaceholder         string `json:"codePlaceholder"`
-	Name                    string `json:"name"`
-	NamePlaceholder         string `json:"namePlaceholder"`
-	Element                 string `json:"element"`
-	Classification          string `json:"classification"`
-	ParentAccount           string `json:"parentAccount"`
+	Code                     string `json:"code"`
+	CodePlaceholder          string `json:"codePlaceholder"`
+	Name                     string `json:"name"`
+	NamePlaceholder          string `json:"namePlaceholder"`
+	Element                  string `json:"element"`
+	Classification           string `json:"classification"`
+	ParentAccount            string `json:"parentAccount"`
 	ParentAccountPlaceholder string `json:"parentAccountPlaceholder"`
-	Group                   string `json:"group"`
-	IsGroup                 string `json:"isGroup"`
-	Active                  string `json:"active"`
-	Description             string `json:"description"`
-	DescriptionPlaceholder  string `json:"descriptionPlaceholder"`
-	CashFlowSection         string `json:"cashFlowSection"`
-	CashFlowClassification  string `json:"cashFlowClassification"`
+	Group                    string `json:"group"`
+	IsGroup                  string `json:"isGroup"`
+	Active                   string `json:"active"`
+	Description              string `json:"description"`
+	DescriptionPlaceholder   string `json:"descriptionPlaceholder"`
+	CashFlowSection          string `json:"cashFlowSection"`
+	CashFlowClassification   string `json:"cashFlowClassification"`
 	// Element option labels
 	ElementAsset     string `json:"elementAsset"`
 	ElementLiability string `json:"elementLiability"`
@@ -671,9 +693,9 @@ type AccountFormLabels struct {
 }
 
 type AccountActionLabels struct {
-	View        string `json:"view"`
-	Edit        string `json:"edit"`
-	Delete      string `json:"delete"`
+	View   string `json:"view"`
+	Edit   string `json:"edit"`
+	Delete string `json:"delete"`
 	// Confirm messages
 	ConfirmDelete     string `json:"confirmDelete"`
 	ConfirmBulkDelete string `json:"confirmBulkDelete"`
@@ -682,7 +704,7 @@ type AccountActionLabels struct {
 }
 
 type AccountDetailLabels struct {
-	Tabs        AccountDetailTabLabels  `json:"tabs"`
+	Tabs        AccountDetailTabLabels   `json:"tabs"`
 	EmptyStates AccountDetailEmptyLabels `json:"emptyStates"`
 	Stats       AccountDetailStatLabels  `json:"stats"`
 	Info        AccountDetailInfoLabels  `json:"info"`
@@ -758,26 +780,26 @@ func DefaultAccountLabels() AccountLabels {
 			Message: "Add your first account or apply a template to get started.",
 		},
 		Form: AccountFormLabels{
-			Code:                    "Account Code",
-			CodePlaceholder:         "e.g. 1140",
-			Name:                    "Account Name",
-			NamePlaceholder:         "e.g. Petty Cash",
-			Element:                 "Element",
-			Classification:          "Class",
-			ParentAccount:           "Parent Account",
+			Code:                     "Account Code",
+			CodePlaceholder:          "e.g. 1140",
+			Name:                     "Account Name",
+			NamePlaceholder:          "e.g. Petty Cash",
+			Element:                  "Element",
+			Classification:           "Class",
+			ParentAccount:            "Parent Account",
 			ParentAccountPlaceholder: "Search groups\u2026",
-			Group:                   "Group",
-			IsGroup:                 "Is Group",
-			Active:                  "Active",
-			Description:             "Description",
-			DescriptionPlaceholder:  "Brief description of this account",
-			CashFlowSection:         "Cash Flow Tag (optional)",
-			CashFlowClassification:  "Cash Flow Classification",
-			ElementAsset:            "Asset",
-			ElementLiability:        "Liability",
-			ElementEquity:           "Equity",
-			ElementRevenue:          "Revenue",
-			ElementExpense:          "Expense",
+			Group:                    "Group",
+			IsGroup:                  "Is Group",
+			Active:                   "Active",
+			Description:              "Description",
+			DescriptionPlaceholder:   "Brief description of this account",
+			CashFlowSection:          "Cash Flow Tag (optional)",
+			CashFlowClassification:   "Cash Flow Classification",
+			ElementAsset:             "Asset",
+			ElementLiability:         "Liability",
+			ElementEquity:            "Equity",
+			ElementRevenue:           "Revenue",
+			ElementExpense:           "Expense",
 			ClassCurrentAsset:        "Current Asset",
 			ClassNonCurrentAsset:     "Non-Current Asset",
 			ClassCurrentLiability:    "Current Liability",
@@ -868,6 +890,26 @@ func DefaultAccountLabels() AccountLabels {
 			Yes:                 "Yes",
 			SkipNote:            "Accounts with matching codes in your existing Chart of Accounts will be skipped.",
 		},
+		GeneralLedger: AccountGeneralLedgerLabels{
+			Title:                 "General Ledger",
+			Subtitle:              "Detailed transaction history by account",
+			Account:               "Account",
+			AccountPlaceholder:    "Select an account",
+			StartDate:             "Start Date",
+			EndDate:               "End Date",
+			Apply:                 "Apply",
+			Clear:                 "Clear",
+			Print:                 "Print",
+			SelectAccountMessage:  "Select an account above to view its detailed transaction history.",
+			NoTransactionsMessage: "No transactions found for the selected account and date range.",
+			DateRangeSeparator:    "to",
+			OpeningBalance:        "Opening Balance",
+			PeriodDebits:          "Period Debits",
+			PeriodCredits:         "Period Credits",
+			RunningBalance:        "Running Balance",
+			NoTransactionsTitle:   "No transactions",
+			NoTransactionsDetail:  "No journal entries found for this account in the selected date range.",
+		},
 	}
 }
 
@@ -877,23 +919,23 @@ func DefaultAccountLabels() AccountLabels {
 
 // JournalLabels holds all translatable strings for the Journal Entries module.
 type JournalLabels struct {
-	Page    JournalPageLabels    `json:"page"`
-	Tabs    JournalTabLabels     `json:"tabs"`
-	Buttons JournalButtonLabels  `json:"buttons"`
-	Columns JournalColumnLabels  `json:"columns"`
-	Empty   JournalEmptyLabels   `json:"empty"`
-	Actions JournalActionLabels  `json:"actions"`
-	Lines   JournalLineLabels    `json:"lines"`
-	Form    JournalFormLabels    `json:"form"`
-	Detail  JournalDetailLabels  `json:"detail"`
+	Page    JournalPageLabels   `json:"page"`
+	Tabs    JournalTabLabels    `json:"tabs"`
+	Buttons JournalButtonLabels `json:"buttons"`
+	Columns JournalColumnLabels `json:"columns"`
+	Empty   JournalEmptyLabels  `json:"empty"`
+	Actions JournalActionLabels `json:"actions"`
+	Lines   JournalLineLabels   `json:"lines"`
+	Form    JournalFormLabels   `json:"form"`
+	Detail  JournalDetailLabels `json:"detail"`
 }
 
 // JournalDetailLabels holds translatable strings for the journal detail page.
 type JournalDetailLabels struct {
-	Stats       JournalDetailStatLabels  `json:"stats"`
-	Info        JournalDetailInfoLabels  `json:"info"`
-	SourceLabel string                   `json:"sourceLabel"`
-	ViewSource  string                   `json:"viewSource"`
+	Stats       JournalDetailStatLabels `json:"stats"`
+	Info        JournalDetailInfoLabels `json:"info"`
+	SourceLabel string                  `json:"sourceLabel"`
+	ViewSource  string                  `json:"viewSource"`
 	// Balance status badges shown in totals row
 	Balanced   string `json:"balanced"`
 	Unbalanced string `json:"unbalanced"`
@@ -907,20 +949,20 @@ type JournalDetailStatLabels struct {
 }
 
 type JournalDetailInfoLabels struct {
-	Title        string `json:"title"`
-	Date         string `json:"date"`
-	Reference    string `json:"reference"`
-	Description  string `json:"description"`
-	Status       string `json:"status"`
-	SourceType   string `json:"sourceType"`
-	Notes        string `json:"notes"`
-	PostedBy     string `json:"postedBy"`
-	PostedAt     string `json:"postedAt"`
-	ReversedBy   string `json:"reversedBy"`
-	ReversedAt   string `json:"reversedAt"`
+	Title         string `json:"title"`
+	Date          string `json:"date"`
+	Reference     string `json:"reference"`
+	Description   string `json:"description"`
+	Status        string `json:"status"`
+	SourceType    string `json:"sourceType"`
+	Notes         string `json:"notes"`
+	PostedBy      string `json:"postedBy"`
+	PostedAt      string `json:"postedAt"`
+	ReversedBy    string `json:"reversedBy"`
+	ReversedAt    string `json:"reversedAt"`
 	ReversalEntry string `json:"reversalEntry"`
-	Created      string `json:"created"`
-	LastModified string `json:"lastModified"`
+	Created       string `json:"created"`
+	LastModified  string `json:"lastModified"`
 }
 
 type JournalPageLabels struct {
@@ -972,28 +1014,28 @@ type JournalActionLabels struct {
 
 // JournalFormLabels holds translatable strings for the journal entry form.
 type JournalFormLabels struct {
-	Date                string `json:"date"`
-	DatePlaceholder     string `json:"datePlaceholder"`
-	Description         string `json:"description"`
+	Date                   string `json:"date"`
+	DatePlaceholder        string `json:"datePlaceholder"`
+	Description            string `json:"description"`
 	DescriptionPlaceholder string `json:"descriptionPlaceholder"`
-	Notes               string `json:"notes"`
-	NotesPlaceholder    string `json:"notesPlaceholder"`
+	Notes                  string `json:"notes"`
+	NotesPlaceholder       string `json:"notesPlaceholder"`
 	// Line table headers
-	LineNumber  string `json:"lineNumber"`
-	Account     string `json:"account"`
+	LineNumber         string `json:"lineNumber"`
+	Account            string `json:"account"`
 	AccountPlaceholder string `json:"accountPlaceholder"`
-	Debit       string `json:"debit"`
-	Credit      string `json:"credit"`
-	Memo        string `json:"memo"`
-	AddLine     string `json:"addLine"`
-	RemoveLine  string `json:"removeLine"`
+	Debit              string `json:"debit"`
+	Credit             string `json:"credit"`
+	Memo               string `json:"memo"`
+	AddLine            string `json:"addLine"`
+	RemoveLine         string `json:"removeLine"`
 	// Balance alert
 	BalancedMessage   string `json:"balancedMessage"`
 	UnbalancedMessage string `json:"unbalancedMessage"`
 	DifferenceLabel   string `json:"differenceLabel"`
 	// Buttons
-	SaveDraft   string `json:"saveDraft"`
-	PostEntry   string `json:"postEntry"`
+	SaveDraft string `json:"saveDraft"`
+	PostEntry string `json:"postEntry"`
 	// Section titles
 	EntryDetails string `json:"entryDetails"`
 	JournalLines string `json:"journalLines"`
@@ -1111,10 +1153,10 @@ func DefaultJournalLabels() JournalLabels {
 			},
 			SourceLabel: "Source",
 			ViewSource:  "View Source \u2192",
-			Balanced:   "Balanced",
-			Unbalanced: "Unbalanced",
-			Totals:     "TOTALS",
-			Difference: "DIFFERENCE",
+			Balanced:    "Balanced",
+			Unbalanced:  "Unbalanced",
+			Totals:      "TOTALS",
+			Difference:  "DIFFERENCE",
 		},
 	}
 }
@@ -1125,12 +1167,12 @@ func DefaultJournalLabels() JournalLabels {
 
 // FiscalPeriodLabels holds all translatable strings for the fiscal period module.
 type FiscalPeriodLabels struct {
-	Page    FiscalPeriodPageLabels    `json:"page"`
-	Buttons FiscalPeriodButtonLabels  `json:"buttons"`
-	Columns FiscalPeriodColumnLabels  `json:"columns"`
-	Status  FiscalPeriodStatusLabels  `json:"status"`
-	Empty   FiscalPeriodEmptyLabels   `json:"empty"`
-	Actions FiscalPeriodActionLabels  `json:"actions"`
+	Page    FiscalPeriodPageLabels   `json:"page"`
+	Buttons FiscalPeriodButtonLabels `json:"buttons"`
+	Columns FiscalPeriodColumnLabels `json:"columns"`
+	Status  FiscalPeriodStatusLabels `json:"status"`
+	Empty   FiscalPeriodEmptyLabels  `json:"empty"`
+	Actions FiscalPeriodActionLabels `json:"actions"`
 }
 
 type FiscalPeriodPageLabels struct {
@@ -1619,18 +1661,18 @@ func DefaultPayrollLabels() PayrollLabels {
 
 // PrepaymentLabels holds all translatable strings for the Prepayments module.
 type PrepaymentLabels struct {
-	Page    PrepaymentPageLabels    `json:"page"`
-	Buttons PrepaymentButtonLabels  `json:"buttons"`
-	Columns PrepaymentColumnLabels  `json:"columns"`
-	Status  PrepaymentStatusLabels  `json:"status"`
-	Empty   PrepaymentEmptyLabels   `json:"empty"`
-	Form    PrepaymentFormLabels    `json:"form"`
-	Actions PrepaymentActionLabels  `json:"actions"`
+	Page    PrepaymentPageLabels   `json:"page"`
+	Buttons PrepaymentButtonLabels `json:"buttons"`
+	Columns PrepaymentColumnLabels `json:"columns"`
+	Status  PrepaymentStatusLabels `json:"status"`
+	Empty   PrepaymentEmptyLabels  `json:"empty"`
+	Form    PrepaymentFormLabels   `json:"form"`
+	Actions PrepaymentActionLabels `json:"actions"`
 }
 
 type PrepaymentPageLabels struct {
-	Heading            string `json:"heading"`
-	Caption            string `json:"caption"`
+	Heading             string `json:"heading"`
+	Caption             string `json:"caption"`
 	AmortizationHeading string `json:"amortizationHeading"`
 	AmortizationCaption string `json:"amortizationCaption"`
 }
@@ -1649,14 +1691,14 @@ type PrepaymentColumnLabels struct {
 	EndDate            string `json:"endDate"`
 	Status             string `json:"status"`
 	// Amortization schedule sub-table
-	Month      string `json:"month"`
-	Opening    string `json:"opening"`
-	Expense    string `json:"expense"`
-	Closing    string `json:"closing"`
+	Month   string `json:"month"`
+	Opening string `json:"opening"`
+	Expense string `json:"expense"`
+	Closing string `json:"closing"`
 }
 
 type PrepaymentStatusLabels struct {
-	Active   string `json:"active"`
+	Active    string `json:"active"`
 	Amortized string `json:"amortized"`
 	Cancelled string `json:"cancelled"`
 }
@@ -1667,24 +1709,24 @@ type PrepaymentEmptyLabels struct {
 }
 
 type PrepaymentFormLabels struct {
-	Description                string `json:"description"`
-	DescriptionPlaceholder     string `json:"descriptionPlaceholder"`
-	Vendor                     string `json:"vendor"`
-	VendorPlaceholder          string `json:"vendorPlaceholder"`
-	TotalAmount                string `json:"totalAmount"`
-	TotalAmountPlaceholder     string `json:"totalAmountPlaceholder"`
-	AmortizationMonths         string `json:"amortizationMonths"`
-	AmortizationPlaceholder    string `json:"amortizationPlaceholder"`
-	StartDate                  string `json:"startDate"`
-	EndDate                    string `json:"endDate"`
-	PrepaidAccount             string `json:"prepaidAccount"`
-	ExpenseAccount             string `json:"expenseAccount"`
+	Description             string `json:"description"`
+	DescriptionPlaceholder  string `json:"descriptionPlaceholder"`
+	Vendor                  string `json:"vendor"`
+	VendorPlaceholder       string `json:"vendorPlaceholder"`
+	TotalAmount             string `json:"totalAmount"`
+	TotalAmountPlaceholder  string `json:"totalAmountPlaceholder"`
+	AmortizationMonths      string `json:"amortizationMonths"`
+	AmortizationPlaceholder string `json:"amortizationPlaceholder"`
+	StartDate               string `json:"startDate"`
+	EndDate                 string `json:"endDate"`
+	PrepaidAccount          string `json:"prepaidAccount"`
+	ExpenseAccount          string `json:"expenseAccount"`
 }
 
 type PrepaymentActionLabels struct {
-	View         string `json:"view"`
-	Delete       string `json:"delete"`
-	NoPermission string `json:"noPermission"`
+	View          string `json:"view"`
+	Delete        string `json:"delete"`
+	NoPermission  string `json:"noPermission"`
 	ConfirmDelete string `json:"confirmDelete"`
 }
 
@@ -1752,14 +1794,14 @@ func DefaultPrepaymentLabels() PrepaymentLabels {
 
 // DepositLabels holds all translatable strings for the Security Deposits module.
 type DepositLabels struct {
-	Page    DepositPageLabels    `json:"page"`
-	Buttons DepositButtonLabels  `json:"buttons"`
-	Columns DepositColumnLabels  `json:"columns"`
-	Tabs    DepositTabLabels     `json:"tabs"`
-	Status  DepositStatusLabels  `json:"status"`
-	Empty   DepositEmptyLabels   `json:"empty"`
-	Form    DepositFormLabels    `json:"form"`
-	Actions DepositActionLabels  `json:"actions"`
+	Page    DepositPageLabels   `json:"page"`
+	Buttons DepositButtonLabels `json:"buttons"`
+	Columns DepositColumnLabels `json:"columns"`
+	Tabs    DepositTabLabels    `json:"tabs"`
+	Status  DepositStatusLabels `json:"status"`
+	Empty   DepositEmptyLabels  `json:"empty"`
+	Form    DepositFormLabels   `json:"form"`
+	Actions DepositActionLabels `json:"actions"`
 }
 
 type DepositPageLabels struct {
@@ -1788,8 +1830,8 @@ type DepositTabLabels struct {
 }
 
 type DepositStatusLabels struct {
-	Held     string `json:"held"`
-	Returned string `json:"returned"`
+	Held      string `json:"held"`
+	Returned  string `json:"returned"`
 	Forfeited string `json:"forfeited"`
 }
 
@@ -1813,9 +1855,9 @@ type DepositFormLabels struct {
 }
 
 type DepositActionLabels struct {
-	View         string `json:"view"`
-	Delete       string `json:"delete"`
-	NoPermission string `json:"noPermission"`
+	View          string `json:"view"`
+	Delete        string `json:"delete"`
+	NoPermission  string `json:"noPermission"`
 	ConfirmDelete string `json:"confirmDelete"`
 }
 
@@ -1880,27 +1922,27 @@ func DefaultDepositLabels() DepositLabels {
 
 // PettyCashLabels holds all translatable strings for the Petty Cash module.
 type PettyCashLabels struct {
-	Page      PettyCashPageLabels      `json:"page"`
-	Buttons   PettyCashButtonLabels    `json:"buttons"`
-	Columns   PettyCashColumnLabels    `json:"columns"`
-	Status    PettyCashStatusLabels    `json:"status"`
-	Empty     PettyCashEmptyLabels     `json:"empty"`
-	Form      PettyCashFormLabels      `json:"form"`
-	Actions   PettyCashActionLabels    `json:"actions"`
+	Page    PettyCashPageLabels   `json:"page"`
+	Buttons PettyCashButtonLabels `json:"buttons"`
+	Columns PettyCashColumnLabels `json:"columns"`
+	Status  PettyCashStatusLabels `json:"status"`
+	Empty   PettyCashEmptyLabels  `json:"empty"`
+	Form    PettyCashFormLabels   `json:"form"`
+	Actions PettyCashActionLabels `json:"actions"`
 }
 
 type PettyCashPageLabels struct {
-	RegisterHeading           string `json:"registerHeading"`
-	RegisterCaption           string `json:"registerCaption"`
-	ReplenishmentsHeading     string `json:"replenishmentsHeading"`
-	ReplenishmentsCaption     string `json:"replenishmentsCaption"`
-	CustodianBalancesHeading  string `json:"custodianBalancesHeading"`
-	CustodianBalancesCaption  string `json:"custodianBalancesCaption"`
+	RegisterHeading          string `json:"registerHeading"`
+	RegisterCaption          string `json:"registerCaption"`
+	ReplenishmentsHeading    string `json:"replenishmentsHeading"`
+	ReplenishmentsCaption    string `json:"replenishmentsCaption"`
+	CustodianBalancesHeading string `json:"custodianBalancesHeading"`
+	CustodianBalancesCaption string `json:"custodianBalancesCaption"`
 }
 
 type PettyCashButtonLabels struct {
-	AddFund        string `json:"addFund"`
-	Replenish      string `json:"replenish"`
+	AddFund   string `json:"addFund"`
+	Replenish string `json:"replenish"`
 }
 
 type PettyCashColumnLabels struct {
@@ -1912,13 +1954,13 @@ type PettyCashColumnLabels struct {
 	Location         string `json:"location"`
 	Status           string `json:"status"`
 	// Replenishment columns
-	Fund             string `json:"fund"`
-	Amount           string `json:"amount"`
-	Date             string `json:"date"`
-	Notes            string `json:"notes"`
+	Fund   string `json:"fund"`
+	Amount string `json:"amount"`
+	Date   string `json:"date"`
+	Notes  string `json:"notes"`
 	// Custodian balance columns
-	TotalFunds       string `json:"totalFunds"`
-	TotalBalance     string `json:"totalBalance"`
+	TotalFunds   string `json:"totalFunds"`
+	TotalBalance string `json:"totalBalance"`
 }
 
 type PettyCashStatusLabels struct {
@@ -1927,28 +1969,28 @@ type PettyCashStatusLabels struct {
 }
 
 type PettyCashEmptyLabels struct {
-	RegisterTitle        string `json:"registerTitle"`
-	RegisterMessage      string `json:"registerMessage"`
-	ReplenishmentsTitle  string `json:"replenishmentsTitle"`
+	RegisterTitle         string `json:"registerTitle"`
+	RegisterMessage       string `json:"registerMessage"`
+	ReplenishmentsTitle   string `json:"replenishmentsTitle"`
 	ReplenishmentsMessage string `json:"replenishmentsMessage"`
-	CustodianTitle       string `json:"custodianTitle"`
-	CustodianMessage     string `json:"custodianMessage"`
+	CustodianTitle        string `json:"custodianTitle"`
+	CustodianMessage      string `json:"custodianMessage"`
 }
 
 type PettyCashFormLabels struct {
-	Name                    string `json:"name"`
-	NamePlaceholder         string `json:"namePlaceholder"`
-	AuthorizedAmount        string `json:"authorizedAmount"`
-	AuthorizedPlaceholder   string `json:"authorizedPlaceholder"`
-	CustodianID             string `json:"custodianId"`
-	LocationID              string `json:"locationId"`
+	Name                  string `json:"name"`
+	NamePlaceholder       string `json:"namePlaceholder"`
+	AuthorizedAmount      string `json:"authorizedAmount"`
+	AuthorizedPlaceholder string `json:"authorizedPlaceholder"`
+	CustodianID           string `json:"custodianId"`
+	LocationID            string `json:"locationId"`
 }
 
 type PettyCashActionLabels struct {
-	View         string `json:"view"`
-	Replenish    string `json:"replenish"`
-	Delete       string `json:"delete"`
-	NoPermission string `json:"noPermission"`
+	View          string `json:"view"`
+	Replenish     string `json:"replenish"`
+	Delete        string `json:"delete"`
+	NoPermission  string `json:"noPermission"`
 	ConfirmDelete string `json:"confirmDelete"`
 }
 
@@ -2017,13 +2059,13 @@ func DefaultPettyCashLabels() PettyCashLabels {
 
 // DeferredRevenueLabels holds all translatable strings for the Deferred Revenue module.
 type DeferredRevenueLabels struct {
-	Page    DeferredRevenuePageLabels    `json:"page"`
-	Buttons DeferredRevenueButtonLabels  `json:"buttons"`
-	Columns DeferredRevenueColumnLabels  `json:"columns"`
-	Status  DeferredRevenueStatusLabels  `json:"status"`
-	Empty   DeferredRevenueEmptyLabels   `json:"empty"`
-	Form    DeferredRevenueFormLabels    `json:"form"`
-	Actions DeferredRevenueActionLabels  `json:"actions"`
+	Page    DeferredRevenuePageLabels   `json:"page"`
+	Buttons DeferredRevenueButtonLabels `json:"buttons"`
+	Columns DeferredRevenueColumnLabels `json:"columns"`
+	Status  DeferredRevenueStatusLabels `json:"status"`
+	Empty   DeferredRevenueEmptyLabels  `json:"empty"`
+	Form    DeferredRevenueFormLabels   `json:"form"`
+	Actions DeferredRevenueActionLabels `json:"actions"`
 }
 
 type DeferredRevenuePageLabels struct {
@@ -2060,18 +2102,18 @@ type DeferredRevenueEmptyLabels struct {
 }
 
 type DeferredRevenueFormLabels struct {
-	Description                string `json:"description"`
-	DescriptionPlaceholder     string `json:"descriptionPlaceholder"`
-	Customer                   string `json:"customer"`
-	CustomerPlaceholder        string `json:"customerPlaceholder"`
-	TotalAmount                string `json:"totalAmount"`
-	TotalAmountPlaceholder     string `json:"totalAmountPlaceholder"`
-	RecognitionMonths          string `json:"recognitionMonths"`
-	RecognitionPlaceholder     string `json:"recognitionPlaceholder"`
-	StartDate                  string `json:"startDate"`
-	EndDate                    string `json:"endDate"`
-	LiabilityAccount           string `json:"liabilityAccount"`
-	RevenueAccount             string `json:"revenueAccount"`
+	Description            string `json:"description"`
+	DescriptionPlaceholder string `json:"descriptionPlaceholder"`
+	Customer               string `json:"customer"`
+	CustomerPlaceholder    string `json:"customerPlaceholder"`
+	TotalAmount            string `json:"totalAmount"`
+	TotalAmountPlaceholder string `json:"totalAmountPlaceholder"`
+	RecognitionMonths      string `json:"recognitionMonths"`
+	RecognitionPlaceholder string `json:"recognitionPlaceholder"`
+	StartDate              string `json:"startDate"`
+	EndDate                string `json:"endDate"`
+	LiabilityAccount       string `json:"liabilityAccount"`
+	RevenueAccount         string `json:"revenueAccount"`
 }
 
 type DeferredRevenueActionLabels struct {
@@ -2113,18 +2155,18 @@ func DefaultDeferredRevenueLabels() DeferredRevenueLabels {
 			Message: "Record advance payments from customers that will be earned over future periods.",
 		},
 		Form: DeferredRevenueFormLabels{
-			Description:             "Description",
-			DescriptionPlaceholder:  "e.g. 12-month service contract",
-			Customer:                "Customer",
-			CustomerPlaceholder:     "e.g. XYZ Corp",
-			TotalAmount:             "Total Amount",
-			TotalAmountPlaceholder:  "0.00",
-			RecognitionMonths:       "Recognition Period (Months)",
-			RecognitionPlaceholder:  "e.g. 12",
-			StartDate:               "Start Date",
-			EndDate:                 "End Date",
-			LiabilityAccount:        "Deferred Revenue Account (Liability)",
-			RevenueAccount:          "Revenue Account",
+			Description:            "Description",
+			DescriptionPlaceholder: "e.g. 12-month service contract",
+			Customer:               "Customer",
+			CustomerPlaceholder:    "e.g. XYZ Corp",
+			TotalAmount:            "Total Amount",
+			TotalAmountPlaceholder: "0.00",
+			RecognitionMonths:      "Recognition Period (Months)",
+			RecognitionPlaceholder: "e.g. 12",
+			StartDate:              "Start Date",
+			EndDate:                "End Date",
+			LiabilityAccount:       "Deferred Revenue Account (Liability)",
+			RevenueAccount:         "Revenue Account",
 		},
 		Actions: DeferredRevenueActionLabels{
 			View:          "View",
@@ -2148,10 +2190,10 @@ type EquityLabels struct {
 
 // EquitySheetLabels holds sheet-form title and button labels for equity pages.
 type EquitySheetLabels struct {
-	AddCapitalAccount        string `json:"addCapitalAccount"`
-	RecordTransaction        string `json:"recordTransaction"`
-	RecordEquityTransaction  string `json:"recordEquityTransaction"`
-	PostTransaction          string `json:"postTransaction"`
+	AddCapitalAccount       string `json:"addCapitalAccount"`
+	RecordTransaction       string `json:"recordTransaction"`
+	RecordEquityTransaction string `json:"recordEquityTransaction"`
+	PostTransaction         string `json:"postTransaction"`
 }
 
 // EquityAccountLabels holds translatable strings for the capital accounts list.
@@ -2227,19 +2269,19 @@ type EquityTransactionActionLabels struct {
 }
 
 type EquityTransactionFormLabels struct {
-	TransactionType              string `json:"transactionType"`
-	TransactionContribution      string `json:"transactionContribution"`
-	TransactionWithdrawal        string `json:"transactionWithdrawal"`
-	TransactionDistribution      string `json:"transactionDistribution"`
-	TransactionTransfer          string `json:"transactionTransfer"`
-	EquityAccount                string `json:"equityAccount"`
-	Amount                       string `json:"amount"`
-	TransactionDate              string `json:"transactionDate"`
-	Description                  string `json:"description"`
-	DescriptionPlaceholder       string `json:"descriptionPlaceholder"`
-	JournalEntryHint             string `json:"journalEntryHint"`
-	MemoPlaceholder              string `json:"memoPlaceholder"`
-	JournalEntryNote             string `json:"journalEntryNote"`
+	TransactionType         string `json:"transactionType"`
+	TransactionContribution string `json:"transactionContribution"`
+	TransactionWithdrawal   string `json:"transactionWithdrawal"`
+	TransactionDistribution string `json:"transactionDistribution"`
+	TransactionTransfer     string `json:"transactionTransfer"`
+	EquityAccount           string `json:"equityAccount"`
+	Amount                  string `json:"amount"`
+	TransactionDate         string `json:"transactionDate"`
+	Description             string `json:"description"`
+	DescriptionPlaceholder  string `json:"descriptionPlaceholder"`
+	JournalEntryHint        string `json:"journalEntryHint"`
+	MemoPlaceholder         string `json:"memoPlaceholder"`
+	JournalEntryNote        string `json:"journalEntryNote"`
 }
 
 // DefaultEquityLabels returns EquityLabels with hardcoded English defaults.
@@ -2292,11 +2334,11 @@ func DefaultEquityLabels() EquityLabels {
 				NoPermission: "No permission",
 			},
 			Form: EquityTransactionFormLabels{
-				TransactionType:        "Transaction Type",
-				EquityAccount:          "Capital Account",
-				Amount:                 "Amount",
-				TransactionDate:        "Transaction Date",
-				Description:            "Description",
+				TransactionType:         "Transaction Type",
+				EquityAccount:           "Capital Account",
+				Amount:                  "Amount",
+				TransactionDate:         "Transaction Date",
+				Description:             "Description",
 				DescriptionPlaceholder:  "Optional memo for this transaction",
 				MemoPlaceholder:         "Optional memo for this transaction",
 				JournalEntryHint:        "The corresponding journal entry will be auto-generated when you post this transaction.",
@@ -2481,13 +2523,13 @@ func DefaultLoanLabels() LoanLabels {
 
 // LoanPaymentLabels holds all translatable strings for the loan payments view.
 type LoanPaymentLabels struct {
-	Page    LoanPaymentPageLabels    `json:"page"`
-	Buttons LoanPaymentButtonLabels  `json:"buttons"`
-	Columns LoanPaymentColumnLabels  `json:"columns"`
-	Empty   LoanPaymentEmptyLabels   `json:"empty"`
-	Actions LoanPaymentActionLabels  `json:"actions"`
-	Form    LoanPaymentFormLabels    `json:"form"`
-	Sheet   LoanPaymentSheetLabels   `json:"sheet"`
+	Page    LoanPaymentPageLabels   `json:"page"`
+	Buttons LoanPaymentButtonLabels `json:"buttons"`
+	Columns LoanPaymentColumnLabels `json:"columns"`
+	Empty   LoanPaymentEmptyLabels  `json:"empty"`
+	Actions LoanPaymentActionLabels `json:"actions"`
+	Form    LoanPaymentFormLabels   `json:"form"`
+	Sheet   LoanPaymentSheetLabels  `json:"sheet"`
 }
 
 // LoanPaymentSheetLabels holds sheet-form title and button labels for loan payments page.

@@ -3,7 +3,7 @@
 **Date:** 2026-03-08
 **Branch:** `dev/20260308-fycha-services-reorg`
 **Status:** Draft
-**Package:** packages/fycha-golang-ryta
+**Package:** packages/fycha-golang
 
 ---
 
@@ -28,7 +28,7 @@ The fycha root package currently mixes domain types (labels, routes, filters) wi
 
 ```
 # Current                              # Target
-fycha-golang-ryta/                     fycha-golang-ryta/
+fycha-golang/                     fycha-golang/
 ├── document_service.go     ──MOVE──►  ├── services/docprocessor/
 │                                      │   └── document_service.go
 ├── storage_handler.go      ──MOVE──►  ├── services/storage/
@@ -80,18 +80,18 @@ fycha-golang-ryta/                     fycha-golang-ryta/
 
 ### Phase 1: Create `services/docprocessor/` (zero-impact move)
 
-1. Create `packages/fycha-golang-ryta/services/docprocessor/document_service.go`
+1. Create `packages/fycha-golang/services/docprocessor/document_service.go`
    - Change package declaration to `package docprocessor`
    - Update internal import of doctemplate (path unchanged, just verifying)
-2. Delete `packages/fycha-golang-ryta/document_service.go`
-3. Verify: `go build ./...` in fycha-golang-ryta
+2. Delete `packages/fycha-golang/document_service.go`
+3. Verify: `go build ./...` in fycha-golang
 
 ### Phase 2: Create `services/storage/` + update consumers
 
-1. Create `packages/fycha-golang-ryta/services/storage/storage_handler.go`
+1. Create `packages/fycha-golang/services/storage/storage_handler.go`
    - Change package declaration to `package storage`
    - Move all symbols: `StorageHandler`, `NewStorageHandler`, `StorageReader`, `StorageReadResult`, `StorageRouteRegistrar`, `ErrObjectNotFound`, `contentTypeFromExt`
-2. Delete `packages/fycha-golang-ryta/storage_handler.go`
+2. Delete `packages/fycha-golang/storage_handler.go`
 3. Update consumer apps (4 files):
    - `apps/retail-client/internal/composition/container.go` — add `storage` import, update type references
    - `apps/retail-client/internal/composition/views.go` — update `fycha.StorageHandler` → `storage.StorageHandler`
@@ -112,11 +112,11 @@ fycha-golang-ryta/                     fycha-golang-ryta/
 
 | File | Change | Phase |
 |------|--------|-------|
-| `packages/fycha-golang-ryta/services/docprocessor/document_service.go` | **New file** — moved from root | 1 |
-| `packages/fycha-golang-ryta/document_service.go` | **Delete** | 1 |
-| `packages/fycha-golang-ryta/services/storage/storage_handler.go` | **New file** — moved from root | 2 |
-| `packages/fycha-golang-ryta/storage_handler.go` | **Delete** | 2 |
-| `packages/fycha-golang-ryta/routes.go` | Remove `StorageImagesPrefix` constant | 3 |
+| `packages/fycha-golang/services/docprocessor/document_service.go` | **New file** — moved from root | 1 |
+| `packages/fycha-golang/document_service.go` | **Delete** | 1 |
+| `packages/fycha-golang/services/storage/storage_handler.go` | **New file** — moved from root | 2 |
+| `packages/fycha-golang/storage_handler.go` | **Delete** | 2 |
+| `packages/fycha-golang/routes.go` | Remove `StorageImagesPrefix` constant | 3 |
 | `apps/retail-client/internal/composition/container.go` | Update fycha storage imports | 2 |
 | `apps/retail-client/internal/composition/views.go` | Update `StorageHandler` type ref | 2 |
 | `apps/service-client/internal/composition/container.go` | Update fycha storage imports | 2 |
@@ -155,7 +155,7 @@ No sub-agents needed. Single session is sufficient. The moves are mechanical —
 - [ ] `services/storage/storage_handler.go` exists with package `storage`
 - [ ] Original root files (`document_service.go`, `storage_handler.go`) deleted
 - [ ] `StorageImagesPrefix` moved to storage package
-- [ ] `go build ./...` passes for `packages/fycha-golang-ryta`
+- [ ] `go build ./...` passes for `packages/fycha-golang`
 - [ ] `go build ./...` passes for `apps/retail-client`
 - [ ] `go build ./...` passes for `apps/service-client`
 - [ ] No remaining references to `fycha.StorageHandler` or `fycha.DocumentService` in consumer apps

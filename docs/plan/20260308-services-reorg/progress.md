@@ -10,7 +10,7 @@
 
 - [ ] Create `services/docprocessor/document_service.go` (move from root, change package to `docprocessor`)
 - [ ] Delete `document_service.go` from root
-- [ ] Verify `go build ./...` in fycha-golang-ryta
+- [ ] Verify `go build ./...` in fycha-golang
 
 ---
 
@@ -58,7 +58,7 @@ To continue this work:
 4. Update checkboxes and summary as you complete steps
 
 Key files to read first:
-- `packages/fycha-golang-ryta/document_service.go` (source for Phase 1)
-- `packages/fycha-golang-ryta/storage_handler.go` (source for Phase 2)
+- `packages/fycha-golang/document_service.go` (source for Phase 1)
+- `packages/fycha-golang/storage_handler.go` (source for Phase 2)
 - `apps/retail-client/internal/composition/container.go` (consumer to update)
 - `apps/service-client/internal/composition/container.go` (consumer to update)

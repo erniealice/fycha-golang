@@ -37,7 +37,7 @@ type GLAccountSection struct {
 	AccountID      string
 	AccountCode    string
 	AccountName    string
-	Element        string  // "asset", "liability", "equity", "revenue", "expense"
+	Element        string // "asset", "liability", "equity", "revenue", "expense"
 	OpeningBalance float64
 	PeriodDebits   float64
 	PeriodCredits  float64
@@ -77,7 +77,7 @@ type GeneralLedgerPageData struct {
 	EndDate     string
 
 	// Report state
-	HasData        bool             // false when no account selected or no results
+	HasData        bool // false when no account selected or no results
 	Section        *GLAccountSection
 	SummaryMetrics []fycha.SummaryMetric
 	Table          *types.TableConfig
@@ -111,12 +111,12 @@ func NewGeneralLedgerView(deps *GeneralLedgerDeps) view.View {
 		pageData := &GeneralLedgerPageData{
 			PageData: types.PageData{
 				CacheVersion:   viewCtx.CacheVersion,
-				Title:          "General Ledger",
+				Title:          deps.Labels.GeneralLedger.Title,
 				CurrentPath:    viewCtx.CurrentPath,
 				ActiveNav:      deps.Routes.ActiveNav,
 				ActiveSubNav:   "general-ledger",
-				HeaderTitle:    "General Ledger",
-				HeaderSubtitle: "Detailed transaction history by account",
+				HeaderTitle:    deps.Labels.GeneralLedger.Title,
+				HeaderSubtitle: deps.Labels.GeneralLedger.Subtitle,
 				HeaderIcon:     "icon-book-open",
 				CommonLabels:   deps.CommonLabels,
 			},
@@ -151,8 +151,8 @@ func NewGeneralLedgerView(deps *GeneralLedgerDeps) view.View {
 		pageData.Section = section
 		pageData.AccountCode = section.AccountCode
 		pageData.AccountName = section.AccountName
-		pageData.SummaryMetrics = buildGLSummary(section)
-		pageData.Table = buildGLTable(section, deps.TableLabels)
+		pageData.SummaryMetrics = buildGLSummary(section, deps.Labels)
+		pageData.Table = buildGLTable(section, deps.TableLabels, deps.Labels)
 
 		if viewCtx.IsHTMX {
 			return view.OK("general-ledger-content", pageData)
@@ -165,11 +165,11 @@ func NewGeneralLedgerView(deps *GeneralLedgerDeps) view.View {
 // Summary bar
 // ---------------------------------------------------------------------------
 
-func buildGLSummary(s *GLAccountSection) []fycha.SummaryMetric {
+func buildGLSummary(s *GLAccountSection, labels fycha.AccountLabels) []fycha.SummaryMetric {
 	return []fycha.SummaryMetric{
-		{Label: "Opening Balance", Value: formatCurrencyGL(s.OpeningBalance)},
-		{Label: "Period Debits", Value: formatCurrencyGL(s.PeriodDebits), Highlight: true},
-		{Label: "Period Credits", Value: formatCurrencyGL(s.PeriodCredits)},
+		{Label: labels.GeneralLedger.OpeningBalance, Value: formatCurrencyGL(s.OpeningBalance)},
+		{Label: labels.GeneralLedger.PeriodDebits, Value: formatCurrencyGL(s.PeriodDebits), Highlight: true},
+		{Label: labels.GeneralLedger.PeriodCredits, Value: formatCurrencyGL(s.PeriodCredits)},
 	}
 }
 
@@ -177,14 +177,14 @@ func buildGLSummary(s *GLAccountSection) []fycha.SummaryMetric {
 // Table builder
 // ---------------------------------------------------------------------------
 
-func buildGLTable(s *GLAccountSection, tableLabels types.TableLabels) *types.TableConfig {
+func buildGLTable(s *GLAccountSection, tableLabels types.TableLabels, labels fycha.AccountLabels) *types.TableConfig {
 	columns := []types.TableColumn{
-		{Key: "date", Label: "Date", Sortable: false, Width: "100px"},
-		{Key: "entry", Label: "Entry #", Sortable: false, Width: "110px"},
-		{Key: "description", Label: "Description", Sortable: false},
-		{Key: "debit", Label: "Debit", Sortable: false, Width: "130px", Align: "right"},
-		{Key: "credit", Label: "Credit", Sortable: false, Width: "130px", Align: "right"},
-		{Key: "balance", Label: "Running Balance", Sortable: false, Width: "140px", Align: "right"},
+		{Key: "date", Label: labels.Columns.Date, Sortable: false, Width: "100px"},
+		{Key: "entry", Label: labels.Columns.EntryNumber, Sortable: false, Width: "110px"},
+		{Key: "description", Label: labels.Columns.Description, Sortable: false},
+		{Key: "debit", Label: labels.Columns.Debit, Sortable: false, Width: "130px", Align: "right"},
+		{Key: "credit", Label: labels.Columns.Credit, Sortable: false, Width: "130px", Align: "right"},
+		{Key: "balance", Label: labels.GeneralLedger.RunningBalance, Sortable: false, Width: "140px", Align: "right"},
 	}
 
 	rows := make([]types.TableRow, 0, len(s.Lines))
@@ -251,8 +251,8 @@ func buildGLTable(s *GLAccountSection, tableLabels types.TableLabels) *types.Tab
 		ShowDensity: true,
 		Labels:      tableLabels,
 		EmptyState: types.TableEmptyState{
-			Title:   "No transactions",
-			Message: "No journal entries found for this account in the selected date range.",
+			Title:   labels.GeneralLedger.NoTransactionsTitle,
+			Message: labels.GeneralLedger.NoTransactionsDetail,
 		},
 	}
 }

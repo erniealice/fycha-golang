@@ -291,7 +291,7 @@ Supported value types:
 │  └───────────────────┬───────────────────┘  │
 │                      │                       │
 ├──────────────────────┼───────────────────────┤
-│  fycha-golang-ryta   │                       │
+│  fycha-golang   │                       │
 │  ┌───────────────────┴───────────────────┐  │
 │  │ DocumentService                        │  │
 │  │ - ProcessFromStorage (storage I/O)     │  │
@@ -309,7 +309,7 @@ Supported value types:
 │  │ - Zero I/O, zero storage deps        │  │
 │  └───────────────────────────────────────┘  │
 ├─────────────────────────────────────────────┤
-│  espyna-golang-ryta                          │
+│  espyna-golang                          │
 │  - StorageAdapter (GCS, S3, Azure, Mock)    │
 └─────────────────────────────────────────────┘
 ```
@@ -323,7 +323,7 @@ Supported value types:
 ## File Structure
 
 ```
-packages/fycha-golang-ryta/
+packages/fycha-golang/
 ├── document_service.go          # DocumentService + StorageReadWriter interface
 ├── services/
 │   └── doctemplate/
@@ -342,7 +342,7 @@ packages/fycha-golang-ryta/
 ## Running Tests
 
 ```bash
-cd packages/fycha-golang-ryta
+cd packages/fycha-golang
 go test ./services/doctemplate/ -v
 ```
 

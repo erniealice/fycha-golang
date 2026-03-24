@@ -12,11 +12,11 @@ Discovered during E2E test writing on 2026-03-19.
 
 **Description:** Navigating to the Income Statement page shows "Page content not available" instead of the financial statement table. The route IS registered in `apps/service-admin/internal/presentation/financial/module.go` (line 55) and the sidebar link works, but the template content fails to render.
 
-**Root cause (suspected):** The fycha-golang-ryta submodule reference in service-admin is out of date. The compiled binary does not include the `income-statement-content` template that the view handler returns via `view.OK("income-statement-content", pageData)`. The pyeza `renderContent` function cannot find the template and falls back to the "Page content not available" message.
+**Root cause (suspected):** The fycha-golang submodule reference in service-admin is out of date. The compiled binary does not include the `income-statement-content` template that the view handler returns via `view.OK("income-statement-content", pageData)`. The pyeza `renderContent` function cannot find the template and falls back to the "Page content not available" message.
 
 **Affected tests:** 5 tests skipped in `reports-navigation.spec.ts` (FYC-RPT-002)
 
-**Fix:** Update the fycha-golang-ryta submodule ref in the service-admin go.work / go.mod, rebuild, and verify the template renders.
+**Fix:** Update the fycha-golang submodule ref in the service-admin go.work / go.mod, rebuild, and verify the template renders.
 
 ---
 

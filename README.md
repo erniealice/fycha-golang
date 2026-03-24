@@ -1,6 +1,6 @@
 # fycha-golang
 
-Recording and accounting domain package for Ryta OS. Provides reusable report views (P&L family), fixed asset management views, period-based filtering, storage handling, and HTMX helpers for Go HTMX admin applications built on pyeza-golang.
+Recording and accounting domain package for Ichizen OS. Provides reusable report views (P&L family), fixed asset management views, period-based filtering, storage handling, and HTMX helpers for Go HTMX admin applications built on pyeza-golang.
 
 **Module path:** `github.com/erniealice/fycha-golang`
 
@@ -11,7 +11,7 @@ Recording and accounting domain package for Ryta OS. Provides reusable report vi
 ## Package Structure
 
 ```
-packages/fycha-golang-ryta/
+packages/fycha-golang/
   go.mod
   go.sum
   package_dir.go          -- runtime.Caller(0) for resolving package directory
