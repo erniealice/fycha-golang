@@ -13,7 +13,7 @@ test.describe('FYC-NAV-001: Page Header Updates on Navigation', () => {
   test('heading changes when switching financial report pages', async ({ page }) => {
     // Navigate to revenue report
     await page.goto('/app/financial/revenue');
-    const h1 = page.locator('h1');
+    const h1 = page.locator('h1').first();
     await expect(h1).toBeVisible();
     const revenueHeading = await h1.textContent();
 
@@ -28,7 +28,7 @@ test.describe('FYC-NAV-001: Page Header Updates on Navigation', () => {
 
   test('heading changes between assets dashboard and list', async ({ page }) => {
     await page.goto('/app/assets/dashboard');
-    const h1 = page.locator('h1');
+    const h1 = page.locator('h1').first();
     await expect(h1).toBeVisible();
     const dashHeading = await h1.textContent();
 
