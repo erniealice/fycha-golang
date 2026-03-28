@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/erniealice/fycha-golang/services/doctemplate"
+	"github.com/erniealice/fycha-golang/services/pdfconv"
 )
 
 // StorageReadWriter reads and writes objects from a storage backend.
@@ -34,14 +35,25 @@ func NewDocumentService(storage StorageReadWriter) *DocumentService {
 	return &DocumentService{storage: storage}
 }
 
-// ProcessBytes processes a DOCX template from raw bytes and returns the result as bytes.
+// ProcessBytes processes a DOCX template from raw bytes and returns the result as DOCX bytes.
 // This is a convenience wrapper around doctemplate.ProcessTemplate — no storage needed.
 func (s *DocumentService) ProcessBytes(templateData []byte, data map[string]any) ([]byte, error) {
 	return doctemplate.ProcessTemplate(templateData, data)
 }
 
+// ProcessBytesToPDF processes a DOCX template and converts the result to PDF.
+// Returns the PDF bytes, or an error if conversion fails.
+// Requires LibreOffice to be installed (https://www.libreoffice.org/download/).
+func (s *DocumentService) ProcessBytesToPDF(templateData []byte, data map[string]any) ([]byte, error) {
+	docxBytes, err := doctemplate.ProcessTemplate(templateData, data)
+	if err != nil {
+		return nil, err
+	}
+	return convertToPDF(docxBytes)
+}
+
 // ProcessFromStorage reads a template from storage, processes it with the given data,
-// and writes the result back to storage.
+// and writes the result back to storage as DOCX.
 //
 // Parameters:
 //   - templateContainer: storage container/bucket where the template lives
@@ -79,8 +91,42 @@ func (s *DocumentService) ProcessFromStorage(
 	return nil
 }
 
+// ProcessFromStorageToPDF reads a template from storage, processes it,
+// converts to PDF, and writes the PDF back to storage.
+func (s *DocumentService) ProcessFromStorageToPDF(
+	ctx context.Context,
+	templateContainer, templateKey string,
+	outputContainer, outputKey string,
+	data map[string]any,
+) error {
+	if s.storage == nil {
+		return fmt.Errorf("storage not configured")
+	}
+
+	templateData, err := s.storage.ReadObject(ctx, templateContainer, templateKey)
+	if err != nil {
+		return fmt.Errorf("reading template %s/%s: %w", templateContainer, templateKey, err)
+	}
+
+	docxBytes, err := doctemplate.ProcessTemplate(templateData, data)
+	if err != nil {
+		return fmt.Errorf("processing template: %w", err)
+	}
+
+	pdfBytes, err := convertToPDF(docxBytes)
+	if err != nil {
+		return fmt.Errorf("converting to PDF: %w", err)
+	}
+
+	if err := s.storage.WriteObject(ctx, outputContainer, outputKey, pdfBytes); err != nil {
+		return fmt.Errorf("writing output %s/%s: %w", outputContainer, outputKey, err)
+	}
+
+	return nil
+}
+
 // ProcessFromStorageToBytes reads a template from storage, processes it,
-// and returns the result as bytes (for streaming to HTTP response, etc.).
+// and returns the result as DOCX bytes (for streaming to HTTP response, etc.).
 func (s *DocumentService) ProcessFromStorageToBytes(
 	ctx context.Context,
 	templateContainer, templateKey string,
@@ -103,4 +149,41 @@ func (s *DocumentService) ProcessFromStorageToBytes(
 	}
 
 	return result, nil
+}
+
+// ProcessFromStorageToPDFBytes reads a template from storage, processes it,
+// converts to PDF, and returns the PDF bytes for streaming to HTTP response.
+func (s *DocumentService) ProcessFromStorageToPDFBytes(
+	ctx context.Context,
+	templateContainer, templateKey string,
+	data map[string]any,
+) ([]byte, error) {
+	if s.storage == nil {
+		return nil, fmt.Errorf("storage not configured")
+	}
+
+	templateData, err := s.storage.ReadObject(ctx, templateContainer, templateKey)
+	if err != nil {
+		return nil, fmt.Errorf("reading template %s/%s: %w", templateContainer, templateKey, err)
+	}
+
+	docxBytes, err := doctemplate.ProcessTemplate(templateData, data)
+	if err != nil {
+		return nil, fmt.Errorf("processing template: %w", err)
+	}
+
+	return convertToPDF(docxBytes)
+}
+
+// convertToPDF converts DOCX bytes to PDF using LibreOffice.
+// Returns an error if LibreOffice is not installed (no silent fallback).
+func convertToPDF(docxBytes []byte) ([]byte, error) {
+	pdfBytes, ok, err := pdfconv.ConvertDocxToPDF(docxBytes)
+	if err != nil {
+		return nil, fmt.Errorf("PDF conversion failed: %w", err)
+	}
+	if !ok {
+		return nil, fmt.Errorf("PDF conversion unavailable: LibreOffice is not installed (see https://www.libreoffice.org/download/)")
+	}
+	return pdfBytes, nil
 }
