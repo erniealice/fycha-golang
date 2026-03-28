@@ -34,6 +34,4 @@ replace github.com/erniealice/pyeza-golang => ../pyeza-golang
 
 replace github.com/erniealice/espyna-golang => ../espyna-golang
 
-replace leapfor.xyz/copya => ../../../master-monorepo-v2/packages/copya
 
-replace leapfor.xyz/vya => ../../../master-monorepo-v2/packages/vya
