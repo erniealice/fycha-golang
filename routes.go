@@ -61,6 +61,7 @@ const (
 	// Ledger — Fiscal Periods / Settings
 	FiscalPeriodListURL   = "/app/ledger/settings/fiscal-periods"
 	FiscalPeriodDetailURL = "/app/ledger/settings/fiscal-periods/detail/{id}"
+	FiscalPeriodAddURL    = "/action/ledger/fiscal-periods/add"
 	FiscalPeriodCloseURL  = "/action/ledger/fiscal-periods/close/{id}"
 
 	// Ledger — Bad Debt Policy

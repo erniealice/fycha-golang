@@ -2,6 +2,7 @@ package ledger
 
 import (
 	"context"
+	"net/http"
 
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
@@ -13,6 +14,7 @@ import (
 	accountlist "github.com/erniealice/fycha-golang/views/ledger/list"
 	fiscalview "github.com/erniealice/fycha-golang/views/ledger/fiscal"
 	journalview "github.com/erniealice/fycha-golang/views/ledger/journal"
+	journalactionview "github.com/erniealice/fycha-golang/views/ledger/journal_action"
 	journaldetailview "github.com/erniealice/fycha-golang/views/ledger/journal_detail"
 	ledgerreports "github.com/erniealice/fycha-golang/views/ledger/reports"
 	ledgersettings "github.com/erniealice/fycha-golang/views/ledger/settings"
@@ -70,6 +72,8 @@ type ModuleDeps struct {
 
 	// FiscalPeriod use cases (Phase 3; nil-safe — falls back to mock data)
 	GetFiscalPeriodListPageData func(ctx context.Context) ([]*fiscalperiodpb.FiscalPeriod, error)
+	CreateFiscalPeriod          func(ctx context.Context, req *fiscalperiodpb.CreateFiscalPeriodRequest) (*fiscalperiodpb.CreateFiscalPeriodResponse, error)
+	CloseFiscalPeriod           func(ctx context.Context, req *fiscalperiodpb.CloseFiscalPeriodRequest) (*fiscalperiodpb.CloseFiscalPeriodResponse, error)
 
 	// Ledger settings routes + labels (Phase 4: RecurringTemplates + BadDebtPolicy)
 	LedgerSettingsRoutes    fycha.LedgerSettingsRoutes
@@ -91,6 +95,9 @@ type Module struct {
 	AccountEdit             view.View
 	AccountDelete           view.View
 
+	// Account search (JSON endpoint for journal form autocomplete)
+	accountSearchHandler http.HandlerFunc
+
 	// Account settings
 	AccountTemplates        view.View
 	AccountTemplatesPreview view.View
@@ -101,11 +108,18 @@ type Module struct {
 	TrialBalance  view.View
 
 	// Journal Entry views (Phase 3)
-	JournalList   view.View
-	JournalDetail view.View
+	JournalList    view.View
+	JournalDetail  view.View
+	JournalAdd     view.View
+	JournalEdit    view.View
+	JournalPost    view.View
+	JournalReverse view.View
+	JournalDelete  view.View
 
 	// FiscalPeriod views (Phase 3)
-	FiscalPeriodList view.View
+	FiscalPeriodList  view.View
+	FiscalPeriodAdd   view.View
+	FiscalPeriodClose view.View
 
 	// Ledger settings views (Phase 4)
 	RecurringTemplates view.View
@@ -179,6 +193,17 @@ func NewModule(deps *ModuleDeps) *Module {
 		TableLabels:                 deps.TableLabels,
 		GetJournalEntryItemPageData: deps.GetJournalEntryItemPageData,
 	}
+	journalActionDeps := &journalactionview.Deps{
+		Routes:                      deps.JournalRoutes,
+		Labels:                      deps.JournalLabels,
+		CreateJournalEntry:          deps.CreateJournalEntry,
+		ReadJournalEntry:            deps.ReadJournalEntry,
+		UpdateJournalEntry:          deps.UpdateJournalEntry,
+		DeleteJournalEntry:          deps.DeleteJournalEntry,
+		PostJournalEntry:            deps.PostJournalEntry,
+		ReverseJournalEntry:         deps.ReverseJournalEntry,
+		GetJournalEntryItemPageData: deps.GetJournalEntryItemPageData,
+	}
 
 	fiscalDeps := &fiscalview.Deps{
 		Routes:                      deps.FiscalPeriodRoutes,
@@ -186,6 +211,13 @@ func NewModule(deps *ModuleDeps) *Module {
 		CommonLabels:                deps.CommonLabels,
 		TableLabels:                 deps.TableLabels,
 		GetFiscalPeriodListPageData: deps.GetFiscalPeriodListPageData,
+	}
+
+	fiscalActionDeps := &fiscalview.ActionDeps{
+		Routes:             deps.FiscalPeriodRoutes,
+		Labels:             deps.FiscalPeriodLabels,
+		CreateFiscalPeriod: deps.CreateFiscalPeriod,
+		CloseFiscalPeriod:  deps.CloseFiscalPeriod,
 	}
 
 	// Ledger settings routes: prefer provided, fall back to defaults
@@ -202,12 +234,17 @@ func NewModule(deps *ModuleDeps) *Module {
 		// GetRecurringTemplateList: nil — falls back to mock data until DB is wired
 	}
 
+	accountSearchDeps := &accountaction.AccountSearchDeps{
+		GetAccountListPageData: deps.GetAccountListPageData,
+	}
+
 	return &Module{
 		routes:          deps.Routes,
 		statementRoutes: statementRoutes,
 		journalRoutes:   deps.JournalRoutes,
 		fiscalRoutes:    deps.FiscalPeriodRoutes,
 
+		accountSearchHandler:    accountaction.NewSearchAccountsHandler(accountSearchDeps),
 		AccountList:             accountlist.NewView(listDeps),
 		AccountDetail:           accountdetail.NewView(detailDeps),
 		AccountTabAction:        accountdetail.NewTabAction(detailDeps),
@@ -220,14 +257,28 @@ func NewModule(deps *ModuleDeps) *Module {
 		GeneralLedger:           ledgerreports.NewGeneralLedgerView(glDeps),
 		TrialBalance:            ledgerreports.NewTrialBalanceView(tbDeps),
 
-		JournalList:   journalview.NewView(journalListDeps),
-		JournalDetail: journaldetailview.NewView(journalDetailDeps),
+		JournalList:    journalview.NewView(journalListDeps),
+		JournalDetail:  journaldetailview.NewView(journalDetailDeps),
+		JournalAdd:     journalactionview.NewAddAction(journalActionDeps),
+		JournalEdit:    journalactionview.NewEditAction(journalActionDeps),
+		JournalPost:    journalactionview.NewPostAction(journalActionDeps),
+		JournalReverse: journalactionview.NewReverseAction(journalActionDeps),
+		JournalDelete:  journalactionview.NewDeleteAction(journalActionDeps),
 
-		FiscalPeriodList: fiscalview.NewView(fiscalDeps),
+		FiscalPeriodList:  fiscalview.NewView(fiscalDeps),
+		FiscalPeriodAdd:   fiscalview.NewAddAction(fiscalActionDeps),
+		FiscalPeriodClose: fiscalview.NewCloseAction(fiscalActionDeps),
 
 		RecurringTemplates: recurringview.NewView(recurringDeps),
 		BadDebtPolicy:      badDebtPolicyView(deps.CommonLabels),
 	}
+}
+
+// routeRegistrarFull extends view.RouteRegistrar with HandleFunc support for raw
+// http.HandlerFunc routes (e.g. JSON search endpoints).
+type routeRegistrarFull interface {
+	view.RouteRegistrar
+	HandleFunc(method, path string, handler http.HandlerFunc, middlewares ...string)
 }
 
 // RegisterRoutes registers all ledger routes with the given route registrar.
@@ -242,9 +293,25 @@ func (m *Module) RegisterRoutes(r view.RouteRegistrar) {
 	r.POST(m.routes.EditURL, m.AccountEdit)
 	r.POST(m.routes.DeleteURL, m.AccountDelete)
 
+	// Account search — JSON endpoint for journal form autocomplete
+	// GET /action/ledger/accounts/search?q=<term>
+	if m.accountSearchHandler != nil {
+		if full, ok := r.(routeRegistrarFull); ok {
+			full.HandleFunc("GET", "/action/ledger/accounts/search", m.accountSearchHandler)
+		}
+	}
+
 	// Journals — Phase 3: real views
 	r.GET(m.journalRoutes.ListURL, m.JournalList)
 	r.GET(m.journalRoutes.DetailURL, m.JournalDetail)
+	// Journal actions — Phase 3: add / edit / post / reverse / delete
+	r.GET(m.journalRoutes.AddURL, m.JournalAdd)
+	r.POST(m.journalRoutes.AddURL, m.JournalAdd)
+	r.GET(m.journalRoutes.EditURL, m.JournalEdit)
+	r.POST(m.journalRoutes.EditURL, m.JournalEdit)
+	r.POST(m.journalRoutes.PostURL, m.JournalPost)
+	r.POST(m.journalRoutes.ReverseURL, m.JournalReverse)
+	r.POST(m.journalRoutes.DeleteURL, m.JournalDelete)
 
 	// Reports — Phase 3: real views with mock data
 	r.GET(m.statementRoutes.GeneralLedgerURL, m.GeneralLedger)
@@ -257,6 +324,9 @@ func (m *Module) RegisterRoutes(r view.RouteRegistrar) {
 
 	// Settings — Phase 3: FiscalPeriod wired
 	r.GET(m.fiscalRoutes.ListURL, m.FiscalPeriodList)
+	r.GET(m.fiscalRoutes.AddURL, m.FiscalPeriodAdd)
+	r.POST(m.fiscalRoutes.AddURL, m.FiscalPeriodAdd)
+	r.POST(m.fiscalRoutes.CloseURL, m.FiscalPeriodClose)
 
 	// Settings — Phase 4: RecurringTemplates + BadDebtPolicy wired
 	r.GET(fycha.RecurringTemplatesURL, m.RecurringTemplates)

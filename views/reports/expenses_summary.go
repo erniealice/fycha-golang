@@ -70,7 +70,7 @@ func fetchExpensesSummary(ctx context.Context, db *sql.DB) ([]types.TableColumn,
 	for dbRows.Next() {
 		var category string
 		var count int
-		var total int64
+		var total float64
 		var pct float64
 		if err := dbRows.Scan(&category, &count, &total, &pct); err != nil {
 			continue
@@ -81,7 +81,7 @@ func fetchExpensesSummary(ctx context.Context, db *sql.DB) ([]types.TableColumn,
 			Cells: []types.TableCell{
 				{Value: category},
 				{Value: fmt.Sprintf("%d", count)},
-				{Value: FormatCurrency(float64(total) / 100)},
+				{Value: FormatCurrency(total / 100)},
 				{Value: fmt.Sprintf("%.1f%%", pct)},
 			},
 		})

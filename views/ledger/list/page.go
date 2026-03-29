@@ -58,7 +58,7 @@ type AccountRow struct {
 // NewView creates the account list view (full page).
 func NewView(deps *ListViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
-		element := viewCtx.Request.URL.Query().Get("element")
+		element := viewCtx.Request.URL.Query().Get("tab")
 		if element == "" {
 			element = "all"
 		}
@@ -144,11 +144,11 @@ func buildElementTabs(deps *ListViewDeps) []pyeza.TabItem {
 	base := deps.Routes.ListURL
 	return []pyeza.TabItem{
 		{Key: "all", Label: l.All, Href: base, Icon: "", Count: 0, Disabled: false},
-		{Key: "asset", Label: l.Asset, Href: base + "?element=asset", Icon: "", Count: 0, Disabled: false},
-		{Key: "liability", Label: l.Liability, Href: base + "?element=liability", Icon: "", Count: 0, Disabled: false},
-		{Key: "equity", Label: l.Equity, Href: base + "?element=equity", Icon: "", Count: 0, Disabled: false},
-		{Key: "revenue", Label: l.Revenue, Href: base + "?element=revenue", Icon: "", Count: 0, Disabled: false},
-		{Key: "expense", Label: l.Expense, Href: base + "?element=expense", Icon: "", Count: 0, Disabled: false},
+		{Key: "asset", Label: l.Asset, Href: base + "?tab=asset", Icon: "", Count: 0, Disabled: false},
+		{Key: "liability", Label: l.Liability, Href: base + "?tab=liability", Icon: "", Count: 0, Disabled: false},
+		{Key: "equity", Label: l.Equity, Href: base + "?tab=equity", Icon: "", Count: 0, Disabled: false},
+		{Key: "revenue", Label: l.Revenue, Href: base + "?tab=revenue", Icon: "", Count: 0, Disabled: false},
+		{Key: "expense", Label: l.Expense, Href: base + "?tab=expense", Icon: "", Count: 0, Disabled: false},
 	}
 }
 
@@ -164,6 +164,7 @@ func buildTableConfig(deps *ListViewDeps, element string, accounts []AccountRow,
 
 	tableConfig := &types.TableConfig{
 		ID:                "accounts-tree-table",
+		RefreshURL:        deps.Routes.ListURL,
 		Columns:           columns,
 		Rows:              rows,
 		ShowSearch:        true,

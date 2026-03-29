@@ -261,6 +261,7 @@ type FiscalPeriodRoutes struct {
 	ActiveSubNav string `json:"active_sub_nav"`
 	ListURL      string `json:"list_url"`
 	DetailURL    string `json:"detail_url"`
+	AddURL       string `json:"add_url"`
 	CloseURL     string `json:"close_url"`
 }
 
@@ -270,6 +271,7 @@ func DefaultFiscalPeriodRoutes() FiscalPeriodRoutes {
 		ActiveSubNav: "fiscal-periods",
 		ListURL:      FiscalPeriodListURL,
 		DetailURL:    FiscalPeriodDetailURL,
+		AddURL:       FiscalPeriodAddURL,
 		CloseURL:     FiscalPeriodCloseURL,
 	}
 }
@@ -278,6 +280,7 @@ func (r FiscalPeriodRoutes) RouteMap() map[string]string {
 	return map[string]string{
 		"ledger.fiscal_period.list":   r.ListURL,
 		"ledger.fiscal_period.detail": r.DetailURL,
+		"ledger.fiscal_period.add":    r.AddURL,
 		"ledger.fiscal_period.close":  r.CloseURL,
 	}
 }

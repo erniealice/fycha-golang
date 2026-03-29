@@ -39,8 +39,9 @@ type FormData struct {
 
 // SelectOption holds a select option value/label pair.
 type SelectOption struct {
-	Value string
-	Label string
+	Value    string
+	Label    string
+	Selected bool
 }
 
 // Deps holds dependencies for account action handlers.
@@ -110,10 +111,10 @@ func NewAddAction(deps *Deps) view.View {
 		resp, err := deps.CreateAccount(ctx, req)
 		if err != nil {
 			log.Printf("CreateAccount error: %v", err)
-			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
+			return fycha.HTMXError("Failed to save account")
 		}
 		if resp == nil || !resp.GetSuccess() {
-			errMsg := deps.Labels.Actions.NoPermission
+			errMsg := "Failed to save account"
 			if resp.GetError() != nil {
 				errMsg = resp.GetError().GetMessage()
 			}
@@ -176,10 +177,10 @@ func NewEditAction(deps *Deps) view.View {
 		resp, err := deps.UpdateAccount(ctx, req)
 		if err != nil {
 			log.Printf("UpdateAccount error for %s: %v", id, err)
-			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
+			return fycha.HTMXError("Failed to save account")
 		}
 		if resp == nil || !resp.GetSuccess() {
-			errMsg := deps.Labels.Actions.NoPermission
+			errMsg := "Failed to save account"
 			if resp.GetError() != nil {
 				errMsg = resp.GetError().GetMessage()
 			}
@@ -213,10 +214,10 @@ func NewDeleteAction(deps *Deps) view.View {
 		})
 		if err != nil {
 			log.Printf("DeleteAccount error for %s: %v", id, err)
-			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
+			return fycha.HTMXError("Failed to delete account")
 		}
 		if resp == nil || !resp.GetSuccess() {
-			errMsg := deps.Labels.Actions.NoPermission
+			errMsg := "Failed to delete account"
 			if resp.GetError() != nil {
 				errMsg = resp.GetError().GetMessage()
 			}

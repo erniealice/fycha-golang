@@ -38,11 +38,11 @@ func fetchReceivablesAging(ctx context.Context, db *sql.DB) ([]types.TableColumn
 		{Key: "total", Label: "Total", Sortable: true, Align: "right"},
 	}
 
-	// revenue stores customer name directly (customer_first_name, customer_last_name)
+	// revenue stores customer name in the `name` column
 	// aging is based on date_created since revenue has no due_date
 	query := `
 		SELECT
-			COALESCE(NULLIF(TRIM(r.customer_first_name || ' ' || r.customer_last_name), ''), 'Unknown') AS customer_name,
+			COALESCE(NULLIF(TRIM(r.name), ''), 'Unknown') AS customer_name,
 			COALESCE(SUM(CASE WHEN CURRENT_DATE - r.date_created::date <= 0 THEN r.total_amount ELSE 0 END), 0) AS current_amt,
 			COALESCE(SUM(CASE WHEN CURRENT_DATE - r.date_created::date BETWEEN 1 AND 30 THEN r.total_amount ELSE 0 END), 0) AS days_30,
 			COALESCE(SUM(CASE WHEN CURRENT_DATE - r.date_created::date BETWEEN 31 AND 60 THEN r.total_amount ELSE 0 END), 0) AS days_60,
@@ -65,7 +65,7 @@ func fetchReceivablesAging(ctx context.Context, db *sql.DB) ([]types.TableColumn
 	idx := 0
 	for dbRows.Next() {
 		var name string
-		var current, d30, d60, d90, over90, total int64
+		var current, d30, d60, d90, over90, total float64
 		if err := dbRows.Scan(&name, &current, &d30, &d60, &d90, &over90, &total); err != nil {
 			continue
 		}
@@ -74,12 +74,12 @@ func fetchReceivablesAging(ctx context.Context, db *sql.DB) ([]types.TableColumn
 			ID: fmt.Sprintf("ra-%d", idx),
 			Cells: []types.TableCell{
 				{Value: name},
-				{Value: FormatCurrency(float64(current) / 100)},
-				{Value: FormatCurrency(float64(d30) / 100)},
-				{Value: FormatCurrency(float64(d60) / 100)},
-				{Value: FormatCurrency(float64(d90) / 100)},
-				{Value: FormatCurrency(float64(over90) / 100)},
-				{Value: FormatCurrency(float64(total) / 100)},
+				{Value: FormatCurrency(current / 100)},
+				{Value: FormatCurrency(d30 / 100)},
+				{Value: FormatCurrency(d60 / 100)},
+				{Value: FormatCurrency(d90 / 100)},
+				{Value: FormatCurrency(over90 / 100)},
+				{Value: FormatCurrency(total / 100)},
 			},
 		})
 	}

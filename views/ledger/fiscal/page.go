@@ -142,7 +142,7 @@ func buildTableConfig(deps *Deps, periods []FiscalPeriodRow, perms *types.UserPe
 		},
 		PrimaryAction: &types.PrimaryAction{
 			Label:           l.Buttons.AddPeriod,
-			ActionURL:       "#",
+			ActionURL:       deps.Routes.AddURL,
 			Icon:            "icon-plus",
 			Disabled:        !perms.Can("fiscal_period", "create"),
 			DisabledTooltip: l.Actions.NoPermission,

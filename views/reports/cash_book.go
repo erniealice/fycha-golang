@@ -42,7 +42,7 @@ func fetchCashBook(ctx context.Context, db *sql.DB) ([]types.TableColumn, []type
 		FROM (
 			SELECT
 				TO_CHAR(date_created, 'YYYY-MM-DD') AS tx_date,
-				COALESCE(NULLIF(TRIM(customer_first_name || ' ' || customer_last_name), ''), 'Collection') AS description,
+				COALESCE(NULLIF(TRIM(name), ''), 'Collection') AS description,
 				COALESCE(NULLIF(reference_number, ''), '-') AS reference,
 				'Receipt' AS tx_type,
 				total_amount AS amount
@@ -74,7 +74,7 @@ func fetchCashBook(ctx context.Context, db *sql.DB) ([]types.TableColumn, []type
 	idx := 0
 	for dbRows.Next() {
 		var date, desc, ref, txType string
-		var amount int64
+		var amount float64
 		if err := dbRows.Scan(&date, &desc, &ref, &txType, &amount); err != nil {
 			continue
 		}
@@ -94,7 +94,7 @@ func fetchCashBook(ctx context.Context, db *sql.DB) ([]types.TableColumn, []type
 				{Value: desc},
 				{Value: ref},
 				{Type: "badge", Value: txType, Variant: variant},
-				{Value: FormatCurrency(float64(amount) / 100)},
+				{Value: FormatCurrency(amount / 100)},
 			},
 		})
 	}

@@ -143,8 +143,13 @@ func NewAddAction(deps *Deps) view.View {
 
 		// If "post" was clicked, post the newly created entry
 		if submitAction == "post" && newID != "" && deps.PostJournalEntry != nil {
+			postedByCreate := ""
+			if uid, ok := ctx.Value("uid").(string); ok {
+				postedByCreate = uid
+			}
 			postResp, postErr := deps.PostJournalEntry(ctx, &jepb.PostJournalEntryRequest{
 				JournalEntryId: newID,
+				PostedBy:       postedByCreate,
 			})
 			if postErr != nil {
 				log.Printf("PostJournalEntry error after create for %s: %v", newID, postErr)
@@ -231,8 +236,16 @@ func NewPostAction(deps *Deps) view.View {
 			return fycha.HTMXSuccess("journals-table")
 		}
 
+		// Extract the authenticated user ID from context.
+		// The session middleware stores it under the "uid" key.
+		postedBy := ""
+		if uid, ok := ctx.Value("uid").(string); ok {
+			postedBy = uid
+		}
+
 		resp, err := deps.PostJournalEntry(ctx, &jepb.PostJournalEntryRequest{
 			JournalEntryId: id,
+			PostedBy:       postedBy,
 		})
 		if err != nil {
 			log.Printf("PostJournalEntry error for %s: %v", id, err)

@@ -919,15 +919,23 @@ func DefaultAccountLabels() AccountLabels {
 
 // JournalLabels holds all translatable strings for the Journal Entries module.
 type JournalLabels struct {
-	Page    JournalPageLabels   `json:"page"`
-	Tabs    JournalTabLabels    `json:"tabs"`
-	Buttons JournalButtonLabels `json:"buttons"`
-	Columns JournalColumnLabels `json:"columns"`
-	Empty   JournalEmptyLabels  `json:"empty"`
-	Actions JournalActionLabels `json:"actions"`
-	Lines   JournalLineLabels   `json:"lines"`
-	Form    JournalFormLabels   `json:"form"`
-	Detail  JournalDetailLabels `json:"detail"`
+	Page    JournalPageLabels    `json:"page"`
+	Tabs    JournalTabLabels     `json:"tabs"`
+	Buttons JournalButtonLabels  `json:"buttons"`
+	Columns JournalColumnLabels  `json:"columns"`
+	Empty   JournalEmptyLabels   `json:"empty"`
+	Actions JournalActionLabels  `json:"actions"`
+	Lines   JournalLineLabels    `json:"lines"`
+	Form    JournalFormLabels    `json:"form"`
+	Detail  JournalDetailLabels  `json:"detail"`
+	Confirm JournalConfirmLabels `json:"confirm"`
+}
+
+// JournalConfirmLabels holds confirmation dialog strings for journal actions.
+type JournalConfirmLabels struct {
+	Post    string `json:"post"`
+	Delete  string `json:"delete"`
+	Reverse string `json:"reverse"`
 }
 
 // JournalDetailLabels holds translatable strings for the journal detail page.
@@ -1158,6 +1166,11 @@ func DefaultJournalLabels() JournalLabels {
 			Totals:      "TOTALS",
 			Difference:  "DIFFERENCE",
 		},
+		Confirm: JournalConfirmLabels{
+			Post:    "Are you sure you want to post this journal entry? This action cannot be undone.",
+			Delete:  "Are you sure you want to delete this journal entry? This action cannot be undone.",
+			Reverse: "Are you sure you want to reverse this journal entry? A reversing entry will be created.",
+		},
 	}
 }
 
@@ -1173,6 +1186,17 @@ type FiscalPeriodLabels struct {
 	Status  FiscalPeriodStatusLabels `json:"status"`
 	Empty   FiscalPeriodEmptyLabels  `json:"empty"`
 	Actions FiscalPeriodActionLabels `json:"actions"`
+	Form    FiscalPeriodFormLabels   `json:"form"`
+}
+
+// FiscalPeriodFormLabels holds field-level labels for the fiscal period add/edit form.
+type FiscalPeriodFormLabels struct {
+	Name         string `json:"name"`
+	PeriodNumber string `json:"period_number"`
+	FiscalYear   string `json:"fiscal_year"`
+	StartDate    string `json:"start_date"`
+	EndDate      string `json:"end_date"`
+	Status       string `json:"status"`
 }
 
 type FiscalPeriodPageLabels struct {
@@ -1243,6 +1267,14 @@ func DefaultFiscalPeriodLabels() FiscalPeriodLabels {
 			Close:        "Close",
 			NoPermission: "No permission",
 			ConfirmClose: "Are you sure you want to close %s? This will prevent new journal entries from being posted to this period.",
+		},
+		Form: FiscalPeriodFormLabels{
+			Name:         "Name",
+			PeriodNumber: "Period Number",
+			FiscalYear:   "Fiscal Year",
+			StartDate:    "Start Date",
+			EndDate:      "End Date",
+			Status:       "Status",
 		},
 	}
 }
