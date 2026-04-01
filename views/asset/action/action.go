@@ -5,11 +5,33 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
+	"github.com/erniealice/pyeza-golang/route"
 	"github.com/erniealice/pyeza-golang/view"
 
 	fycha "github.com/erniealice/fycha-golang"
 )
+
+// AssetRecord is a flat struct for passing asset data between action handlers
+// and the DB layer. It avoids a dependency on protobuf types.
+type AssetRecord struct {
+	ID                 string
+	AssetNumber        string
+	Name               string
+	Description        string
+	AssetType          string
+	AssetCategoryID    string
+	LocationID         string
+	AcquisitionCost    float64
+	SalvageValue       float64
+	BookValue          float64
+	UsefulLifeMonths   int
+	DepreciationMethod string
+	Currency           string
+	Status             string
+	Active             bool
+}
 
 // FormLabels holds i18n labels for the drawer form template.
 type FormLabels struct {
@@ -60,6 +82,14 @@ type FormData struct {
 type Deps struct {
 	Routes fycha.AssetRoutes
 	Labels fycha.AssetLabels
+
+	// CRUD operations (wired from block.go)
+	CreateAsset func(ctx context.Context, asset *AssetRecord) error
+	ReadAsset   func(ctx context.Context, id string) (*AssetRecord, error)
+	UpdateAsset func(ctx context.Context, asset *AssetRecord) error
+	DeleteAsset func(ctx context.Context, id string) error
+	SetActive   func(ctx context.Context, id string, active bool) error
+	NewID       func() string
 }
 
 func formLabelsFromStruct(l fycha.AssetFormLabels) FormLabels {
@@ -107,12 +137,62 @@ func NewAddAction(deps *Deps) view.View {
 			})
 		}
 
-		// POST -- create asset (mock — just return success)
+		// POST — create asset
 		if err := viewCtx.Request.ParseForm(); err != nil {
 			return fycha.HTMXError(deps.Labels.Actions.InvalidFormData)
 		}
 
-		log.Printf("Mock create asset: %s", viewCtx.Request.FormValue("name"))
+		name := viewCtx.Request.FormValue("name")
+		if name == "" {
+			return fycha.HTMXError("Name is required")
+		}
+
+		acqCost, _ := strconv.ParseFloat(viewCtx.Request.FormValue("acquisition_cost"), 64)
+		salvage, _ := strconv.ParseFloat(viewCtx.Request.FormValue("salvage_value"), 64)
+		usefulLife, _ := strconv.Atoi(viewCtx.Request.FormValue("useful_life_months"))
+
+		id := ""
+		if deps.NewID != nil {
+			id = deps.NewID()
+		}
+
+		assetNumber := viewCtx.Request.FormValue("asset_number")
+		if assetNumber == "" {
+			assetNumber = id
+		}
+
+		depMethod := viewCtx.Request.FormValue("depreciation_method")
+		if depMethod == "" {
+			depMethod = "STRAIGHT_LINE"
+		}
+
+		record := &AssetRecord{
+			ID:                 id,
+			AssetNumber:        assetNumber,
+			Name:               name,
+			Description:        viewCtx.Request.FormValue("description"),
+			AssetType:          "PPE",
+			AssetCategoryID:    viewCtx.Request.FormValue("asset_category_id"),
+			LocationID:         viewCtx.Request.FormValue("location_id"),
+			AcquisitionCost:    acqCost,
+			SalvageValue:       salvage,
+			BookValue:          acqCost - salvage,
+			UsefulLifeMonths:   usefulLife,
+			DepreciationMethod: depMethod,
+			Currency:           "PHP",
+			Status:             "IN_SERVICE",
+			Active:             true,
+		}
+
+		if deps.CreateAsset != nil {
+			if err := deps.CreateAsset(ctx, record); err != nil {
+				log.Printf("asset create error: %v", err)
+				return fycha.HTMXError("Failed to create asset")
+			}
+		} else {
+			log.Printf("Mock create asset: %s (no CreateAsset wired)", name)
+		}
+
 		return fycha.HTMXSuccess("assets-table")
 	})
 }
@@ -128,9 +208,35 @@ func NewEditAction(deps *Deps) view.View {
 		id := viewCtx.Request.PathValue("id")
 
 		if viewCtx.Request.Method == http.MethodGet {
-			// Mock data for edit form
+			// Load asset from DB for edit form pre-fill
+			if deps.ReadAsset != nil {
+				record, err := deps.ReadAsset(ctx, id)
+				if err != nil {
+					log.Printf("asset read error for edit: %v", err)
+					return fycha.HTMXError("Failed to read asset")
+				}
+				return view.OK("asset-drawer-form", &FormData{
+					FormAction:         route.ResolveURL(deps.Routes.EditURL, "id", record.ID),
+					IsEdit:             true,
+					ID:                 record.ID,
+					Name:               record.Name,
+					AssetNumber:        record.AssetNumber,
+					Description:        record.Description,
+					CategoryID:         record.AssetCategoryID,
+					LocationID:         record.LocationID,
+					AcquisitionCost:    fmt.Sprintf("%.2f", record.AcquisitionCost),
+					SalvageValue:       fmt.Sprintf("%.2f", record.SalvageValue),
+					UsefulLifeMonths:   strconv.Itoa(record.UsefulLifeMonths),
+					DepreciationMethod: record.DepreciationMethod,
+					Active:             record.Active,
+					Labels:             formLabelsFromStruct(deps.Labels.Form),
+					CommonLabels:       nil,
+				})
+			}
+
+			// Fallback: mock data
 			return view.OK("asset-drawer-form", &FormData{
-				FormAction:         deps.Routes.EditURL,
+				FormAction:         route.ResolveURL(deps.Routes.EditURL, "id", id),
 				IsEdit:             true,
 				ID:                 id,
 				Name:               "Mock Asset",
@@ -146,12 +252,49 @@ func NewEditAction(deps *Deps) view.View {
 			})
 		}
 
-		// POST -- update asset (mock — just return success)
+		// POST — update asset
 		if err := viewCtx.Request.ParseForm(); err != nil {
 			return fycha.HTMXError(deps.Labels.Actions.InvalidFormData)
 		}
 
-		log.Printf("Mock update asset %s: %s", id, viewCtx.Request.FormValue("name"))
+		name := viewCtx.Request.FormValue("name")
+		if name == "" {
+			return fycha.HTMXError("Name is required")
+		}
+
+		acqCost, _ := strconv.ParseFloat(viewCtx.Request.FormValue("acquisition_cost"), 64)
+		salvage, _ := strconv.ParseFloat(viewCtx.Request.FormValue("salvage_value"), 64)
+		usefulLife, _ := strconv.Atoi(viewCtx.Request.FormValue("useful_life_months"))
+
+		depMethod := viewCtx.Request.FormValue("depreciation_method")
+		if depMethod == "" {
+			depMethod = "STRAIGHT_LINE"
+		}
+
+		record := &AssetRecord{
+			ID:                 id,
+			AssetNumber:        viewCtx.Request.FormValue("asset_number"),
+			Name:               name,
+			Description:        viewCtx.Request.FormValue("description"),
+			AssetCategoryID:    viewCtx.Request.FormValue("asset_category_id"),
+			LocationID:         viewCtx.Request.FormValue("location_id"),
+			AcquisitionCost:    acqCost,
+			SalvageValue:       salvage,
+			BookValue:          acqCost - salvage,
+			UsefulLifeMonths:   usefulLife,
+			DepreciationMethod: depMethod,
+			Currency:           "PHP",
+		}
+
+		if deps.UpdateAsset != nil {
+			if err := deps.UpdateAsset(ctx, record); err != nil {
+				log.Printf("asset update error: %v", err)
+				return fycha.HTMXError("Failed to update asset")
+			}
+		} else {
+			log.Printf("Mock update asset %s: %s (no UpdateAsset wired)", id, name)
+		}
+
 		return fycha.HTMXSuccess("assets-table")
 	})
 }
@@ -173,7 +316,15 @@ func NewDeleteAction(deps *Deps) view.View {
 			return fycha.HTMXError(deps.Labels.Actions.IDRequired)
 		}
 
-		log.Printf("Mock delete asset: %s", id)
+		if deps.DeleteAsset != nil {
+			if err := deps.DeleteAsset(ctx, id); err != nil {
+				log.Printf("asset delete error: %v", err)
+				return fycha.HTMXError("Failed to delete asset")
+			}
+		} else {
+			log.Printf("Mock delete asset: %s", id)
+		}
+
 		return fycha.HTMXSuccess("assets-table")
 	})
 }
@@ -193,7 +344,16 @@ func NewBulkDeleteAction(deps *Deps) view.View {
 			return fycha.HTMXError(deps.Labels.Actions.NoIDsProvided)
 		}
 
-		log.Printf("Mock bulk delete assets: %v", ids)
+		if deps.DeleteAsset != nil {
+			for _, id := range ids {
+				if err := deps.DeleteAsset(ctx, id); err != nil {
+					log.Printf("asset bulk delete error for %s: %v", id, err)
+				}
+			}
+		} else {
+			log.Printf("Mock bulk delete assets: %v", ids)
+		}
+
 		return fycha.HTMXSuccess("assets-table")
 	})
 }
@@ -221,7 +381,17 @@ func NewSetStatusAction(deps *Deps) view.View {
 			return fycha.HTMXError(deps.Labels.Actions.InvalidStatus)
 		}
 
-		log.Printf("Mock set asset status %s: %s", id, targetStatus)
+		active := targetStatus == "active"
+
+		if deps.SetActive != nil {
+			if err := deps.SetActive(ctx, id, active); err != nil {
+				log.Printf("asset set-status error: %v", err)
+				return fycha.HTMXError("Failed to update asset")
+			}
+		} else {
+			log.Printf("Mock set asset status %s: %s", id, targetStatus)
+		}
+
 		return fycha.HTMXSuccess("assets-table")
 	})
 }
@@ -246,7 +416,18 @@ func NewBulkSetStatusAction(deps *Deps) view.View {
 			return fycha.HTMXError(deps.Labels.Actions.InvalidTargetStatus)
 		}
 
-		log.Printf("Mock bulk set asset status %v: %s", ids, targetStatus)
+		active := targetStatus == "active"
+
+		if deps.SetActive != nil {
+			for _, id := range ids {
+				if err := deps.SetActive(ctx, id, active); err != nil {
+					log.Printf("asset bulk set-status error for %s: %v", id, err)
+				}
+			}
+		} else {
+			log.Printf("Mock bulk set asset status %v: %s", ids, targetStatus)
+		}
+
 		return fycha.HTMXSuccess("assets-table")
 	})
 }

@@ -23,12 +23,20 @@ type ModuleDeps struct {
 	Labels       fycha.AssetLabels
 	TableLabels  types.TableLabels
 
+	// CRUD operations (wired from block.go via raw SQL)
+	CreateAsset  func(ctx context.Context, asset *assetaction.AssetRecord) error
+	ReadAsset    func(ctx context.Context, id string) (*assetaction.AssetRecord, error)
+	UpdateAsset  func(ctx context.Context, asset *assetaction.AssetRecord) error
+	DeleteAsset  func(ctx context.Context, id string) error
+	SetActive    func(ctx context.Context, id string, active bool) error
+	ListAssets   func(ctx context.Context, status string) ([]assetlist.AssetRow, error)
+	NewID        func() string
+
 	// Attachment operations
 	UploadFile       func(ctx context.Context, bucket, key string, content []byte, contentType string) error
 	ListAttachments  func(ctx context.Context, moduleKey, foreignKey string) (*attachmentpb.ListAttachmentsResponse, error)
 	CreateAttachment func(ctx context.Context, req *attachmentpb.CreateAttachmentRequest) (*attachmentpb.CreateAttachmentResponse, error)
 	DeleteAttachment func(ctx context.Context, req *attachmentpb.DeleteAttachmentRequest) (*attachmentpb.DeleteAttachmentResponse, error)
-	NewID            func() string
 }
 
 // Module holds all constructed asset views.
@@ -56,10 +64,17 @@ func NewModule(deps *ModuleDeps) *Module {
 		Labels:       deps.Labels,
 		CommonLabels: deps.CommonLabels,
 		TableLabels:  deps.TableLabels,
+		ListAssets:   deps.ListAssets,
 	}
 	actionDeps := &assetaction.Deps{
-		Routes: deps.Routes,
-		Labels: deps.Labels,
+		Routes:      deps.Routes,
+		Labels:      deps.Labels,
+		CreateAsset: deps.CreateAsset,
+		ReadAsset:   deps.ReadAsset,
+		UpdateAsset: deps.UpdateAsset,
+		DeleteAsset: deps.DeleteAsset,
+		SetActive:   deps.SetActive,
+		NewID:       deps.NewID,
 	}
 	detailDeps := &assetdetail.DetailViewDeps{
 		AttachmentOps: attachment.AttachmentOps{

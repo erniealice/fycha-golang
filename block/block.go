@@ -18,6 +18,7 @@ package block
 
 import (
 	"context"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
@@ -32,6 +33,8 @@ import (
 
 	fycha "github.com/erniealice/fycha-golang"
 	assetmod "github.com/erniealice/fycha-golang/views/asset"
+	assetaction "github.com/erniealice/fycha-golang/views/asset/action"
+	assetlist "github.com/erniealice/fycha-golang/views/asset/list"
 	cashmod "github.com/erniealice/fycha-golang/views/cash"
 	equitymod "github.com/erniealice/fycha-golang/views/equity"
 	expensesmod "github.com/erniealice/fycha-golang/views/expenses"
@@ -228,7 +231,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		// =====================================================================
 
 		if cfg.wantAsset() {
-			assetmod.NewModule(&assetmod.ModuleDeps{
+			assetDeps := &assetmod.ModuleDeps{
 				Routes:       assetRoutes,
 				CommonLabels: ctx.Common,
 				Labels:       assetLabels,
@@ -238,8 +241,27 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 				ListAttachments:  listAttachments,
 				CreateAttachment: createAttachment,
 				DeleteAttachment: deleteAttachment,
-				NewID:            newAttachmentID,
-			}).RegisterRoutes(ctx.Routes)
+			}
+
+			// Wire asset CRUD via raw SQL if DB is available
+			if ctx.SqlDB != nil {
+				assetDeps.NewID = func() string {
+					if newAttachmentID != nil {
+						return newAttachmentID()
+					}
+					var id string
+					_ = ctx.SqlDB.QueryRow("SELECT gen_random_uuid()::text").Scan(&id)
+					return id
+				}
+				assetDeps.CreateAsset = makeCreateAsset(ctx.SqlDB)
+				assetDeps.ReadAsset = makeReadAsset(ctx.SqlDB)
+				assetDeps.UpdateAsset = makeUpdateAsset(ctx.SqlDB)
+				assetDeps.DeleteAsset = makeDeleteAsset(ctx.SqlDB)
+				assetDeps.SetActive = makeSetActive(ctx.SqlDB)
+				assetDeps.ListAssets = makeListAssets(ctx.SqlDB)
+			}
+
+			assetmod.NewModule(assetDeps).RegisterRoutes(ctx.Routes)
 
 			// Assets → Reports → Lapsing Schedule
 			ctx.Routes.GET(assetRoutes.LapsingScheduleURL, reportmod.NewLapsingScheduleView(ctx.Common, ctx.Table))
@@ -293,6 +315,12 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 						return nil, nil
 					}
 					return resp.GetFiscalPeriodList(), nil
+				}
+				if ufp.CreateFiscalPeriod != nil {
+					ledgerDeps.CreateFiscalPeriod = ufp.CreateFiscalPeriod.Execute
+				}
+				if ufp.CloseFiscalPeriod != nil {
+					ledgerDeps.CloseFiscalPeriod = ufp.CloseFiscalPeriod.Execute
 				}
 			}
 			ledgermod.NewModule(ledgerDeps).RegisterRoutes(ctx.Routes)
@@ -376,4 +404,127 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		log.Println("  fycha accounting domain initialized")
 		return nil
 	}
+}
+
+// ---------------------------------------------------------------------------
+// Asset CRUD — raw SQL implementations
+// ---------------------------------------------------------------------------
+
+func makeCreateAsset(db *sql.DB) func(context.Context, *assetaction.AssetRecord) error {
+	return func(ctx context.Context, a *assetaction.AssetRecord) error {
+		// Default asset_category_id to first available if empty (FK requires valid ref)
+		if a.AssetCategoryID == "" {
+			_ = db.QueryRowContext(ctx, `SELECT id FROM asset_category ORDER BY name LIMIT 1`).Scan(&a.AssetCategoryID)
+		}
+		_, err := db.ExecContext(ctx, `
+			INSERT INTO asset (
+				id, asset_number, name, description, asset_type,
+				asset_category_id, location_id, acquisition_cost, currency,
+				salvage_value, book_value, useful_life_months,
+				depreciation_method, status, active
+			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
+			a.ID, a.AssetNumber, a.Name, a.Description, a.AssetType,
+			a.AssetCategoryID, nullIfEmpty(a.LocationID), a.AcquisitionCost, a.Currency,
+			a.SalvageValue, a.BookValue, a.UsefulLifeMonths,
+			a.DepreciationMethod, a.Status, a.Active,
+		)
+		return err
+	}
+}
+
+func makeReadAsset(db *sql.DB) func(context.Context, string) (*assetaction.AssetRecord, error) {
+	return func(ctx context.Context, id string) (*assetaction.AssetRecord, error) {
+		a := &assetaction.AssetRecord{}
+		var locationID sql.NullString
+		err := db.QueryRowContext(ctx, `
+			SELECT id, asset_number, name, COALESCE(description,''), asset_type,
+				   COALESCE(asset_category_id,''), location_id,
+				   acquisition_cost, currency, salvage_value, book_value,
+				   useful_life_months, depreciation_method, status, active
+			FROM asset WHERE id = $1`, id,
+		).Scan(
+			&a.ID, &a.AssetNumber, &a.Name, &a.Description, &a.AssetType,
+			&a.AssetCategoryID, &locationID,
+			&a.AcquisitionCost, &a.Currency, &a.SalvageValue, &a.BookValue,
+			&a.UsefulLifeMonths, &a.DepreciationMethod, &a.Status, &a.Active,
+		)
+		if err != nil {
+			return nil, err
+		}
+		a.LocationID = locationID.String
+		return a, nil
+	}
+}
+
+func makeUpdateAsset(db *sql.DB) func(context.Context, *assetaction.AssetRecord) error {
+	return func(ctx context.Context, a *assetaction.AssetRecord) error {
+		_, err := db.ExecContext(ctx, `
+			UPDATE asset SET
+				name = $2, description = $3,
+				asset_number = $4, asset_category_id = $5, location_id = $6,
+				acquisition_cost = $7, salvage_value = $8, book_value = $9,
+				useful_life_months = $10, depreciation_method = $11,
+				currency = $12, date_modified = NOW()
+			WHERE id = $1`,
+			a.ID, a.Name, a.Description,
+			a.AssetNumber, a.AssetCategoryID, nullIfEmpty(a.LocationID),
+			a.AcquisitionCost, a.SalvageValue, a.BookValue,
+			a.UsefulLifeMonths, a.DepreciationMethod,
+			a.Currency,
+		)
+		return err
+	}
+}
+
+func makeDeleteAsset(db *sql.DB) func(context.Context, string) error {
+	return func(ctx context.Context, id string) error {
+		_, err := db.ExecContext(ctx, `UPDATE asset SET active = false, date_modified = NOW() WHERE id = $1`, id)
+		return err
+	}
+}
+
+func makeSetActive(db *sql.DB) func(context.Context, string, bool) error {
+	return func(ctx context.Context, id string, active bool) error {
+		_, err := db.ExecContext(ctx, `UPDATE asset SET active = $2, date_modified = NOW() WHERE id = $1`, id, active)
+		return err
+	}
+}
+
+func makeListAssets(db *sql.DB) func(context.Context, string) ([]assetlist.AssetRow, error) {
+	return func(ctx context.Context, status string) ([]assetlist.AssetRow, error) {
+		active := status == "active"
+		rows, err := db.QueryContext(ctx, `
+			SELECT a.id, a.asset_number, a.name,
+				   COALESCE(c.name, '') AS category_name,
+				   COALESCE(l.name, '') AS location_name,
+				   a.acquisition_cost, a.book_value, a.active
+			FROM asset a
+			LEFT JOIN asset_category c ON c.id = a.asset_category_id
+			LEFT JOIN location l ON l.id = a.location_id
+			WHERE a.active = $1
+			ORDER BY a.asset_number ASC`, active)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		var result []assetlist.AssetRow
+		for rows.Next() {
+			var r assetlist.AssetRow
+			if err := rows.Scan(&r.ID, &r.AssetNumber, &r.Name,
+				&r.CategoryName, &r.LocationName,
+				&r.AcquisitionCost, &r.BookValue, &r.Active); err != nil {
+				return nil, err
+			}
+			result = append(result, r)
+		}
+		return result, rows.Err()
+	}
+}
+
+func nullIfEmpty(s string) any {
+	if s == "" {
+		return nil
+	}
+	return s
 }

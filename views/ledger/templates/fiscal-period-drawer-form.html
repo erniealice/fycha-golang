@@ -1,0 +1,56 @@
+{{/*
+Fiscal period add drawer form -- loaded into #sheetContent via HTMX.
+Data: .FormAction, .Labels, .CommonLabels
+*/}}
+{{define "fiscal-period-drawer-form"}}
+<form hx-post="{{.FormAction}}" hx-swap="none" hx-on::after-request="Sheet.handleResponse(event)">
+
+  <div class="sheet-body">
+
+    <div class="form-row single">
+      {{template "form-group" (dict
+        "Type" "text"
+        "Name" "name"
+        "Label" .Labels.Name
+        "Required" true
+        "Placeholder" "e.g. March 2026"
+      )}}
+    </div>
+
+    <div class="form-row">
+      {{template "form-group" (dict
+        "Type" "number"
+        "Name" "period_number"
+        "Label" .Labels.PeriodNumber
+        "Required" true
+        "Placeholder" "1"
+      )}}
+      {{template "form-group" (dict
+        "Type" "number"
+        "Name" "fiscal_year"
+        "Label" .Labels.FiscalYear
+        "Required" true
+        "Placeholder" "2026"
+      )}}
+    </div>
+
+    <div class="form-row">
+      {{template "form-group" (dict
+        "Type" "date"
+        "Name" "start_date"
+        "Label" .Labels.StartDate
+        "Required" true
+      )}}
+      {{template "form-group" (dict
+        "Type" "date"
+        "Name" "end_date"
+        "Label" .Labels.EndDate
+        "Required" true
+      )}}
+    </div>
+
+  </div>
+
+  {{template "sheet-form-footer" (dict "CommonLabels" .CommonLabels "ShowCancel" true "IsEdit" false)}}
+</form>
+{{end}}

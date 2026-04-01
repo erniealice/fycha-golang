@@ -3,6 +3,7 @@ package list
 import (
 	"context"
 	"fmt"
+	"log"
 
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/route"
@@ -12,8 +13,9 @@ import (
 	fycha "github.com/erniealice/fycha-golang"
 )
 
-// MockAsset represents a fixed asset for mock data display.
-type MockAsset struct {
+// AssetRow is a flat row returned by the list query. Exported so block.go
+// can construct it from raw SQL without importing protobuf types.
+type AssetRow struct {
 	ID              string
 	AssetNumber     string
 	Name            string
@@ -30,6 +32,9 @@ type ListViewDeps struct {
 	Labels       fycha.AssetLabels
 	CommonLabels pyeza.CommonLabels
 	TableLabels  types.TableLabels
+
+	// ListAssets returns asset rows filtered by status. Wired from block.go.
+	ListAssets func(ctx context.Context, status string) ([]AssetRow, error)
 }
 
 // PageData holds the data for the asset list page.
@@ -48,7 +53,7 @@ func NewView(deps *ListViewDeps) view.View {
 		}
 
 		perms := view.GetUserPermissions(ctx)
-		tableConfig := buildTableConfig(deps, status, perms)
+		tableConfig := buildTableConfig(ctx, deps, status, perms)
 
 		pageData := &PageData{
 			PageData: types.PageData{
@@ -80,28 +85,25 @@ func NewTableView(deps *ListViewDeps) view.View {
 		}
 
 		perms := view.GetUserPermissions(ctx)
-		tableConfig := buildTableConfig(deps, status, perms)
+		tableConfig := buildTableConfig(ctx, deps, status, perms)
 		return view.OK("table-card", tableConfig)
 	})
 }
 
-// mockAssets returns hardcoded asset data for initial UI development.
-func mockAssets() []MockAsset {
-	return []MockAsset{
-		{ID: "ast-001", AssetNumber: "FA-001", Name: "Office Laptop (Dell XPS 15)", CategoryName: "IT Equipment", LocationName: "Main Office", AcquisitionCost: 85000, BookValue: 42500, Active: true},
-		{ID: "ast-002", AssetNumber: "FA-002", Name: "Salon Chair (Hydraulic)", CategoryName: "Furniture", LocationName: "Branch 1", AcquisitionCost: 25000, BookValue: 18750, Active: true},
-		{ID: "ast-003", AssetNumber: "FA-003", Name: "Hair Dryer (Professional)", CategoryName: "Equipment", LocationName: "Branch 1", AcquisitionCost: 12000, BookValue: 6000, Active: true},
-		{ID: "ast-004", AssetNumber: "FA-004", Name: "POS Terminal", CategoryName: "IT Equipment", LocationName: "Main Office", AcquisitionCost: 35000, BookValue: 17500, Active: true},
-		{ID: "ast-005", AssetNumber: "FA-005", Name: "Air Conditioning Unit", CategoryName: "Building Equipment", LocationName: "Main Office", AcquisitionCost: 65000, BookValue: 0, Active: false},
-		{ID: "ast-006", AssetNumber: "FA-006", Name: "Massage Table", CategoryName: "Furniture", LocationName: "Branch 2", AcquisitionCost: 18000, BookValue: 13500, Active: true},
-		{ID: "ast-007", AssetNumber: "FA-007", Name: "UV Sterilizer Cabinet", CategoryName: "Equipment", LocationName: "Branch 1", AcquisitionCost: 8500, BookValue: 2125, Active: false},
-	}
-}
-
-func buildTableConfig(deps *ListViewDeps, status string, perms *types.UserPermissions) *types.TableConfig {
+func buildTableConfig(ctx context.Context, deps *ListViewDeps, status string, perms *types.UserPermissions) *types.TableConfig {
 	l := deps.Labels
 	columns := assetColumns(l)
-	rows := buildTableRows(mockAssets(), status, l, deps.Routes, perms)
+
+	var assets []AssetRow
+	if deps.ListAssets != nil {
+		var err error
+		assets, err = deps.ListAssets(ctx, status)
+		if err != nil {
+			log.Printf("asset list query error: %v", err)
+		}
+	}
+
+	rows := buildTableRows(assets, l, deps.Routes, perms, status)
 	types.ApplyColumnStyles(columns, rows)
 
 	bulkCfg := fycha.MapBulkConfig(deps.CommonLabels)
@@ -155,19 +157,16 @@ func assetColumns(l fycha.AssetLabels) []types.TableColumn {
 	}
 }
 
-func buildTableRows(assets []MockAsset, status string, l fycha.AssetLabels, routes fycha.AssetRoutes, perms *types.UserPermissions) []types.TableRow {
+func buildTableRows(assets []AssetRow, l fycha.AssetLabels, routes fycha.AssetRoutes, perms *types.UserPermissions, status string) []types.TableRow {
 	rows := []types.TableRow{}
 	for _, asset := range assets {
+		id := asset.ID
+		name := asset.Name
+
 		recordStatus := "active"
 		if !asset.Active {
 			recordStatus = "inactive"
 		}
-		if recordStatus != status {
-			continue
-		}
-
-		id := asset.ID
-		name := asset.Name
 
 		canUpdate := perms.Can("asset", "update")
 		canDelete := perms.Can("asset", "delete")
