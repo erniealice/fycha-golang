@@ -8,6 +8,7 @@ import (
 	"strconv"
 
 	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
+	consumer "github.com/erniealice/espyna-golang/consumer"
 	"github.com/erniealice/pyeza-golang/view"
 
 	fycha "github.com/erniealice/fycha-golang"
@@ -127,8 +128,8 @@ func NewCloseAction(deps *ActionDeps) view.View {
 			return fycha.HTMXSuccess("fiscal-periods-table")
 		}
 
-		// Extract the current user ID from context (set by session middleware as "uid")
-		closedBy, _ := ctx.Value("uid").(string)
+		// Extract the current user ID from context.
+		closedBy := consumer.ExtractUserIDFromContext(ctx)
 
 		resp, err := deps.CloseFiscalPeriod(ctx, &fiscalperiodpb.CloseFiscalPeriodRequest{
 			FiscalPeriodId: id,

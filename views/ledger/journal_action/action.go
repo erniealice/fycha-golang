@@ -10,6 +10,7 @@ import (
 	"time"
 
 	jepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_entry"
+	consumer "github.com/erniealice/espyna-golang/consumer"
 	"github.com/erniealice/pyeza-golang/view"
 
 	fycha "github.com/erniealice/fycha-golang"
@@ -143,10 +144,7 @@ func NewAddAction(deps *Deps) view.View {
 
 		// If "post" was clicked, post the newly created entry
 		if submitAction == "post" && newID != "" && deps.PostJournalEntry != nil {
-			postedByCreate := ""
-			if uid, ok := ctx.Value("uid").(string); ok {
-				postedByCreate = uid
-			}
+			postedByCreate := consumer.ExtractUserIDFromContext(ctx)
 			postResp, postErr := deps.PostJournalEntry(ctx, &jepb.PostJournalEntryRequest{
 				JournalEntryId: newID,
 				PostedBy:       postedByCreate,
@@ -237,11 +235,7 @@ func NewPostAction(deps *Deps) view.View {
 		}
 
 		// Extract the authenticated user ID from context.
-		// The session middleware stores it under the "uid" key.
-		postedBy := ""
-		if uid, ok := ctx.Value("uid").(string); ok {
-			postedBy = uid
-		}
+		postedBy := consumer.ExtractUserIDFromContext(ctx)
 
 		resp, err := deps.PostJournalEntry(ctx, &jepb.PostJournalEntryRequest{
 			JournalEntryId: id,
