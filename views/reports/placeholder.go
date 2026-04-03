@@ -68,12 +68,6 @@ func NewReportView(cfg ReportConfig) view.View {
 		}
 		types.ApplyTableSettings(tableConfig)
 
-		templateName := "report-list"
-		contentTemplate := "report-list-content"
-		if viewCtx.Request.Header.Get("HX-Request") == "true" {
-			templateName = contentTemplate
-		}
-
 		pageData := &ReportPageData{
 			PageData: types.PageData{
 				CacheVersion:   viewCtx.CacheVersion,
@@ -86,11 +80,11 @@ func NewReportView(cfg ReportConfig) view.View {
 				HeaderIcon:     cfg.Icon,
 				CommonLabels:   cfg.CommonLabels,
 			},
-			ContentTemplate: contentTemplate,
+			ContentTemplate: "report-list-content",
 			Table:           tableConfig,
 		}
 
-		return view.OK(templateName, pageData)
+		return view.OK("report-list", pageData)
 	})
 }
 

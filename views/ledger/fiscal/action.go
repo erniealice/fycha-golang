@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"strconv"
 
-	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
 	consumer "github.com/erniealice/espyna-golang/consumer"
+	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
 	"github.com/erniealice/pyeza-golang/view"
 
 	fycha "github.com/erniealice/fycha-golang"
@@ -80,12 +80,12 @@ func NewAddAction(deps *ActionDeps) view.View {
 
 		req := &fiscalperiodpb.CreateFiscalPeriodRequest{
 			Data: &fiscalperiodpb.FiscalPeriod{
-				Name:            name,
-				PeriodNumber:    int32(periodNumber),
-				FiscalYear:      int32(fiscalYear),
-				StartDateString: &startDate,
-				EndDateString:   &endDate,
-				Status:          fiscalperiodpb.FiscalPeriodStatus_FISCAL_PERIOD_STATUS_OPEN,
+				Name:         name,
+				PeriodNumber: int32(periodNumber),
+				FiscalYear:   int32(fiscalYear),
+				StartDate:    startDate,
+				EndDate:      endDate,
+				Status:       fiscalperiodpb.FiscalPeriodStatus_FISCAL_PERIOD_STATUS_OPEN,
 			},
 		}
 

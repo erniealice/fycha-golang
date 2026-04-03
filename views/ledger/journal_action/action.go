@@ -4,13 +4,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
 
-	jepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_entry"
 	consumer "github.com/erniealice/espyna-golang/consumer"
+	jepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_entry"
 	"github.com/erniealice/pyeza-golang/view"
 
 	fycha "github.com/erniealice/fycha-golang"
@@ -22,14 +23,14 @@ import (
 
 // FormData is the template data for the journal entry drawer form.
 type FormData struct {
-	FormAction  string
-	IsEdit      bool
-	ID          string
-	Date        string
-	Description string
-	Notes       string
-	Lines       []FormLine
-	Labels      fycha.JournalFormLabels
+	FormAction   string
+	IsEdit       bool
+	ID           string
+	Date         string
+	Description  string
+	Notes        string
+	Lines        []FormLine
+	Labels       fycha.JournalFormLabels
 	CommonLabels any
 }
 
@@ -470,8 +471,8 @@ func parseJournalForm(r *http.Request) (*jepb.JournalEntry, []ParsedLine, error)
 	entry := &jepb.JournalEntry{
 		Description:     desc,
 		EntryDateString: &dateStr,
-		TotalDebit:      totalDebit,
-		TotalCredit:     totalCredit,
+		TotalDebit:      int64(math.Round(totalDebit * 100)),
+		TotalCredit:     int64(math.Round(totalCredit * 100)),
 	}
 	if notes != "" {
 		entry.Notes = &notes

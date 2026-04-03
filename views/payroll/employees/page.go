@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -65,6 +66,16 @@ func NewView(deps *Deps) view.View {
 			},
 			ContentTemplate: "employees-content",
 			Table:           tableConfig,
+		}
+
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "payroll-employee"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
 		}
 
 		return view.OK("employees", pageData)

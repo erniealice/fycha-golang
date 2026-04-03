@@ -3,8 +3,8 @@ package asset
 import (
 	"context"
 
-	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/hybra-golang/views/attachment"
+	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
 
@@ -24,13 +24,13 @@ type ModuleDeps struct {
 	TableLabels  types.TableLabels
 
 	// CRUD operations (wired from block.go via raw SQL)
-	CreateAsset  func(ctx context.Context, asset *assetaction.AssetRecord) error
-	ReadAsset    func(ctx context.Context, id string) (*assetaction.AssetRecord, error)
-	UpdateAsset  func(ctx context.Context, asset *assetaction.AssetRecord) error
-	DeleteAsset  func(ctx context.Context, id string) error
-	SetActive    func(ctx context.Context, id string, active bool) error
-	ListAssets   func(ctx context.Context, status string) ([]assetlist.AssetRow, error)
-	NewID        func() string
+	CreateAsset func(ctx context.Context, asset *assetaction.AssetRecord) error
+	ReadAsset   func(ctx context.Context, id string) (*assetaction.AssetRecord, error)
+	UpdateAsset func(ctx context.Context, asset *assetaction.AssetRecord) error
+	DeleteAsset func(ctx context.Context, id string) error
+	SetActive   func(ctx context.Context, id string, active bool) error
+	ListAssets  func(ctx context.Context, status string) ([]assetlist.AssetRow, error)
+	NewID       func() string
 
 	// Attachment operations
 	UploadFile       func(ctx context.Context, bucket, key string, content []byte, contentType string) error

@@ -6,8 +6,9 @@ import (
 	"log"
 
 	accountpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/account"
-	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/hybra-golang/views/auditlog"
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
+	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/route"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -88,6 +89,17 @@ func NewView(deps *Deps) view.View {
 
 		perms := view.GetUserPermissions(ctx)
 		pageData := buildPageData(ctx, deps, id, activeTab, viewCtx, perms)
+
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "ledger-detail"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
+		}
+
 		return view.OK("account-detail", pageData)
 	})
 }

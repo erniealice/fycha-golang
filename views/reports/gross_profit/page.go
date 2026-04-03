@@ -10,6 +10,7 @@ import (
 	fycha "github.com/erniealice/fycha-golang"
 
 	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -113,32 +114,27 @@ func NewView(deps *Deps) view.View {
 
 		// Resolve dates
 		if period == "custom" && startDateStr != "" {
-			if ts, err := strconv.ParseInt(startDateStr, 10, 64); err == nil {
-				req.StartDate = &ts
-			} else if t, err := time.Parse("2006-01-02", startDateStr); err == nil {
-				ts := t.Unix()
-				req.StartDate = &ts
+			// Validate as date string; pass through if valid
+			if _, err := time.Parse("2006-01-02", startDateStr); err == nil {
+				req.StartDate = &startDateStr
 			}
 		}
 		if period == "custom" && endDateStr != "" {
-			if ts, err := strconv.ParseInt(endDateStr, 10, 64); err == nil {
-				req.EndDate = &ts
-			} else if t, err := time.Parse("2006-01-02", endDateStr); err == nil {
-				ts := t.Unix()
-				req.EndDate = &ts
+			if _, err := time.Parse("2006-01-02", endDateStr); err == nil {
+				req.EndDate = &endDateStr
 			}
 		}
 
 		// Apply period preset if not custom
 		if req.StartDate == nil {
 			start, _ := fycha.ParsePeriodPreset(period)
-			ts := start.Unix()
-			req.StartDate = &ts
+			s := start.Format("2006-01-02")
+			req.StartDate = &s
 		}
 		if req.EndDate == nil {
 			_, end := fycha.ParsePeriodPreset(period)
-			ts := end.Unix()
-			req.EndDate = &ts
+			e := end.Format("2006-01-02")
+			req.EndDate = &e
 		}
 
 		// Apply optional filters
@@ -201,6 +197,16 @@ func NewView(deps *Deps) view.View {
 			CategoryID:        categoryID,
 		}
 
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "report-gross-profit"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
+		}
+
 		if viewCtx.IsHTMX {
 			return view.OK("gross-profit-content", pageData)
 		}
@@ -219,9 +225,9 @@ func buildSummary(s *reportpb.GrossProfitSummary, l fycha.GrossProfitLabels) []f
 		marginVariant = "warning"
 	}
 	return []fycha.SummaryMetric{
-		{Label: l.SummaryNetRevenue, Value: formatCurrency(s.GetNetRevenue())},
-		{Label: l.SummaryCogs, Value: formatCurrency(s.GetTotalCogs())},
-		{Label: l.SummaryGrossProfit, Value: formatCurrency(s.GetTotalGrossProfit()), Highlight: true},
+		{Label: l.SummaryNetRevenue, Value: formatCurrency(float64(s.GetNetRevenue()) / 100.0)},
+		{Label: l.SummaryCogs, Value: formatCurrency(float64(s.GetTotalCogs()) / 100.0)},
+		{Label: l.SummaryGrossProfit, Value: formatCurrency(float64(s.GetTotalGrossProfit()) / 100.0), Highlight: true},
 		{Label: l.SummaryMargin, Value: fmt.Sprintf("%.1f%%", s.GetOverallMargin()), Variant: marginVariant},
 	}
 }
@@ -286,22 +292,22 @@ func buildTable(items []*reportpb.GrossProfitLineItem, summary *reportpb.GrossPr
 		row := types.TableRow{
 			ID: item.GetGroupKey(),
 			DataAttrs: map[string]string{
-				"totalRevenue":  fmt.Sprintf("%.2f", item.GetTotalRevenue()),
-				"totalDiscount": fmt.Sprintf("%.2f", item.GetTotalDiscount()),
-				"netRevenue":    fmt.Sprintf("%.2f", item.GetNetRevenue()),
-				"cogs":          fmt.Sprintf("%.2f", item.GetCostOfGoodsSold()),
-				"grossProfit":   fmt.Sprintf("%.2f", item.GetGrossProfit()),
+				"totalRevenue":  fmt.Sprintf("%.2f", float64(item.GetTotalRevenue())/100.0),
+				"totalDiscount": fmt.Sprintf("%.2f", float64(item.GetTotalDiscount())/100.0),
+				"netRevenue":    fmt.Sprintf("%.2f", float64(item.GetNetRevenue())/100.0),
+				"cogs":          fmt.Sprintf("%.2f", float64(item.GetCostOfGoodsSold())/100.0),
+				"grossProfit":   fmt.Sprintf("%.2f", float64(item.GetGrossProfit())/100.0),
 				"margin":        fmt.Sprintf("%.1f", item.GetGrossProfitMargin()),
 				"unitsSold":     strconv.FormatInt(item.GetUnitsSold(), 10),
 				"txnCount":      strconv.FormatInt(item.GetTransactionCount(), 10),
 			},
 			Cells: []types.TableCell{
 				{Type: "name", Value: item.GetGroupKey()},
-				{Type: "text", Value: formatCurrency(item.GetTotalRevenue())},
-				{Type: "text", Value: formatCurrency(item.GetTotalDiscount())},
-				{Type: "text", Value: formatCurrency(item.GetNetRevenue())},
-				{Type: "text", Value: formatCurrency(item.GetCostOfGoodsSold())},
-				{Type: "text", Value: formatCurrency(item.GetGrossProfit())},
+				{Type: "text", Value: formatCurrency(float64(item.GetTotalRevenue()) / 100.0)},
+				{Type: "text", Value: formatCurrency(float64(item.GetTotalDiscount()) / 100.0)},
+				{Type: "text", Value: formatCurrency(float64(item.GetNetRevenue()) / 100.0)},
+				{Type: "text", Value: formatCurrency(float64(item.GetCostOfGoodsSold()) / 100.0)},
+				{Type: "text", Value: formatCurrency(float64(item.GetGrossProfit()) / 100.0)},
 				{Type: "badge", Value: fmt.Sprintf("%.1f%%", item.GetGrossProfitMargin()), Variant: marginVariant},
 				{Type: "text", Value: strconv.FormatInt(item.GetUnitsSold(), 10)},
 				{Type: "text", Value: strconv.FormatInt(item.GetTransactionCount(), 10)},
@@ -322,11 +328,11 @@ func buildTable(items []*reportpb.GrossProfitLineItem, summary *reportpb.GrossPr
 			ID: "__totals__",
 			Cells: []types.TableCell{
 				{Type: "name", Value: l.Totals},
-				{Type: "text", Value: formatCurrency(summary.GetTotalRevenue())},
-				{Type: "text", Value: formatCurrency(summary.GetTotalDiscount())},
-				{Type: "text", Value: formatCurrency(summary.GetNetRevenue())},
-				{Type: "text", Value: formatCurrency(summary.GetTotalCogs())},
-				{Type: "text", Value: formatCurrency(summary.GetTotalGrossProfit())},
+				{Type: "text", Value: formatCurrency(float64(summary.GetTotalRevenue()) / 100.0)},
+				{Type: "text", Value: formatCurrency(float64(summary.GetTotalDiscount()) / 100.0)},
+				{Type: "text", Value: formatCurrency(float64(summary.GetNetRevenue()) / 100.0)},
+				{Type: "text", Value: formatCurrency(float64(summary.GetTotalCogs()) / 100.0)},
+				{Type: "text", Value: formatCurrency(float64(summary.GetTotalGrossProfit()) / 100.0)},
 				{Type: "badge", Value: fmt.Sprintf("%.1f%%", summary.GetOverallMargin()), Variant: marginVariant},
 				{Type: "text", Value: strconv.FormatInt(summary.GetTotalUnitsSold(), 10)},
 				{Type: "text", Value: strconv.FormatInt(summary.GetTotalTransactions(), 10)},

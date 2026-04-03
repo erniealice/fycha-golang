@@ -3,6 +3,7 @@ package settings
 import (
 	"context"
 
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -30,12 +31,12 @@ type GovRatesPageData struct {
 
 // GovContributionRate represents a single government agency contribution rate row.
 type GovContributionRate struct {
-	Agency          string // SSS, PhilHealth, Pag-IBIG, BIR
-	RateType        string // "percentage" or "fixed"
-	EmployeeRate    string
-	EmployerRate    string
-	EffectiveDate   string
-	Notes           string
+	Agency        string // SSS, PhilHealth, Pag-IBIG, BIR
+	RateType      string // "percentage" or "fixed"
+	EmployeeRate  string
+	EmployerRate  string
+	EffectiveDate string
+	Notes         string
 }
 
 // NewGovRatesView creates the government contribution rates settings view.
@@ -55,6 +56,16 @@ func NewGovRatesView(deps *GovRatesDeps) view.View {
 			},
 			ContentTemplate: "gov-rates-content",
 			Rates:           govContributionRates(deps.Labels),
+		}
+
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "payroll-setting"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
 		}
 
 		return view.OK("gov-rates", pageData)
@@ -120,13 +131,13 @@ type PayPeriodsPageData struct {
 
 // PayPeriodSchedule represents a pay period schedule configuration.
 type PayPeriodSchedule struct {
-	Name        string
-	Frequency   string // "semi-monthly", "monthly", "weekly"
-	CutOffDay1  string
-	CutOffDay2  string
-	PayDay1     string
-	PayDay2     string
-	Active      bool
+	Name       string
+	Frequency  string // "semi-monthly", "monthly", "weekly"
+	CutOffDay1 string
+	CutOffDay2 string
+	PayDay1    string
+	PayDay2    string
+	Active     bool
 }
 
 // NewPayPeriodsView creates the pay periods settings view.

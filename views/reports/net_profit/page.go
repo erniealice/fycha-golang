@@ -9,6 +9,7 @@ import (
 
 	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
 	fycha "github.com/erniealice/fycha-golang"
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -78,10 +79,10 @@ func NewView(deps *Deps) view.View {
 
 		// Get gross profit data (contains revenue + COGS)
 		req := &reportpb.GrossProfitReportRequest{}
-		startTS := start.Unix()
-		endTS := end.Unix()
-		req.StartDate = &startTS
-		req.EndDate = &endTS
+		startStr := start.Format("2006-01-02")
+		endStr := end.Format("2006-01-02")
+		req.StartDate = &startStr
+		req.EndDate = &endStr
 
 		resp, err := deps.DB.GetGrossProfitReport(ctx, req)
 		if err != nil {
@@ -105,14 +106,17 @@ func NewView(deps *Deps) view.View {
 			totalExpenses += toFloat64(r["total_amount"])
 		}
 
-		netProfit := s.GetTotalGrossProfit() - totalExpenses
+		grossProfitF := float64(s.GetTotalGrossProfit()) / 100.0
+		netRevenueF := float64(s.GetNetRevenue()) / 100.0
+		totalCogsF := float64(s.GetTotalCogs()) / 100.0
+		netProfit := grossProfitF - totalExpenses
 		netMargin := 0.0
-		if s.GetNetRevenue() > 0 {
-			netMargin = (netProfit / s.GetNetRevenue()) * 100
+		if netRevenueF > 0 {
+			netMargin = (netProfit / netRevenueF) * 100
 		}
 		grossMargin := 0.0
-		if s.GetNetRevenue() > 0 {
-			grossMargin = (s.GetTotalGrossProfit() / s.GetNetRevenue()) * 100
+		if netRevenueF > 0 {
+			grossMargin = (grossProfitF / netRevenueF) * 100
 		}
 
 		// Summary bar
@@ -124,17 +128,17 @@ func NewView(deps *Deps) view.View {
 		}
 
 		summary := []fycha.SummaryMetric{
-			{Label: l.SummaryRevenue, Value: formatCurrency(s.GetNetRevenue())},
-			{Label: l.SummaryGross, Value: formatCurrency(s.GetTotalGrossProfit())},
+			{Label: l.SummaryRevenue, Value: formatCurrency(netRevenueF)},
+			{Label: l.SummaryGross, Value: formatCurrency(grossProfitF)},
 			{Label: l.SummaryExpenses, Value: formatCurrency(totalExpenses)},
 			{Label: l.SummaryNetProfit, Value: formatCurrency(netProfit), Highlight: true, Variant: netVariant},
 		}
 
 		// P&L statement line items
 		lineItems := []fycha.PLLineItem{
-			{Label: l.Revenue, Value: formatCurrency(s.GetNetRevenue())},
-			{Label: l.CostOfSales, Value: formatCurrency(s.GetTotalCogs())},
-			{Label: l.GrossProfit, Value: formatCurrency(s.GetTotalGrossProfit()), IsTotal: true},
+			{Label: l.Revenue, Value: formatCurrency(netRevenueF)},
+			{Label: l.CostOfSales, Value: formatCurrency(totalCogsF)},
+			{Label: l.GrossProfit, Value: formatCurrency(grossProfitF), IsTotal: true},
 			{Label: l.GrossMargin, Value: fmt.Sprintf("%.1f%%", grossMargin)},
 			{Label: l.Expenses, Value: formatCurrency(totalExpenses)},
 			{Label: l.NetProfit, Value: formatCurrency(netProfit), IsTotal: true},
@@ -167,6 +171,16 @@ func NewView(deps *Deps) view.View {
 			PeriodLabels:      pl,
 			ReportURL:         reportURL,
 			ActiveFilterCount: fycha.ActiveFilterCount(filter),
+		}
+
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "report-net-profit"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
 		}
 
 		if viewCtx.IsHTMX {

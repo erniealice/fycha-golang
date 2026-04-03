@@ -28,11 +28,11 @@ type CFLine struct {
 
 // CFActivity is one of the three cash flow activity sections.
 type CFActivity struct {
-	Title    string   // "OPERATING ACTIVITIES"
-	Lines    []CFLine // individual line items
-	NetTotal string   // "Net Cash from Operating Activities"
-	NetLabel string   // Label for the subtotal row
-	IsPositive bool    // true if net total >= 0 (for styling)
+	Title      string   // "OPERATING ACTIVITIES"
+	Lines      []CFLine // individual line items
+	NetTotal   string   // "Net Cash from Operating Activities"
+	NetLabel   string   // Label for the subtotal row
+	IsPositive bool     // true if net total >= 0 (for styling)
 }
 
 // CFVerification holds the beginning/ending cash reconciliation.
@@ -163,18 +163,18 @@ func NewCashFlowView(deps *CashFlowDeps) view.View {
 				HeaderIcon:     "icon-activity",
 				CommonLabels:   deps.CommonLabels,
 			},
-			ContentTemplate:  "cash-flow-content",
-			ActivePreset:     preset,
-			StartDate:        startDate,
-			EndDate:          endDate,
-			PeriodLabel:      periodLabel,
-			PeriodPresets:    periodPresets,
-			OperatingCF:      operatingCF,
-			NetChange:        netChange,
-			EndingCash:       endingCash,
-			OperatingTrend:   "+15%",
-			Activities:       activities,
-			Verification:     verification,
+			ContentTemplate: "cash-flow-content",
+			ActivePreset:    preset,
+			StartDate:       startDate,
+			EndDate:         endDate,
+			PeriodLabel:     periodLabel,
+			PeriodPresets:   periodPresets,
+			OperatingCF:     operatingCF,
+			NetChange:       netChange,
+			EndingCash:      endingCash,
+			OperatingTrend:  "+15%",
+			Activities:      activities,
+			Verification:    verification,
 		}
 
 		if viewCtx.IsHTMX {

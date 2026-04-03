@@ -7,6 +7,7 @@ import (
 
 	jepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_entry"
 	jlpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_line"
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/route"
 	"github.com/erniealice/pyeza-golang/types"
@@ -36,19 +37,19 @@ type PageData struct {
 	ContentTemplate string
 	Labels          fycha.JournalLabels
 	// Identity
-	ID          string
-	EntryNumber string
-	Description string
-	EntryDate   string
-	Status      string
+	ID            string
+	EntryNumber   string
+	Description   string
+	EntryDate     string
+	Status        string
 	StatusVariant string
-	SourceType  string
-	SourceID    string
-	SourceHref  string // link to originating transaction (if auto-generated)
-	Notes       string
+	SourceType    string
+	SourceID      string
+	SourceHref    string // link to originating transaction (if auto-generated)
+	Notes         string
 	// Posting info
-	PostedBy   string
-	PostedAt   string
+	PostedBy string
+	PostedAt string
 	// Reversal info
 	ReversedBy      string
 	ReversedAt      string
@@ -65,14 +66,14 @@ type PageData struct {
 	// Lines table
 	LinesTable *types.TableConfig
 	// Action URLs + permissions
-	EditURL        string
-	PostURL        string
-	ReverseURL     string
-	DeleteURL      string
-	CanEdit        bool
-	CanPost        bool
-	CanReverse     bool
-	CanDelete      bool
+	EditURL    string
+	PostURL    string
+	ReverseURL string
+	DeleteURL  string
+	CanEdit    bool
+	CanPost    bool
+	CanReverse bool
+	CanDelete  bool
 }
 
 // LineRow is the view-model for a single journal line.
@@ -96,6 +97,17 @@ func NewView(deps *Deps) view.View {
 		id := viewCtx.Request.PathValue("id")
 		perms := view.GetUserPermissions(ctx)
 		pageData := buildPageData(ctx, deps, id, viewCtx, perms)
+
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "journal-detail"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
+		}
+
 		return view.OK("journal-detail", pageData)
 	})
 }
@@ -222,9 +234,9 @@ func fetchEntry(ctx context.Context, deps *Deps, id string) journalViewModel {
 
 func protoToViewModel(e *jepb.JournalEntry) journalViewModel {
 	status := statusString(e.GetStatus())
-	totalDebit := e.GetTotalDebit()
-	totalCredit := e.GetTotalCredit()
-	diff := totalDebit - totalCredit
+	totalDebitF := float64(e.GetTotalDebit()) / 100.0
+	totalCreditF := float64(e.GetTotalCredit()) / 100.0
+	diff := totalDebitF - totalCreditF
 	if diff < 0 {
 		diff = -diff
 	}
@@ -244,8 +256,8 @@ func protoToViewModel(e *jepb.JournalEntry) journalViewModel {
 		ReversalEntryID: e.GetReversalEntryId(),
 		Created:         e.GetDateCreatedString(),
 		LastModified:    e.GetDateModifiedString(),
-		TotalDebit:      fmt.Sprintf("\u20b1%.2f", totalDebit),
-		TotalCredit:     fmt.Sprintf("\u20b1%.2f", totalCredit),
+		TotalDebit:      fmt.Sprintf("\u20b1%.2f", totalDebitF),
+		TotalCredit:     fmt.Sprintf("\u20b1%.2f", totalCreditF),
 		Difference:      fmt.Sprintf("\u20b1%.2f", diff),
 		IsBalanced:      diff < 0.005, // allow for float precision
 	}
@@ -403,10 +415,10 @@ func LinesToViewModels(lines []*jlpb.JournalLine, accountCodeByID map[string]str
 		debit := ""
 		credit := ""
 		if l.GetDebitAmount() > 0 {
-			debit = fmt.Sprintf("%.2f", l.GetDebitAmount())
+			debit = fmt.Sprintf("%.2f", float64(l.GetDebitAmount())/100.0)
 		}
 		if l.GetCreditAmount() > 0 {
-			credit = fmt.Sprintf("%.2f", l.GetCreditAmount())
+			credit = fmt.Sprintf("%.2f", float64(l.GetCreditAmount())/100.0)
 		}
 
 		rows[i] = LineRow{

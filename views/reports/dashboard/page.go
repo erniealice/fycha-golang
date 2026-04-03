@@ -8,6 +8,7 @@ import (
 
 	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
 	fycha "github.com/erniealice/fycha-golang"
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -45,10 +46,10 @@ func NewView(deps *Deps) view.View {
 
 		// Get gross profit data (contains revenue + COGS)
 		req := &reportpb.GrossProfitReportRequest{}
-		startTS := start.Unix()
-		endTS := end.Unix()
-		req.StartDate = &startTS
-		req.EndDate = &endTS
+		startStr := start.Format("2006-01-02")
+		endStr := end.Format("2006-01-02")
+		req.StartDate = &startStr
+		req.EndDate = &endStr
 
 		resp, err := deps.DB.GetGrossProfitReport(ctx, req)
 		if err != nil {
@@ -72,10 +73,10 @@ func NewView(deps *Deps) view.View {
 			totalExpenses += toFloat64(r["total_amount"])
 		}
 
-		netProfit := s.GetTotalGrossProfit() - totalExpenses
+		netProfit := float64(s.GetTotalGrossProfit())/100.0 - totalExpenses
 		netMargin := 0.0
 		if s.GetNetRevenue() > 0 {
-			netMargin = (netProfit / s.GetNetRevenue()) * 100
+			netMargin = (netProfit / (float64(s.GetNetRevenue()) / 100.0)) * 100
 		}
 
 		// KPI summary
@@ -87,7 +88,7 @@ func NewView(deps *Deps) view.View {
 		}
 
 		summary := []fycha.SummaryMetric{
-			{Label: l.RevenueCard, Value: formatCurrency(s.GetNetRevenue())},
+			{Label: l.RevenueCard, Value: formatCurrency(float64(s.GetNetRevenue()) / 100.0)},
 			{Label: l.ExpensesCard, Value: formatCurrency(totalExpenses)},
 			{Label: l.NetProfitCard, Value: formatCurrency(netProfit), Highlight: true, Variant: netVariant},
 			{Label: l.NetMarginCard, Value: fmt.Sprintf("%.1f%%", netMargin), Variant: netVariant},
@@ -119,6 +120,16 @@ func NewView(deps *Deps) view.View {
 			Summary:         summary,
 			ReportCards:     reportCards,
 			Labels:          l,
+		}
+
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "report-dashboard"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
 		}
 
 		if viewCtx.IsHTMX {

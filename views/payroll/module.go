@@ -6,9 +6,9 @@ import (
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
 
-	fycha "github.com/erniealice/fycha-golang"
-	payrollrunpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/payroll/payroll_run"
 	payrollremittancepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/payroll/payroll_remittance"
+	payrollrunpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/payroll/payroll_run"
+	fycha "github.com/erniealice/fycha-golang"
 )
 
 // ModuleDeps holds all dependencies for the payroll module.

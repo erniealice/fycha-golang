@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	loanpaymentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/loan_payment"
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -84,6 +84,16 @@ func NewView(deps *Deps) view.View {
 			Labels:           deps.Labels,
 		}
 
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "loan-payment"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
+		}
+
 		return view.OK("loan-payments", pageData)
 	})
 }
@@ -150,21 +160,18 @@ func fetchPayments(ctx context.Context, deps *Deps, loanID string) []LoanPayment
 }
 
 func protoToRow(p *loanpaymentpb.LoanPayment) LoanPaymentRow {
-	payDate := p.GetPaymentDateString()
-	if payDate == "" && p.GetPaymentDate() > 0 {
-		payDate = time.UnixMilli(p.GetPaymentDate()).Format("2006-01-02")
-	}
+	payDate := p.GetPaymentDate()
 
 	return LoanPaymentRow{
 		ID:               p.GetId(),
 		LoanID:           p.GetLoanId(),
 		PaymentNumber:    p.GetPaymentNumber(),
 		PaymentDate:      payDate,
-		PrincipalAmount:  fmt.Sprintf("%.2f", p.GetPrincipalAmount()),
-		InterestAmount:   fmt.Sprintf("%.2f", p.GetInterestAmount()),
-		FeeAmount:        fmt.Sprintf("%.2f", p.GetFeeAmount()),
-		TotalAmount:      fmt.Sprintf("%.2f", p.GetTotalAmount()),
-		RemainingBalance: fmt.Sprintf("%.2f", p.GetRemainingBalance()),
+		PrincipalAmount:  fmt.Sprintf("%.2f", float64(p.GetPrincipalAmount())/100.0),
+		InterestAmount:   fmt.Sprintf("%.2f", float64(p.GetInterestAmount())/100.0),
+		FeeAmount:        fmt.Sprintf("%.2f", float64(p.GetFeeAmount())/100.0),
+		TotalAmount:      fmt.Sprintf("%.2f", float64(p.GetTotalAmount())/100.0),
+		RemainingBalance: fmt.Sprintf("%.2f", float64(p.GetRemainingBalance())/100.0),
 		Notes:            p.GetNotes(),
 	}
 }

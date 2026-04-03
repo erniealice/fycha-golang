@@ -5,9 +5,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"time"
 
 	loanpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/loan"
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/route"
 	"github.com/erniealice/pyeza-golang/types"
@@ -89,6 +89,16 @@ func NewView(deps *Deps) view.View {
 			Labels:          deps.Labels,
 		}
 
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "loan"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
+		}
+
 		return view.OK("loan-list", pageData)
 	})
 }
@@ -161,22 +171,16 @@ func fetchLoans(ctx context.Context, deps *Deps, status string) []LoanRow {
 }
 
 func protoToRow(l *loanpb.Loan) LoanRow {
-	startDate := ""
-	if l.GetStartDate() > 0 {
-		startDate = time.UnixMilli(l.GetStartDate()).Format("2006-01-02")
-	}
-	maturityDate := ""
-	if l.GetMaturityDate() > 0 {
-		maturityDate = time.UnixMilli(l.GetMaturityDate()).Format("2006-01-02")
-	}
+	startDate := l.GetStartDate()
+	maturityDate := l.GetMaturityDate()
 
 	return LoanRow{
 		ID:               l.GetId(),
 		LoanNumber:       l.GetLoanNumber(),
 		LenderName:       l.GetLenderName(),
 		LoanType:         loanTypeLabel(l.GetLoanType()),
-		PrincipalAmount:  fmt.Sprintf("%.2f", l.GetPrincipalAmount()),
-		RemainingBalance: fmt.Sprintf("%.2f", l.GetRemainingBalance()),
+		PrincipalAmount:  fmt.Sprintf("%.2f", float64(l.GetPrincipalAmount())/100.0),
+		RemainingBalance: fmt.Sprintf("%.2f", float64(l.GetRemainingBalance())/100.0),
 		InterestRate:     fmt.Sprintf("%.4f%%", l.GetInterestRate()),
 		Status:           loanStatusLabel(l.GetStatus()),
 		StartDate:        startDate,

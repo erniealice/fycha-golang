@@ -6,6 +6,7 @@ import (
 	"log"
 
 	payrollremittancepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/payroll/payroll_remittance"
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/route"
 	"github.com/erniealice/pyeza-golang/types"
@@ -86,6 +87,16 @@ func NewView(deps *Deps) view.View {
 			Table:           tableConfig,
 		}
 
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "payroll-remittance"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
+		}
+
 		return view.OK("remittances", pageData)
 	})
 }
@@ -119,8 +130,8 @@ func protoToRow(r *payrollremittancepb.PayrollRemittance) RemittanceRow {
 	return RemittanceRow{
 		ID:              r.GetId(),
 		RemittanceType:  remittanceTypeString(r.GetRemittanceType()),
-		Amount:          r.GetAmount(),
-		DueDate:         r.GetDueDateString(),
+		Amount:          float64(r.GetAmount()) / 100.0,
+		DueDate:         r.GetDueDate(),
 		Status:          remittanceStatusString(r.GetStatus()),
 		FiledAt:         r.GetFiledAtString(),
 		PaidAt:          r.GetPaidAtString(),

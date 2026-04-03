@@ -13,13 +13,13 @@ import (
 
 // MockDeposit represents a security deposit record for mock data display.
 type MockDeposit struct {
-	ID               string
-	CounterpartyName string
-	Direction        string // "DEPOSIT_PAID" or "DEPOSIT_RECEIVED"
-	Amount           float64
+	ID                string
+	CounterpartyName  string
+	Direction         string // "DEPOSIT_PAID" or "DEPOSIT_RECEIVED"
+	Amount            float64
 	DepositDateString string
-	Status           string
-	Notes            string
+	Status            string
+	Notes             string
 }
 
 // DepositDeps holds view dependencies for deposit views.

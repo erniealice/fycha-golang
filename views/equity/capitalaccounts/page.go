@@ -7,6 +7,7 @@ import (
 	"log"
 
 	equityaccountpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/equity_account"
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/route"
 	"github.com/erniealice/pyeza-golang/types"
@@ -76,6 +77,16 @@ func NewView(deps *Deps) view.View {
 			Table:           tableConfig,
 		}
 
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "equity"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
+		}
+
 		return view.OK("capital-accounts", pageData)
 	})
 }
@@ -138,7 +149,7 @@ func protoToRow(a *equityaccountpb.EquityAccount) EquityAccountRow {
 		Name:        a.GetName(),
 		OwnerName:   a.GetOwnerName(),
 		AccountType: accountTypeLabel(a.GetAccountType()),
-		Balance:     fmt.Sprintf("%.2f", a.GetBalance()),
+		Balance:     fmt.Sprintf("%.2f", float64(a.GetBalance())/100.0),
 		Active:      a.GetActive(),
 	}
 }

@@ -31,11 +31,11 @@ type ECCell struct {
 
 // ECRow is a row in the equity changes matrix.
 type ECRow struct {
-	Label     string   // e.g. "Opening Balance"
-	SubLabel  string   // e.g. "Apr 1, 2025" (shown below Label)
-	Cells     []ECCell // one cell per column (including Total)
-	IsTotal   bool     // closing balance row (bold, double-underline)
-	IsSpacer  bool     // blank spacer row for readability
+	Label    string   // e.g. "Opening Balance"
+	SubLabel string   // e.g. "Apr 1, 2025" (shown below Label)
+	Cells    []ECCell // one cell per column (including Total)
+	IsTotal  bool     // closing balance row (bold, double-underline)
+	IsSpacer bool     // blank spacer row for readability
 }
 
 // ---------------------------------------------------------------------------
@@ -66,10 +66,10 @@ type EquityChangesPageData struct {
 	PeriodPresets []fycha.FilterOption
 
 	// KPI summary metrics
-	OpeningEquity        string
-	ClosingEquity        string
-	EquityChangeTrend    string // "+20.3%"
-	EquityChangeVariant  string // "success" or "danger"
+	OpeningEquity       string
+	ClosingEquity       string
+	EquityChangeTrend   string // "+20.3%"
+	EquityChangeVariant string // "success" or "danger"
 
 	// Statement body
 	Columns []ECColumn

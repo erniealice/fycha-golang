@@ -6,8 +6,8 @@ import (
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
 
-	fycha "github.com/erniealice/fycha-golang"
 	prepaymentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/expenditure/prepayment"
+	fycha "github.com/erniealice/fycha-golang"
 )
 
 // ModuleDeps holds all dependencies for the expenses expansion module.

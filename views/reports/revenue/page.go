@@ -7,6 +7,7 @@ import (
 	"time"
 
 	fycha "github.com/erniealice/fycha-golang"
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -134,6 +135,16 @@ func NewView(deps *Deps) view.View {
 			PeriodLabels:      pl,
 			ReportURL:         reportURL,
 			ActiveFilterCount: fycha.ActiveFilterCount(filter),
+		}
+
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "report-revenue"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
 		}
 
 		if viewCtx.IsHTMX {

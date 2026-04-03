@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 	"strconv"
-	"time"
 
 	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
 	fycha "github.com/erniealice/fycha-golang"
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -72,26 +72,20 @@ func NewView(deps *Deps) view.View {
 
 		// Resolve dates
 		if period == "custom" && startDateStr != "" {
-			if t, err := time.Parse("2006-01-02", startDateStr); err == nil {
-				ts := t.Unix()
-				req.StartDate = &ts
-			}
+			req.StartDate = &startDateStr
 		}
 		if period == "custom" && endDateStr != "" {
-			if t, err := time.Parse("2006-01-02", endDateStr); err == nil {
-				ts := t.Unix()
-				req.EndDate = &ts
-			}
+			req.EndDate = &endDateStr
 		}
 		if req.StartDate == nil {
 			start, _ := fycha.ParsePeriodPreset(period)
-			ts := start.Unix()
-			req.StartDate = &ts
+			s := start.Format("2006-01-02")
+			req.StartDate = &s
 		}
 		if req.EndDate == nil {
 			_, end := fycha.ParsePeriodPreset(period)
-			ts := end.Unix()
-			req.EndDate = &ts
+			e := end.Format("2006-01-02")
+			req.EndDate = &e
 		}
 
 		resp, err := deps.DB.GetGrossProfitReport(ctx, req)
@@ -110,12 +104,12 @@ func NewView(deps *Deps) view.View {
 
 		cogsRatio := 0.0
 		if s.GetNetRevenue() > 0 {
-			cogsRatio = (s.GetTotalCogs() / s.GetNetRevenue()) * 100
+			cogsRatio = (float64(s.GetTotalCogs()) / float64(s.GetNetRevenue())) * 100
 		}
 
 		summary := []fycha.SummaryMetric{
-			{Label: l.SummaryTotalCOGS, Value: formatCurrency(s.GetTotalCogs()), Highlight: true},
-			{Label: l.SummaryRevenue, Value: formatCurrency(s.GetNetRevenue())},
+			{Label: l.SummaryTotalCOGS, Value: formatCurrency(float64(s.GetTotalCogs()) / 100.0), Highlight: true},
+			{Label: l.SummaryRevenue, Value: formatCurrency(float64(s.GetNetRevenue()) / 100.0)},
 			{Label: l.SummaryCOGSRatio, Value: fmt.Sprintf("%.1f%%", cogsRatio)},
 			{Label: l.SummaryUnits, Value: strconv.FormatInt(s.GetTotalUnitsSold(), 10)},
 		}
@@ -133,20 +127,20 @@ func NewView(deps *Deps) view.View {
 		for _, item := range resp.GetLineItems() {
 			ratio := 0.0
 			if item.GetNetRevenue() > 0 {
-				ratio = (item.GetCostOfGoodsSold() / item.GetNetRevenue()) * 100
+				ratio = (float64(item.GetCostOfGoodsSold()) / float64(item.GetNetRevenue())) * 100
 			}
 			rows = append(rows, types.TableRow{
 				ID: item.GetGroupKey(),
 				Cells: []types.TableCell{
 					{Type: "name", Value: item.GetGroupKey()},
-					{Type: "text", Value: formatCurrency(item.GetCostOfGoodsSold())},
-					{Type: "text", Value: formatCurrency(item.GetNetRevenue())},
+					{Type: "text", Value: formatCurrency(float64(item.GetCostOfGoodsSold()) / 100.0)},
+					{Type: "text", Value: formatCurrency(float64(item.GetNetRevenue()) / 100.0)},
 					{Type: "text", Value: fmt.Sprintf("%.1f%%", ratio)},
 					{Type: "text", Value: strconv.FormatInt(item.GetUnitsSold(), 10)},
 				},
 				DataAttrs: map[string]string{
-					"cogs":    fmt.Sprintf("%.2f", item.GetCostOfGoodsSold()),
-					"revenue": fmt.Sprintf("%.2f", item.GetNetRevenue()),
+					"cogs":    fmt.Sprintf("%.2f", float64(item.GetCostOfGoodsSold())/100.0),
+					"revenue": fmt.Sprintf("%.2f", float64(item.GetNetRevenue())/100.0),
 					"ratio":   fmt.Sprintf("%.1f", ratio),
 					"units":   strconv.FormatInt(item.GetUnitsSold(), 10),
 				},
@@ -202,6 +196,16 @@ func NewView(deps *Deps) view.View {
 			PeriodLabels:      pl,
 			ReportURL:         reportURL,
 			ActiveFilterCount: fycha.ActiveFilterCount(filter),
+		}
+
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "report-cost-of-sale"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
 		}
 
 		if viewCtx.IsHTMX {

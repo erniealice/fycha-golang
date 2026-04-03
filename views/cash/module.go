@@ -6,9 +6,9 @@ import (
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
 
-	fycha "github.com/erniealice/fycha-golang"
-	securitydepositpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/security_deposit"
 	pettycashfundpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/petty_cash_fund"
+	securitydepositpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/security_deposit"
+	fycha "github.com/erniealice/fycha-golang"
 )
 
 // ModuleDeps holds all dependencies for the cash expansion module.

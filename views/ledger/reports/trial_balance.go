@@ -28,19 +28,19 @@ type TBAccountRow struct {
 
 // TBElementGroup groups accounts by element with subtotals.
 type TBElementGroup struct {
-	Element      string // "asset", "liability", "equity", "revenue", "expense"
-	Label        string // display label, e.g. "ASSETS"
-	Accounts     []TBAccountRow
+	Element        string // "asset", "liability", "equity", "revenue", "expense"
+	Label          string // display label, e.g. "ASSETS"
+	Accounts       []TBAccountRow
 	SubtotalDebit  float64
 	SubtotalCredit float64
 }
 
 // TBTotals holds the grand totals and balance check result.
 type TBTotals struct {
-	TotalDebit   float64
-	TotalCredit  float64
-	Difference   float64
-	IsBalanced   bool
+	TotalDebit  float64
+	TotalCredit float64
+	Difference  float64
+	IsBalanced  bool
 	// Pre-formatted for templates
 	TotalDebitStr  string
 	TotalCreditStr string

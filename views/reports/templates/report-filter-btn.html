@@ -4,6 +4,9 @@
 {{define "report-filter-btn"}}
 <div class="report-header-actions">
     <button type="button" class="fycha-filter-btn"
+            data-testid="report-filters-open-btn"
+            aria-controls="sheetContent"
+            aria-haspopup="dialog"
             hx-get="{{.ReportURL}}?sheet=filters"
             hx-target="#sheetContent"
             hx-swap="innerHTML"

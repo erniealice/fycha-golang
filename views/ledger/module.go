@@ -11,14 +11,14 @@ import (
 	fycha "github.com/erniealice/fycha-golang"
 	accountaction "github.com/erniealice/fycha-golang/views/ledger/action"
 	accountdetail "github.com/erniealice/fycha-golang/views/ledger/detail"
-	accountlist "github.com/erniealice/fycha-golang/views/ledger/list"
 	fiscalview "github.com/erniealice/fycha-golang/views/ledger/fiscal"
 	journalview "github.com/erniealice/fycha-golang/views/ledger/journal"
 	journalactionview "github.com/erniealice/fycha-golang/views/ledger/journal_action"
 	journaldetailview "github.com/erniealice/fycha-golang/views/ledger/journal_detail"
+	accountlist "github.com/erniealice/fycha-golang/views/ledger/list"
+	recurringview "github.com/erniealice/fycha-golang/views/ledger/recurring"
 	ledgerreports "github.com/erniealice/fycha-golang/views/ledger/reports"
 	ledgersettings "github.com/erniealice/fycha-golang/views/ledger/settings"
-	recurringview "github.com/erniealice/fycha-golang/views/ledger/recurring"
 
 	accountpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/account"
 	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
@@ -88,12 +88,12 @@ type Module struct {
 	fiscalRoutes    fycha.FiscalPeriodRoutes
 
 	// Account CRUD
-	AccountList             view.View
-	AccountDetail           view.View
-	AccountTabAction        view.View
-	AccountAdd              view.View
-	AccountEdit             view.View
-	AccountDelete           view.View
+	AccountList      view.View
+	AccountDetail    view.View
+	AccountTabAction view.View
+	AccountAdd       view.View
+	AccountEdit      view.View
+	AccountDelete    view.View
 
 	// Account search (JSON endpoint for journal form autocomplete)
 	accountSearchHandler http.HandlerFunc

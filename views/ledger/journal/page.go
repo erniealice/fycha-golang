@@ -6,6 +6,7 @@ import (
 	"log"
 
 	jepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_entry"
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/route"
 	"github.com/erniealice/pyeza-golang/types"
@@ -33,7 +34,7 @@ type Deps struct {
 type PageData struct {
 	types.PageData
 	ContentTemplate string
-	ActiveStatus    string          // "draft", "posted", "reversed"
+	ActiveStatus    string // "draft", "posted", "reversed"
 	Table           *types.TableConfig
 }
 
@@ -86,6 +87,16 @@ func NewView(deps *Deps) view.View {
 			Table:           tableConfig,
 		}
 
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "journal"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
+		}
+
 		return view.OK("journal-list", pageData)
 	})
 }
@@ -124,8 +135,8 @@ func protoToRow(e *jepb.JournalEntry) JournalRow {
 		Status:      statusString(e.GetStatus()),
 		SourceType:  sourceTypeLabel(e.GetSourceType()),
 		SourceID:    e.GetSourceId(),
-		TotalDebit:  fmt.Sprintf("%.2f", e.GetTotalDebit()),
-		TotalCredit: fmt.Sprintf("%.2f", e.GetTotalCredit()),
+		TotalDebit:  fmt.Sprintf("%.2f", float64(e.GetTotalDebit())/100.0),
+		TotalCredit: fmt.Sprintf("%.2f", float64(e.GetTotalCredit())/100.0),
 	}
 }
 

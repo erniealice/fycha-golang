@@ -6,6 +6,7 @@ import (
 	"log"
 
 	payrollrunpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/payroll/payroll_run"
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/route"
 	"github.com/erniealice/pyeza-golang/types"
@@ -40,17 +41,17 @@ type PageData struct {
 
 // PayrollRunRow is the view-model for a single payroll run row (mapped from proto).
 type PayrollRunRow struct {
-	ID               string
-	RunNumber        string
-	PayPeriodStart   string
-	PayPeriodEnd     string
-	EmployeeCount    int32
-	TotalGross       float64
-	TotalDeductions  float64
-	TotalNet         float64
-	Status           string
-	ApprovedBy       string
-	PostedAt         string
+	ID              string
+	RunNumber       string
+	PayPeriodStart  string
+	PayPeriodEnd    string
+	EmployeeCount   int32
+	TotalGross      float64
+	TotalDeductions float64
+	TotalNet        float64
+	Status          string
+	ApprovedBy      string
+	PostedAt        string
 }
 
 // ---------------------------------------------------------------------------
@@ -88,6 +89,16 @@ func NewView(deps *Deps) view.View {
 			Table:           tableConfig,
 		}
 
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "payroll-run"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
+		}
+
 		return view.OK("payroll-runs", pageData)
 	})
 }
@@ -118,8 +129,8 @@ func fetchPayrollRuns(ctx context.Context, deps *Deps) []PayrollRunRow {
 }
 
 func protoToRow(r *payrollrunpb.PayrollRun) PayrollRunRow {
-	periodStart := r.GetPayPeriodStartString()
-	periodEnd := r.GetPayPeriodEndString()
+	periodStart := r.GetPayPeriodStart()
+	periodEnd := r.GetPayPeriodEnd()
 	approvedBy := r.GetApprovedBy()
 	postedAt := r.GetPostedAtString()
 	return PayrollRunRow{
@@ -128,9 +139,9 @@ func protoToRow(r *payrollrunpb.PayrollRun) PayrollRunRow {
 		PayPeriodStart:  periodStart,
 		PayPeriodEnd:    periodEnd,
 		EmployeeCount:   r.GetEmployeeCount(),
-		TotalGross:      r.GetTotalGross(),
-		TotalDeductions: r.GetTotalDeductions(),
-		TotalNet:        r.GetTotalNet(),
+		TotalGross:      float64(r.GetTotalGross()) / 100.0,
+		TotalDeductions: float64(r.GetTotalDeductions()) / 100.0,
+		TotalNet:        float64(r.GetTotalNet()) / 100.0,
 		Status:          statusString(r.GetStatus()),
 		ApprovedBy:      approvedBy,
 		PostedAt:        postedAt,

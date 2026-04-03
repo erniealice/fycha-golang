@@ -23,8 +23,8 @@ import (
 	"log"
 	"net/http"
 
-	pyeza "github.com/erniealice/pyeza-golang"
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
+	pyeza "github.com/erniealice/pyeza-golang"
 
 	consumer "github.com/erniealice/espyna-golang/consumer"
 

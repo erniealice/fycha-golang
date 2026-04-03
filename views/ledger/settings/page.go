@@ -10,6 +10,7 @@ import (
 	"context"
 	"fmt"
 
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -24,19 +25,19 @@ import (
 
 // CoATemplate describes one pre-built Chart of Accounts template.
 type CoATemplate struct {
-	ID           string // e.g. "service-ph"
-	Icon         string // icon name, e.g. "icon-scissors"
-	Name         string // display name
-	Description  string // 2-3 sentence description
-	AccountCount int    // total accounts in the template
-	AssetCount   int
+	ID             string // e.g. "service-ph"
+	Icon           string // icon name, e.g. "icon-scissors"
+	Name           string // display name
+	Description    string // 2-3 sentence description
+	AccountCount   int    // total accounts in the template
+	AssetCount     int
 	LiabilityCount int
-	EquityCount  int
-	RevenueCount int
-	ExpenseCount int
-	ApplyURL     string // POST action URL
-	PreviewURL   string // GET action URL (returns dialog content)
-	IsApplied    bool   // whether this template has already been applied
+	EquityCount    int
+	RevenueCount   int
+	ExpenseCount   int
+	ApplyURL       string // POST action URL
+	PreviewURL     string // GET action URL (returns dialog content)
+	IsApplied      bool   // whether this template has already been applied
 }
 
 // PreviewEntry is a simplified account entry for the preview dialog.
@@ -61,7 +62,7 @@ type Deps struct {
 	TableLabels  types.TableLabels
 	// ApplyTemplateURL is the POST action URL for the seeder.
 	// Defaults to "/action/ledger/settings/account-templates/apply" if empty.
-	ApplyTemplateURL string
+	ApplyTemplateURL   string
 	PreviewTemplateURL string
 }
 
@@ -130,6 +131,16 @@ func NewView(deps *Deps) view.View {
 			Templates:           templates,
 			CurrentAccountCount: 0, // Phase 3: replace with DB query
 			HasExistingAccounts: false,
+		}
+
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "ledger-setting"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
 		}
 
 		return view.OK("account-templates", pageData)
@@ -204,24 +215,24 @@ func buildTemplates(applyURL, previewURL string) []CoATemplate {
 			IsApplied:      false, // Phase 3: check if already seeded
 		},
 		{
-			ID:             "retail-ph",
-			Icon:           "icon-shopping-bag",
-			Name:           "Retail Business",
-			Description:    "CoA for Philippine retail businesses with inventory and COGS accounts. Includes supplier payables, merchandise inventory, and product sales revenue streams.",
-			AccountCount:   0, // coming soon
-			ApplyURL:       "",
-			PreviewURL:     "",
-			IsApplied:      false,
+			ID:           "retail-ph",
+			Icon:         "icon-shopping-bag",
+			Name:         "Retail Business",
+			Description:  "CoA for Philippine retail businesses with inventory and COGS accounts. Includes supplier payables, merchandise inventory, and product sales revenue streams.",
+			AccountCount: 0, // coming soon
+			ApplyURL:     "",
+			PreviewURL:   "",
+			IsApplied:    false,
 		},
 		{
-			ID:             "professional-ph",
-			Icon:           "icon-briefcase",
-			Name:           "Professional Services",
-			Description:    "Streamlined CoA for consultants, accountants, lawyers, and other professional services firms. Minimal inventory, focus on receivables and project billing.",
-			AccountCount:   0, // coming soon
-			ApplyURL:       "",
-			PreviewURL:     "",
-			IsApplied:      false,
+			ID:           "professional-ph",
+			Icon:         "icon-briefcase",
+			Name:         "Professional Services",
+			Description:  "Streamlined CoA for consultants, accountants, lawyers, and other professional services firms. Minimal inventory, focus on receivables and project billing.",
+			AccountCount: 0, // coming soon
+			ApplyURL:     "",
+			PreviewURL:   "",
+			IsApplied:    false,
 		},
 	}
 }
