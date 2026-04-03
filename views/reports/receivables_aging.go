@@ -39,15 +39,14 @@ func fetchReceivablesAging(ctx context.Context, db *sql.DB) ([]types.TableColumn
 	}
 
 	// revenue stores customer name in the `name` column
-	// aging is based on date_created since revenue has no due_date
 	query := `
 		SELECT
 			COALESCE(NULLIF(TRIM(r.name), ''), 'Unknown') AS customer_name,
-			COALESCE(SUM(CASE WHEN CURRENT_DATE - r.date_created::date <= 0 THEN r.total_amount ELSE 0 END), 0) AS current_amt,
-			COALESCE(SUM(CASE WHEN CURRENT_DATE - r.date_created::date BETWEEN 1 AND 30 THEN r.total_amount ELSE 0 END), 0) AS days_30,
-			COALESCE(SUM(CASE WHEN CURRENT_DATE - r.date_created::date BETWEEN 31 AND 60 THEN r.total_amount ELSE 0 END), 0) AS days_60,
-			COALESCE(SUM(CASE WHEN CURRENT_DATE - r.date_created::date BETWEEN 61 AND 90 THEN r.total_amount ELSE 0 END), 0) AS days_90,
-			COALESCE(SUM(CASE WHEN CURRENT_DATE - r.date_created::date > 90 THEN r.total_amount ELSE 0 END), 0) AS over_90,
+			COALESCE(SUM(CASE WHEN CURRENT_DATE - COALESCE(TO_TIMESTAMP(r.due_date / 1000.0)::date, r.date_created::date) <= 0 THEN r.total_amount ELSE 0 END), 0) AS current_amt,
+			COALESCE(SUM(CASE WHEN CURRENT_DATE - COALESCE(TO_TIMESTAMP(r.due_date / 1000.0)::date, r.date_created::date) BETWEEN 1 AND 30 THEN r.total_amount ELSE 0 END), 0) AS days_30,
+			COALESCE(SUM(CASE WHEN CURRENT_DATE - COALESCE(TO_TIMESTAMP(r.due_date / 1000.0)::date, r.date_created::date) BETWEEN 31 AND 60 THEN r.total_amount ELSE 0 END), 0) AS days_60,
+			COALESCE(SUM(CASE WHEN CURRENT_DATE - COALESCE(TO_TIMESTAMP(r.due_date / 1000.0)::date, r.date_created::date) BETWEEN 61 AND 90 THEN r.total_amount ELSE 0 END), 0) AS days_90,
+			COALESCE(SUM(CASE WHEN CURRENT_DATE - COALESCE(TO_TIMESTAMP(r.due_date / 1000.0)::date, r.date_created::date) > 90 THEN r.total_amount ELSE 0 END), 0) AS over_90,
 			COALESCE(SUM(r.total_amount), 0) AS total
 		FROM revenue r
 		WHERE r.status NOT IN ('paid', 'cancelled')
