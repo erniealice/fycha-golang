@@ -51,6 +51,7 @@ func MapBulkConfig(common pyeza.CommonLabels) types.BulkActionsConfig {
 type ReportsLabels struct {
 	GrossProfit     GrossProfitLabels     `json:"grossProfit"`
 	Revenue         RevenueLabels         `json:"revenue"`
+	RevenueReport   RevenueReportLabels   `json:"revenueReport"`
 	CostOfSales     CostOfSalesLabels     `json:"costOfSales"`
 	Expenses        ExpensesLabels        `json:"expenses"`
 	NetProfit       NetProfitLabels       `json:"netProfit"`
@@ -2677,4 +2678,72 @@ type NetProfitLabels struct {
 	SummaryGross     string `json:"summaryGrossProfit"`
 	SummaryExpenses  string `json:"summaryExpenses"`
 	SummaryNetProfit string `json:"summaryNetProfit"`
+}
+
+// RevenueReportLabels holds translatable strings for the revenue pivot-table report.
+type RevenueReportLabels struct {
+	Title                 string `json:"title"`
+	Subtitle              string `json:"subtitle"`
+	ColumnDimension       string `json:"columnDimension"`
+	RowDimension          string `json:"rowDimension"`
+	DimensionMonthly      string `json:"dimensionMonthly"`
+	DimensionQuarterly    string `json:"dimensionQuarterly"`
+	DimensionYearly       string `json:"dimensionYearly"`
+	DimensionProduct      string `json:"dimensionProduct"`
+	DimensionProductLine  string `json:"dimensionProductLine"`
+	DimensionLocation     string `json:"dimensionLocation"`
+	DimensionLocationArea string `json:"dimensionLocationArea"`
+	SummaryGrandTotal     string `json:"summaryGrandTotal"`
+	SummaryTransactions   string `json:"summaryTransactions"`
+	SummaryAverage        string `json:"summaryAverage"`
+	Total                 string `json:"total"`
+	Totals                string `json:"totals"`
+	ExportCsv             string `json:"exportCsv"`
+	Apply                 string `json:"apply"`
+	Clear                 string `json:"clear"`
+	EmptyTitle            string `json:"emptyTitle"`
+	EmptyMessage          string `json:"emptyMessage"`
+}
+
+// PrimaryGroupLabel returns the display label for the given dimension string.
+func (l RevenueReportLabels) PrimaryGroupLabel(dim string) string {
+	switch dim {
+	case "monthly":
+		return l.DimensionMonthly
+	case "quarterly":
+		return l.DimensionQuarterly
+	case "yearly":
+		return l.DimensionYearly
+	case "product":
+		return l.DimensionProduct
+	case "productLine":
+		return l.DimensionProductLine
+	case "location":
+		return l.DimensionLocation
+	case "locationArea":
+		return l.DimensionLocationArea
+	default:
+		return dim
+	}
+}
+
+// DimensionOptions returns all seven dimension choices as FilterOption slices.
+func (l RevenueReportLabels) DimensionOptions(active string) []FilterOption {
+	dims := []struct {
+		value string
+		label string
+	}{
+		{"monthly", l.DimensionMonthly},
+		{"quarterly", l.DimensionQuarterly},
+		{"yearly", l.DimensionYearly},
+		{"product", l.DimensionProduct},
+		{"productLine", l.DimensionProductLine},
+		{"location", l.DimensionLocation},
+		{"locationArea", l.DimensionLocationArea},
+	}
+	opts := make([]FilterOption, len(dims))
+	for i, d := range dims {
+		opts[i] = FilterOption{Value: d.value, Label: d.label, Selected: d.value == active}
+	}
+	return opts
 }

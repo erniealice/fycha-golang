@@ -29,37 +29,44 @@ type ReportsRoutes struct {
 	BalanceSheetURL    string `json:"balance_sheet_url"`
 	CashFlowURL        string `json:"cash_flow_url"`
 	EquityChangesURL   string `json:"equity_changes_url"`
+	// Revenue Report pivot table
+	RevenueReportURL       string `json:"revenue_report_url"`
+	RevenueReportExportURL string `json:"revenue_report_export_url"`
 }
 
 // DefaultReportsRoutes returns a ReportsRoutes populated from package-level consts.
 func DefaultReportsRoutes() ReportsRoutes {
 	return ReportsRoutes{
-		DashboardURL:       ReportsDashboardURL,
-		RevenueURL:         ReportsRevenueURL,
-		CostOfSalesURL:     ReportsCostOfSalesURL,
-		GrossProfitURL:     ReportsGrossProfitURL,
-		ExpensesURL:        ReportsExpensesURL,
-		NetProfitURL:       ReportsNetProfitURL,
-		IncomeStatementURL: ReportsIncomeStatementURL,
-		BalanceSheetURL:    ReportsBalanceSheetURL,
-		CashFlowURL:        ReportsCashFlowURL,
-		EquityChangesURL:   ReportsEquityChangesURL,
+		DashboardURL:           ReportsDashboardURL,
+		RevenueURL:             ReportsRevenueURL,
+		CostOfSalesURL:         ReportsCostOfSalesURL,
+		GrossProfitURL:         ReportsGrossProfitURL,
+		ExpensesURL:            ReportsExpensesURL,
+		NetProfitURL:           ReportsNetProfitURL,
+		IncomeStatementURL:     ReportsIncomeStatementURL,
+		BalanceSheetURL:        ReportsBalanceSheetURL,
+		CashFlowURL:            ReportsCashFlowURL,
+		EquityChangesURL:       ReportsEquityChangesURL,
+		RevenueReportURL:       ReportsRevenueReportURL,
+		RevenueReportExportURL: ReportsRevenueReportExportURL,
 	}
 }
 
 // RouteMap returns a map of dot-notation keys to route paths.
 func (r ReportsRoutes) RouteMap() map[string]string {
 	return map[string]string{
-		"reports.dashboard":        r.DashboardURL,
-		"reports.revenue":          r.RevenueURL,
-		"reports.cost_of_sales":    r.CostOfSalesURL,
-		"reports.gross_profit":     r.GrossProfitURL,
-		"reports.expenses":         r.ExpensesURL,
-		"reports.net_profit":       r.NetProfitURL,
-		"reports.income_statement": r.IncomeStatementURL,
-		"reports.balance_sheet":    r.BalanceSheetURL,
-		"reports.cash_flow":        r.CashFlowURL,
-		"reports.equity_changes":   r.EquityChangesURL,
+		"reports.dashboard":             r.DashboardURL,
+		"reports.revenue":               r.RevenueURL,
+		"reports.cost_of_sales":         r.CostOfSalesURL,
+		"reports.gross_profit":          r.GrossProfitURL,
+		"reports.expenses":              r.ExpensesURL,
+		"reports.net_profit":            r.NetProfitURL,
+		"reports.income_statement":      r.IncomeStatementURL,
+		"reports.balance_sheet":         r.BalanceSheetURL,
+		"reports.cash_flow":             r.CashFlowURL,
+		"reports.equity_changes":        r.EquityChangesURL,
+		"reports.revenue_report":        r.RevenueReportURL,
+		"reports.revenue_report_export": r.RevenueReportExportURL,
 	}
 }
 

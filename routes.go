@@ -1,13 +1,15 @@
 package fycha
 
 const (
-	ReportsBaseURL        = "/app/reports/"
-	ReportsDashboardURL   = "/app/reports/dashboard"
-	ReportsRevenueURL     = "/app/reports/revenue"
-	ReportsCostOfSalesURL = "/app/reports/cost-of-sales"
-	ReportsGrossProfitURL = "/app/reports/gross-profit"
-	ReportsExpensesURL    = "/app/reports/expenses"
-	ReportsNetProfitURL   = "/app/reports/net-profit"
+	ReportsBaseURL                = "/app/reports/"
+	ReportsDashboardURL           = "/app/reports/dashboard"
+	ReportsRevenueURL             = "/app/reports/revenue"
+	ReportsCostOfSalesURL         = "/app/reports/cost-of-sales"
+	ReportsGrossProfitURL         = "/app/reports/gross-profit"
+	ReportsExpensesURL            = "/app/reports/expenses"
+	ReportsNetProfitURL           = "/app/reports/net-profit"
+	ReportsRevenueReportURL       = "/app/reports/revenue-report"
+	ReportsRevenueReportExportURL = "/app/reports/revenue-report/export"
 
 	// StorageImagesPrefix is the default route prefix for image serving.
 	StorageImagesPrefix = "/storage/images"
