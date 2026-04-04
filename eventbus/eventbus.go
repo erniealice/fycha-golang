@@ -2,11 +2,12 @@
 // Phase 9: Auto-posting journal entries from operational domain events.
 //
 // Event flow:
-//   Operational domain (revenue, expenditure, treasury, payroll, etc.)
-//     → publishes Event to EventBus
-//     → JournalPoster handler maps event type to debit/credit rules
-//     → calls CreateJournalEntry use case
-//     → journal entry is created as draft or posted automatically
+//
+//	Operational domain (revenue, expenditure, treasury, payroll, etc.)
+//	  → publishes Event to EventBus
+//	  → JournalPoster handler maps event type to debit/credit rules
+//	  → calls CreateJournalEntry use case
+//	  → journal entry is created as draft or posted automatically
 package eventbus
 
 import (

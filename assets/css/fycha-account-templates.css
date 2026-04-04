@@ -45,7 +45,7 @@
 .template-card__header {
     display: flex;
     align-items: flex-start;
-    gap: 0.875rem;
+    gap: var(--spacing-lg-tight, 0.875rem);
     padding: var(--spacing-xl) var(--spacing-xl) 0;
 }
 
@@ -135,7 +135,7 @@
     display: flex;
     align-items: center;
     justify-content: flex-end;
-    gap: 0.625rem;
+    gap: var(--spacing-sm-tight, 0.625rem);
     padding: var(--spacing-lg) var(--spacing-xl);
     border-top: var(--border-width) solid var(--border-light);
     background: var(--bg-sidebar);
@@ -182,7 +182,7 @@
 /* Level indentation for preview tree */
 .preview-row--level-0 td:nth-child(2) { padding-left: var(--spacing-md); }
 .preview-row--level-1 td:nth-child(2) { padding-left: var(--spacing-3xl); }
-.preview-row--level-2 td:nth-child(2) { padding-left: 3rem; }
+.preview-row--level-2 td:nth-child(2) { padding-left: var(--spacing-6xl, 3rem); }
 
 .preview-row--group td {
     font-weight: var(--font-weight-semibold);

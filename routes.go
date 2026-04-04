@@ -16,34 +16,34 @@ const (
 	CashBookURL = "/app/cash/reports/cash-book"
 
 	// Asset routes
-	AssetDashboardURL     = "/app/assets/dashboard"
-	AssetListURL          = "/app/assets/list/{status}"
-	AssetDetailURL        = "/app/assets/detail/{id}"
-	AssetTabActionURL         = "/action/assets/{id}/tab/{tab}"
-	AssetAttachmentUploadURL  = "/action/assets/{id}/attachments/upload"
-	AssetAttachmentDeleteURL  = "/action/assets/{id}/attachments/delete"
-	AssetTableURL         = "/action/assets/table/{status}"
-	AssetAddURL           = "/action/assets/add"
-	AssetEditURL          = "/action/assets/edit/{id}"
-	AssetDeleteURL        = "/action/assets/delete"
-	AssetBulkDeleteURL    = "/action/assets/bulk-delete"
-	AssetSetStatusURL     = "/action/assets/set-status"
-	AssetBulkSetStatusURL = "/action/assets/bulk-set-status"
+	AssetDashboardURL        = "/app/assets/dashboard"
+	AssetListURL             = "/app/assets/list/{status}"
+	AssetDetailURL           = "/app/assets/detail/{id}"
+	AssetTabActionURL        = "/action/assets/{id}/tab/{tab}"
+	AssetAttachmentUploadURL = "/action/assets/{id}/attachments/upload"
+	AssetAttachmentDeleteURL = "/action/assets/{id}/attachments/delete"
+	AssetTableURL            = "/action/assets/table/{status}"
+	AssetAddURL              = "/action/assets/add"
+	AssetEditURL             = "/action/assets/edit/{id}"
+	AssetDeleteURL           = "/action/assets/delete"
+	AssetBulkDeleteURL       = "/action/assets/bulk-delete"
+	AssetSetStatusURL        = "/action/assets/set-status"
+	AssetBulkSetStatusURL    = "/action/assets/bulk-set-status"
 
 	// Asset report/settings routes
 	AssetLapsingScheduleURL      = "/app/assets/reports/lapsing-schedule"
 	AssetDepreciationPoliciesURL = "/app/assets/settings/depreciation-policies"
 
 	// Ledger — Chart of Accounts
-	LedgerBaseURL        = "/app/ledger/"
-	AccountListURL       = "/app/ledger/accounts/list"
-	AccountDetailURL     = "/app/ledger/accounts/detail/{id}"
-	AccountTabActionURL  = "/action/ledger/accounts/{id}/tab/{tab}"
-	AccountTreeURL       = "/app/ledger/accounts/tree"
-	AccountTemplatesURL  = "/app/ledger/settings/account-templates"
-	AccountAddURL        = "/action/ledger/accounts/add"
-	AccountEditURL       = "/action/ledger/accounts/edit/{id}"
-	AccountDeleteURL     = "/action/ledger/accounts/delete"
+	LedgerBaseURL       = "/app/ledger/"
+	AccountListURL      = "/app/ledger/accounts/list"
+	AccountDetailURL    = "/app/ledger/accounts/detail/{id}"
+	AccountTabActionURL = "/action/ledger/accounts/{id}/tab/{tab}"
+	AccountTreeURL      = "/app/ledger/accounts/tree"
+	AccountTemplatesURL = "/app/ledger/settings/account-templates"
+	AccountAddURL       = "/action/ledger/accounts/add"
+	AccountEditURL      = "/action/ledger/accounts/edit/{id}"
+	AccountDeleteURL    = "/action/ledger/accounts/delete"
 
 	// Ledger — Journal Entries
 	JournalListURL    = "/app/ledger/journals/list/{status}"
@@ -85,9 +85,9 @@ const (
 	LoanPaymentListURL  = "/app/funding/loans/payments/{status}"
 
 	// Funding — Equity
-	EquityAccountsURL      = "/app/funding/equity/accounts"
-	EquityAccountDetailURL = "/app/funding/equity/accounts/detail/{id}"
-	EquityTransactionsURL  = "/app/funding/equity/transactions"
+	EquityAccountsURL       = "/app/funding/equity/accounts"
+	EquityAccountDetailURL  = "/app/funding/equity/accounts/detail/{id}"
+	EquityTransactionsURL   = "/app/funding/equity/transactions"
 	EquityTransactionAddURL = "/action/funding/equity/transaction/add"
 
 	// Payroll
@@ -99,12 +99,12 @@ const (
 	PayrollPayPeriodsURL     = "/app/payroll/settings/pay-periods"
 
 	// Cash — Deposits and Petty Cash
-	DepositListURL               = "/app/cash/deposits/{status}"
-	PettyCashRegisterURL         = "/app/cash/petty-cash/register"
+	DepositListURL                = "/app/cash/deposits/{status}"
+	PettyCashRegisterURL          = "/app/cash/petty-cash/register"
 	PettyCashReplenishmentListURL = "/app/cash/petty-cash/replenishments/{status}"
 	PettyCashCustodianBalancesURL = "/app/cash/petty-cash/custodian-balances"
 
 	// Expenses — Prepayments
-	PrepaymentListURL        = "/app/expenses/prepayments/{status}"
+	PrepaymentListURL         = "/app/expenses/prepayments/{status}"
 	PrepaymentAmortizationURL = "/app/expenses/prepayments/amortization"
 )
