@@ -149,7 +149,7 @@ func NewEquityChangesView(deps *EquityChangesDeps) view.View {
 				CacheVersion:   viewCtx.CacheVersion,
 				Title:          deps.Labels.EquityChanges.Title,
 				CurrentPath:    viewCtx.CurrentPath,
-				ActiveNav:      "reports",
+				ActiveNav:      "report",
 				ActiveSubNav:   "equity-changes",
 				HeaderTitle:    deps.Labels.EquityChanges.Title,
 				HeaderSubtitle: deps.Labels.EquityChanges.Subtitle,

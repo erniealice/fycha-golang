@@ -327,7 +327,7 @@ type LoanRoutes struct {
 
 func DefaultLoanRoutes() LoanRoutes {
 	return LoanRoutes{
-		ActiveNav:       "loans",
+		ActiveNav:       "loan",
 		ListURL:         LoanListURL,
 		DetailURL:       LoanDetailURL,
 		AddURL:          LoanAddURL,
@@ -357,7 +357,7 @@ type LoanPaymentRoutes struct {
 
 func DefaultLoanPaymentRoutes() LoanPaymentRoutes {
 	return LoanPaymentRoutes{
-		ActiveNav: "loans",
+		ActiveNav: "loan",
 		ListURL:   LoanPaymentListURL,
 		AddURL:    LoanPaymentAddURL,
 	}
@@ -565,7 +565,7 @@ type PrepaymentRoutes struct {
 
 func DefaultPrepaymentRoutes() PrepaymentRoutes {
 	return PrepaymentRoutes{
-		ActiveNav:       "expenses",
+		ActiveNav:       "expense",
 		ListURL:         PrepaymentListURL,
 		AmortizationURL: PrepaymentAmortizationURL,
 	}

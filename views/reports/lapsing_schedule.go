@@ -34,7 +34,7 @@ func mockLapsingAssets() []MockLapsingAsset {
 // NewLapsingScheduleView creates the lapsing schedule report (mock data).
 func NewLapsingScheduleView(commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
 	return NewReportView(ReportConfig{
-		ActiveNav:    "assets",
+		ActiveNav:    "asset",
 		ActiveSubNav: "lapsing-schedule",
 		Title:        "Lapsing Schedule",
 		Subtitle:     "Asset depreciation lapsing schedule and projections",

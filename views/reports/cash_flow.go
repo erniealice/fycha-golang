@@ -156,7 +156,7 @@ func NewCashFlowView(deps *CashFlowDeps) view.View {
 				CacheVersion:   viewCtx.CacheVersion,
 				Title:          deps.Labels.CashFlow.Title,
 				CurrentPath:    viewCtx.CurrentPath,
-				ActiveNav:      "reports",
+				ActiveNav:      "report",
 				ActiveSubNav:   "cash-flow",
 				HeaderTitle:    deps.Labels.CashFlow.Title,
 				HeaderSubtitle: deps.Labels.CashFlow.Subtitle,

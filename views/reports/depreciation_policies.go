@@ -32,7 +32,7 @@ func mockDepreciationPolicies() []MockDepreciationPolicy {
 // NewDepreciationPoliciesView creates the depreciation policies report (mock data).
 func NewDepreciationPoliciesView(commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
 	return NewReportView(ReportConfig{
-		ActiveNav:    "assets",
+		ActiveNav:    "asset",
 		ActiveSubNav: "depreciation-policies",
 		Title:        "Depreciation Policies",
 		Subtitle:     "Configure asset depreciation methods and useful life settings",

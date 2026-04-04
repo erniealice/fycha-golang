@@ -13,7 +13,7 @@ import (
 // NewReceivablesAgingView creates the receivables aging report with DB data.
 func NewReceivablesAgingView(db *sql.DB, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
 	return NewReportView(ReportConfig{
-		ActiveNav:    "clients",
+		ActiveNav:    "client",
 		ActiveSubNav: "receivables-aging",
 		Title:        "Receivables Aging",
 		Subtitle:     "Aging analysis of outstanding receivables by customer",

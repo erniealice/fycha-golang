@@ -14,7 +14,7 @@ import (
 // NewPurchasesSummaryView creates the purchases summary report with DB data.
 func NewPurchasesSummaryView(db *sql.DB, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
 	return NewReportView(ReportConfig{
-		ActiveNav:    "purchases",
+		ActiveNav:    "purchase",
 		ActiveSubNav: "purchases-summary",
 		Title:        "Purchases Summary",
 		Subtitle:     "Summary of purchase orders and spending",

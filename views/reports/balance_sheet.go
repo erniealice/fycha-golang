@@ -135,7 +135,7 @@ func NewBalanceSheetView(deps *BalanceSheetDeps) view.View {
 				CacheVersion:   viewCtx.CacheVersion,
 				Title:          deps.Labels.BalanceSheet.Title,
 				CurrentPath:    viewCtx.CurrentPath,
-				ActiveNav:      "reports",
+				ActiveNav:      "report",
 				ActiveSubNav:   "balance-sheet",
 				HeaderTitle:    deps.Labels.BalanceSheet.Title,
 				HeaderSubtitle: deps.Labels.BalanceSheet.Subtitle,

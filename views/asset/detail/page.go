@@ -197,7 +197,7 @@ func buildPageData(deps *DetailViewDeps, id, activeTab string, viewCtx *view.Vie
 			CacheVersion:   viewCtx.CacheVersion,
 			Title:          asset.Name,
 			CurrentPath:    viewCtx.CurrentPath,
-			ActiveNav:      "assets",
+			ActiveNav:      "asset",
 			ActiveSubNav:   "assets-fixed",
 			HeaderTitle:    asset.Name,
 			HeaderSubtitle: fmt.Sprintf("%s | %s", asset.AssetNumber, asset.CategoryName),

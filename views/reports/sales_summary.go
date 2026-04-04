@@ -14,7 +14,7 @@ import (
 // NewSalesSummaryView creates the sales summary report with DB data.
 func NewSalesSummaryView(db *sql.DB, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
 	return NewReportView(ReportConfig{
-		ActiveNav:    "sales",
+		ActiveNav:    "sale",
 		ActiveSubNav: "sales-summary",
 		Title:        "Sales Summary",
 		Subtitle:     "Summary of sales performance and trends",

@@ -85,7 +85,7 @@ func NewView(deps *Deps) view.View {
 				CacheVersion:   viewCtx.CacheVersion,
 				Title:          l.Title,
 				CurrentPath:    viewCtx.CurrentPath,
-				ActiveNav:      "assets",
+				ActiveNav:      "asset",
 				ActiveSubNav:   "assets-dashboard",
 				HeaderTitle:    l.Title,
 				HeaderSubtitle: l.Subtitle,

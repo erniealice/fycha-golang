@@ -13,7 +13,7 @@ import (
 // NewPayablesAgingView creates the payables aging report with DB data.
 func NewPayablesAgingView(db *sql.DB, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
 	return NewReportView(ReportConfig{
-		ActiveNav:    "suppliers",
+		ActiveNav:    "supplier",
 		ActiveSubNav: "payables-aging",
 		Title:        "Payables Aging",
 		Subtitle:     "Aging analysis of outstanding payables by supplier",

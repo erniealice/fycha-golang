@@ -143,7 +143,7 @@ func NewIncomeStatementView(deps *IncomeStatementDeps) view.View {
 				CacheVersion:   viewCtx.CacheVersion,
 				Title:          deps.Labels.IncomeStatement.Title,
 				CurrentPath:    viewCtx.CurrentPath,
-				ActiveNav:      "reports",
+				ActiveNav:      "report",
 				ActiveSubNav:   "income-statement",
 				HeaderTitle:    deps.Labels.IncomeStatement.Title,
 				HeaderSubtitle: deps.Labels.IncomeStatement.Subtitle,
