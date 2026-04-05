@@ -9,28 +9,20 @@
      data-page-css="/assets/css/fycha/fycha-report.css?v={{.CacheVersion}}"
      data-page-js="/assets/js/fycha/fycha-report-filter.js?v={{.CacheVersion}}">
 
-    {{/* ─── Filter Button ─── */}}
-    {{template "report-filter-btn" .}}
-
-    {{/* ─── Summary Bar ─── */}}
-    <div class="report-summary-bar">
-        {{range .Summary}}
-        <div class="summary-metric{{if .Highlight}} highlight{{end}}">
-            <span class="summary-label">{{.Label}}</span>
-            {{if .Variant}}
-            <span class="summary-value badge {{.Variant}}">{{.Value}}</span>
-            {{else}}
-            <span class="summary-value">{{.Value}}</span>
-            {{end}}
+    {{/* ─── Toolbar: Filter button + active filter chips + export ─── */}}
+    <div class="rr-toolbar">
+        {{template "report-filter-btn" .}}
+        <div class="rr-active-filters">
+            <span class="rr-chip" data-testid="rr-chip-primary">
+                <span class="rr-chip-label">Columns:</span>
+                <span class="rr-chip-value">{{.PrimaryDimension}}</span>
+            </span>
+            <span class="rr-chip-sep">&times;</span>
+            <span class="rr-chip" data-testid="rr-chip-rows">
+                <span class="rr-chip-label">Rows:</span>
+                <span class="rr-chip-value">{{.RowDimension}}</span>
+            </span>
         </div>
-        {{end}}
-    </div>
-
-    {{/* ─── Export CSV Button ─── */}}
-    <div class="report-actions">
-        <a href="{{.ExportURL}}" class="btn btn-outline" data-testid="revenue-report-export-csv">
-            {{.Labels.ExportCsv}}
-        </a>
     </div>
 
     {{/* ─── Table Card ─── */}}

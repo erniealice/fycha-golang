@@ -36,6 +36,7 @@ type PageData struct {
 	Filter            fycha.FilterState
 	PeriodLabels      fycha.PeriodLabels
 	ReportURL         string
+	FilterSheetURL    string
 	ExportURL         string
 	ActiveFilterCount int
 	PrimaryDimension  string
@@ -176,6 +177,9 @@ func NewView(deps *Deps) view.View {
 		// Build export URL with current query params
 		exportURL := buildExportURL(deps.Routes.RevenueReportExportURL, primary, rows, period, startDateStr, endDateStr)
 
+		// Build filter sheet URL — carries current state so the sheet reflects active filters
+		filterSheetURL := buildFilterSheetURL(reportURL, primary, rows, period, startDateStr, endDateStr)
+
 		// Count active filters
 		activeCount := 0
 		if period != "" && period != "thisMonth" {
@@ -206,6 +210,7 @@ func NewView(deps *Deps) view.View {
 			Filter:            filter,
 			PeriodLabels:      pl,
 			ReportURL:         reportURL,
+			FilterSheetURL:    filterSheetURL,
 			ExportURL:         exportURL,
 			ActiveFilterCount: activeCount,
 			PrimaryDimension:  primary,
@@ -271,20 +276,21 @@ func buildPivotTable(resp *revreportpb.RevenueReportResponse, l fycha.RevenueRep
 			Label:    ck,
 			Sortable: true,
 			Align:    "right",
-			MinWidth: "120px",
+			MinWidth: "7.5rem",
 		})
 	}
 
 	table := &types.TableConfig{
-		ID:          "revenueReportTable",
-		ShowSearch:  false,
-		ShowFilters: false,
-		ShowSort:    true,
-		ShowColumns: true,
-		ShowExport:  true,
-		ShowEntries: true,
-		ShowDensity: true,
-		Labels:      tableLabels,
+		ID:              "revenueReportTable",
+		NameColumnLabel: l.PrimaryGroupLabel(rowDim),
+		ShowSearch:      false,
+		ShowFilters:     false,
+		ShowSort:        false,
+		ShowColumns:     false,
+		ShowExport:      true,
+		ShowEntries:     true,
+		ShowDensity:     true,
+		Labels:          tableLabels,
 		ColumnGroups: []types.ColumnGroup{
 			{
 				Label:   l.PrimaryGroupLabel(primary),
@@ -293,7 +299,7 @@ func buildPivotTable(resp *revreportpb.RevenueReportResponse, l fycha.RevenueRep
 			{
 				Label: "",
 				Columns: []types.TableColumn{
-					{Key: "total", Label: l.Total, Sortable: true, Align: "right", MinWidth: "130px"},
+					{Key: "total", Label: l.Total, Sortable: true, Align: "right", MinWidth: "8.125rem"},
 				},
 			},
 		},
@@ -401,6 +407,21 @@ func buildExportURL(base, primary, rows, period, start, end string) string {
 	return base + "?" + params.Encode()
 }
 
+func buildFilterSheetURL(base, primary, rows, period, start, end string) string {
+	params := url.Values{}
+	params.Set("sheet", "filters")
+	params.Set("primary", primary)
+	params.Set("rows", rows)
+	params.Set("period", period)
+	if start != "" {
+		params.Set("start", start)
+	}
+	if end != "" {
+		params.Set("end", end)
+	}
+	return base + "?" + params.Encode()
+}
+
 func formatCurrency(amount float64) string {
 	negative := amount < 0
 	if negative {
@@ -426,7 +447,7 @@ func formatCurrency(amount float64) string {
 	}
 	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
 	if negative {
-		formatted = "-" + formatted
+		formatted = "(" + formatted + ")"
 	}
 	return formatted
 }
