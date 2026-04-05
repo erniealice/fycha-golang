@@ -3,6 +3,7 @@ package expenditure_report
 import (
 	"context"
 	"fmt"
+	"html/template"
 	"log"
 	"net/url"
 	"strconv"
@@ -171,16 +172,6 @@ func NewView(deps *Deps) view.View {
 		// Build pivot table
 		table := buildPivotTable(resp, l, deps.TableLabels, primary, rows)
 
-		filter := fycha.FilterState{
-			ActivePreset:  period,
-			StartDate:     startDateStr,
-			EndDate:       endDateStr,
-			PeriodPresets: fycha.DefaultPeriodPresets(pl, period),
-		}
-
-		// Build export URL with current query params
-		exportURL := buildExportURL(deps.Routes.ExpenditureReportExportURL, primary, rows, period, startDateStr, endDateStr)
-
 		// Build filter sheet URL
 		filterSheetURL := buildFilterSheetURL(reportURL, primary, rows, period, startDateStr, endDateStr)
 
@@ -196,18 +187,31 @@ func NewView(deps *Deps) view.View {
 			activeCount++
 		}
 
+		// Inject filter button + dimension chips into the table toolbar prefix
+		table.ToolbarPrefix = buildToolbarPrefix(filterSheetURL, activeCount, "Columns:", primary, "Rows:", rows)
+
+		filter := fycha.FilterState{
+			ActivePreset:  period,
+			StartDate:     startDateStr,
+			EndDate:       endDateStr,
+			PeriodPresets: fycha.DefaultPeriodPresets(pl, period),
+		}
+
+		// Build export URL with current query params
+		exportURL := buildExportURL(deps.Routes.ExpenditureReportExportURL, primary, rows, period, startDateStr, endDateStr)
+
 		pageData := &PageData{
 			PageData: types.PageData{
 				CacheVersion: viewCtx.CacheVersion,
 				Title:        l.Title,
 				CurrentPath:  viewCtx.CurrentPath,
-				ActiveNav:    "report",
+				ActiveNav:    "expense",
 				ActiveSubNav: "expenditure-report",
 				HeaderTitle:  l.Title,
 				HeaderIcon:   "icon-bar-chart",
 				CommonLabels: deps.CommonLabels,
 			},
-			ContentTemplate:   "expenditure-report-content",
+			ContentTemplate:   "expenditure-report",
 			Labels:            l,
 			Summary:           summary,
 			Table:             table,
@@ -423,6 +427,23 @@ func buildFilterSheetURL(base, primary, rows, period, start, end string) string 
 		params.Set("end", end)
 	}
 	return base + "?" + params.Encode()
+}
+
+// buildToolbarPrefix builds the filter button + chips HTML for the table toolbar prefix slot.
+func buildToolbarPrefix(filterSheetURL string, activeCount int, primaryLabel, primary, rowsLabel, rows string) template.HTML {
+	badgeHTML := ""
+	if activeCount > 0 {
+		badgeHTML = fmt.Sprintf(`<span class="filter-count-badge">%d</span>`, activeCount)
+	}
+	return template.HTML(fmt.Sprintf(
+		`<div class="report-header-actions"><button type="button" class="fycha-filter-btn" data-testid="report-filters-open-btn" aria-controls="sheetContent" aria-haspopup="dialog" hx-get="%s" hx-target="#sheetContent" hx-swap="innerHTML" hx-push-url="false" onclick="Sheet.open('Filters')"><svg class="icon" aria-hidden="true"><use href="#icon-filter"></use></svg><span>Filters</span>%s</button></div><div class="rr-active-filters"><span class="rr-chip" data-testid="rr-chip-primary"><span class="rr-chip-label">%s</span> <span class="rr-chip-value">%s</span></span><span class="rr-chip-sep">&times;</span><span class="rr-chip" data-testid="rr-chip-rows"><span class="rr-chip-label">%s</span> <span class="rr-chip-value">%s</span></span></div>`,
+		template.HTMLEscapeString(filterSheetURL),
+		badgeHTML,
+		template.HTMLEscapeString(primaryLabel),
+		template.HTMLEscapeString(primary),
+		template.HTMLEscapeString(rowsLabel),
+		template.HTMLEscapeString(rows),
+	))
 }
 
 func formatCurrency(amount float64) string {

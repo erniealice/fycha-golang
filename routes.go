@@ -16,6 +16,8 @@ const (
 	ReportsDisbursementReportExportURL = "/app/reports/disbursement-report/export"
 	ReportsReceivablesAgingReportURL       = "/app/reports/receivables-aging"
 	ReportsReceivablesAgingReportExportURL = "/app/reports/receivables-aging/export"
+	ReportsPayablesAgingReportURL          = "/app/suppliers/reports/payables-aging"
+	ReportsPayablesAgingReportExportURL    = "/app/suppliers/reports/payables-aging/export"
 	ReportsCollectionSummaryReportURL       = "/app/reports/collection-summary"
 	ReportsCollectionSummaryReportExportURL = "/app/reports/collection-summary/export"
 

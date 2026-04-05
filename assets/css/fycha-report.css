@@ -225,7 +225,7 @@
     opacity: 0.35;
     transition: opacity 0.1s ease;
 }
-.page-content.report-layout.htmx-request .rr-toolbar::after {
+.page-content.report-layout.htmx-request .table-toolbar .toolbar-prefix::after {
     content: '';
     display: inline-block;
     width: 1rem;

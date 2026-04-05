@@ -1,0 +1,55 @@
+{{/* Payables Aging Report filter sheet — loaded into #sheetContent via HTMX.
+     Expects FilterSheetData with Labels, ReportURL, AsOfDate, RowDimension, RowOptions. */}}
+
+{{define "payables-aging-report-filter-sheet"}}
+<form class="filter-sheet-form rr-filter-form"
+      id="payablesAgingFilterForm"
+      hx-get="{{.ReportURL}}"
+      hx-target=".page-content"
+      hx-swap="innerHTML show:none"
+      hx-push-url="true"
+      hx-indicator=".page-content"
+      hx-on::before-request="Sheet.close()"
+      hx-on::after-settle="window.scrollTo(0,0)">
+
+    <div class="rr-filter-body">
+
+    {{/* ─── As-of Date Section ─── */}}
+    <div class="filter-sheet-section">
+        <h4 class="rr-dim-group-label">{{.Labels.FilterAsOfDate}}</h4>
+        <div class="filter-dates">
+            <input type="date" name="as-of-date" value="{{.AsOfDate}}"
+                   class="form-input" data-testid="aging-as-of-date">
+        </div>
+    </div>
+
+    {{/* ─── Row Dimension Section ─── */}}
+    <div class="filter-sheet-section">
+        <h4 class="rr-dim-group-label">{{.Labels.FilterRowDimension}}</h4>
+        <div class="groupby-options">
+            {{range .RowOptions}}
+            <label class="groupby-option{{if .Selected}} active{{end}}">
+                <input type="radio" name="rows" value="{{.Value}}"{{if .Selected}} checked{{end}}>
+                <span>{{.Label}}</span>
+            </label>
+            {{end}}
+        </div>
+    </div>
+
+    </div>{{/* end .rr-filter-body */}}
+
+    {{/* ─── Sticky Footer ─── */}}
+    <div class="rr-filter-footer">
+        <button type="submit" class="btn btn-primary rr-apply-btn"
+                data-testid="report-filters-apply">Apply</button>
+        <a href="{{.ReportURL}}" class="btn btn-ghost"
+           data-testid="report-filters-clear"
+           hx-get="{{.ReportURL}}"
+           hx-target=".page-content"
+           hx-swap="innerHTML show:none"
+           hx-push-url="true"
+           hx-indicator=".page-content"
+           hx-on::before-request="Sheet.close()">Clear</a>
+    </div>
+</form>
+{{end}}

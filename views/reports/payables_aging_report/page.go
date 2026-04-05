@@ -1,9 +1,8 @@
-package receivables_aging_report
+package payables_aging_report
 
 import (
 	"context"
 	"fmt"
-	"html/template"
 	"log"
 	"net/url"
 	"strconv"
@@ -11,7 +10,7 @@ import (
 
 	fycha "github.com/erniealice/fycha-golang"
 
-	agingpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/receivables_aging"
+	payagingpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/payables_aging"
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
@@ -27,11 +26,11 @@ type Deps struct {
 	Routes       fycha.ReportsRoutes
 }
 
-// PageData holds the data for the receivables aging report page.
+// PageData holds the data for the payables aging report page.
 type PageData struct {
 	types.PageData
 	ContentTemplate   string
-	Labels            fycha.ReceivablesAgingReportLabels
+	Labels            fycha.PayablesAgingReportLabels
 	Summary           []fycha.SummaryMetric
 	Table             *types.TableConfig
 	AsOfDate          string
@@ -43,10 +42,10 @@ type PageData struct {
 	ActiveFilterCount int
 }
 
-// NewView creates the receivables aging report view.
+// NewView creates the payables aging report view.
 func NewView(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
-		l := deps.Labels.ReceivablesAging
+		l := deps.Labels.PayablesAging
 
 		// Parse query params
 		asOfDate := viewCtx.QueryParams["as-of-date"]
@@ -55,30 +54,31 @@ func NewView(deps *Deps) view.View {
 		}
 		rows := viewCtx.QueryParams["rows"]
 		if rows == "" {
-			rows = "client"
+			rows = "supplier"
 		}
 
 		// Secondary filter IDs
-		clientID := viewCtx.QueryParams["client-id"]
+		supplierID := viewCtx.QueryParams["supplier-id"]
 		locationID := viewCtx.QueryParams["location-id"]
-		revenueCategoryID := viewCtx.QueryParams["revenue-category-id"]
+		expenditureCategoryID := viewCtx.QueryParams["expenditure-category-id"]
 
 		reportURL := viewCtx.CurrentPath
 		if reportURL == "" {
-			reportURL = deps.Routes.ReceivablesAgingReportURL
+			reportURL = deps.Routes.PayablesAgingReportURL
 		}
 
 		// Build row dimension options
 		rowOptions := []fycha.FilterOption{
-			{Value: "client", Label: l.DimensionClient, Selected: rows == "client"},
-			{Value: "clientCategory", Label: l.DimensionClientCategory, Selected: rows == "clientCategory"},
+			{Value: "supplier", Label: l.DimensionSupplier, Selected: rows == "supplier"},
+			{Value: "supplierCategory", Label: l.DimensionSupplierCategory, Selected: rows == "supplierCategory"},
 			{Value: "location", Label: l.DimensionLocation, Selected: rows == "location"},
 			{Value: "locationArea", Label: l.DimensionLocationArea, Selected: rows == "locationArea"},
+			{Value: "expenditureCategory", Label: l.DimensionExpenditureCategory, Selected: rows == "expenditureCategory"},
 		}
 
 		// Handle filter sheet request
 		if viewCtx.QueryParams["sheet"] == "filters" {
-			return view.OK("receivables-aging-report-filter-sheet", &FilterSheetData{
+			return view.OK("payables-aging-report-filter-sheet", &FilterSheetData{
 				Labels:       l,
 				ReportURL:    reportURL,
 				AsOfDate:     asOfDate,
@@ -88,30 +88,30 @@ func NewView(deps *Deps) view.View {
 		}
 
 		// Build proto request
-		req := &agingpb.ReceivablesAgingRequest{
+		req := &payagingpb.PayablesAgingRequest{
 			AsOfDate:     &asOfDate,
 			RowDimension: rows,
 		}
 
 		// Apply optional secondary filters
-		if clientID != "" {
-			req.ClientId = &clientID
+		if supplierID != "" {
+			req.SupplierId = &supplierID
 		}
 		if locationID != "" {
 			req.LocationId = &locationID
 		}
-		if revenueCategoryID != "" {
-			req.RevenueCategoryId = &revenueCategoryID
+		if expenditureCategoryID != "" {
+			req.ExpenditureCategoryId = &expenditureCategoryID
 		}
 
 		// Call data source
-		resp, err := deps.DB.GetReceivablesAgingReport(ctx, req)
+		resp, err := deps.DB.GetPayablesAgingReport(ctx, req)
 		if err != nil {
-			log.Printf("Failed to get receivables aging report: %v", err)
-			resp = &agingpb.ReceivablesAgingResponse{
+			log.Printf("Failed to get payables aging report: %v", err)
+			resp = &payagingpb.PayablesAgingResponse{
 				BucketLabels: []string{},
-				Rows:         []*agingpb.ReceivablesAgingRow{},
-				Summary:      &agingpb.ReceivablesAgingSummary{},
+				Rows:         []*payagingpb.PayablesAgingRow{},
+				Summary:      &payagingpb.PayablesAgingSummary{},
 			}
 		}
 
@@ -122,35 +122,32 @@ func NewView(deps *Deps) view.View {
 		table := buildTable(resp, l, deps.TableLabels, rows)
 
 		// Build export URL with current query params
-		exportURL := buildExportURL(deps.Routes.ReceivablesAgingReportExportURL, asOfDate, rows)
+		exportURL := buildExportURL(deps.Routes.PayablesAgingReportExportURL, asOfDate, rows)
 
 		// Build filter sheet URL
 		filterSheetURL := buildFilterSheetURL(reportURL, asOfDate, rows)
 
 		// Count active filters
 		activeCount := 0
-		if rows != "" && rows != "client" {
+		if rows != "" && rows != "supplier" {
 			activeCount++
 		}
 		if asOfDate != "" && asOfDate != time.Now().Format("2006-01-02") {
 			activeCount++
 		}
 
-		// Inject filter button + dimension chips into the table toolbar prefix
-		table.ToolbarPrefix = buildAgingToolbarPrefix(filterSheetURL, activeCount, asOfDate, rows)
-
 		pageData := &PageData{
 			PageData: types.PageData{
 				CacheVersion: viewCtx.CacheVersion,
 				Title:        l.PageTitle,
 				CurrentPath:  viewCtx.CurrentPath,
-				ActiveNav:    "report",
-				ActiveSubNav: "receivables-aging-report",
+				ActiveNav:    "supplier",
+				ActiveSubNav: "payables-aging-report",
 				HeaderTitle:  l.PageTitle,
 				HeaderIcon:   "icon-bar-chart",
 				CommonLabels: deps.CommonLabels,
 			},
-			ContentTemplate:   "receivables-aging-report",
+			ContentTemplate:   "payables-aging-report",
 			Labels:            l,
 			Summary:           summary,
 			Table:             table,
@@ -166,7 +163,7 @@ func NewView(deps *Deps) view.View {
 		// KB help content
 		if viewCtx.Translations != nil {
 			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
-				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "report-receivables-aging-report"); kb != nil {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "report-payables-aging-report"); kb != nil {
 					pageData.HasHelp = true
 					pageData.HelpContent = kb.Body
 				}
@@ -174,24 +171,24 @@ func NewView(deps *Deps) view.View {
 		}
 
 		if viewCtx.IsHTMX {
-			return view.OK("receivables-aging-report-content", pageData)
+			return view.OK("payables-aging-report-content", pageData)
 		}
-		return view.OK("receivables-aging-report", pageData)
+		return view.OK("payables-aging-report", pageData)
 	})
 }
 
-// FilterSheetData holds data for the receivables aging report filter sheet template.
+// FilterSheetData holds data for the payables aging report filter sheet template.
 type FilterSheetData struct {
-	Labels       fycha.ReceivablesAgingReportLabels
+	Labels       fycha.PayablesAgingReportLabels
 	ReportURL    string
 	AsOfDate     string
 	RowDimension string
 	RowOptions   []fycha.FilterOption
 }
 
-func buildSummary(s *agingpb.ReceivablesAgingSummary, l fycha.ReceivablesAgingReportLabels) []fycha.SummaryMetric {
+func buildSummary(s *payagingpb.PayablesAgingSummary, l fycha.PayablesAgingReportLabels) []fycha.SummaryMetric {
 	if s == nil {
-		s = &agingpb.ReceivablesAgingSummary{}
+		s = &payagingpb.PayablesAgingSummary{}
 	}
 	grandTotal := float64(s.GetGrandTotalOutstanding()) / 100.0
 	invoiceCount := s.GetTotalInvoiceCount()
@@ -210,7 +207,7 @@ func buildSummary(s *agingpb.ReceivablesAgingSummary, l fycha.ReceivablesAgingRe
 	}
 }
 
-func buildTable(resp *agingpb.ReceivablesAgingResponse, l fycha.ReceivablesAgingReportLabels, tableLabels types.TableLabels, rowDim string) *types.TableConfig {
+func buildTable(resp *payagingpb.PayablesAgingResponse, l fycha.PayablesAgingReportLabels, tableLabels types.TableLabels, rowDim string) *types.TableConfig {
 	// Fixed columns for aging buckets
 	columns := []types.TableColumn{
 		{Key: "current", Label: l.BucketCurrent, Sortable: true, Align: "right", MinWidth: "7.5rem"},
@@ -223,7 +220,7 @@ func buildTable(resp *agingpb.ReceivablesAgingResponse, l fycha.ReceivablesAging
 	}
 
 	table := &types.TableConfig{
-		ID:              "receivablesAgingTable",
+		ID:              "payablesAgingReportTable",
 		NameColumnLabel: rowDimensionLabel(l, rowDim),
 		Columns:         columns,
 		ShowSearch:      false,
@@ -244,7 +241,7 @@ func buildTable(resp *agingpb.ReceivablesAgingResponse, l fycha.ReceivablesAging
 	for _, row := range resp.GetRows() {
 		b := row.GetBuckets()
 		if b == nil {
-			b = &agingpb.AgingBuckets{}
+			b = &payagingpb.PayablesAgingBuckets{}
 		}
 
 		cells := []types.TableCell{
@@ -284,7 +281,7 @@ func buildTable(resp *agingpb.ReceivablesAgingResponse, l fycha.ReceivablesAging
 	if summary != nil && len(resp.GetRows()) > 0 {
 		sb := summary.GetBuckets()
 		if sb == nil {
-			sb = &agingpb.AgingBuckets{}
+			sb = &payagingpb.PayablesAgingBuckets{}
 		}
 		table.TotalsRow = []types.TableCell{
 			{Value: "Total"},
@@ -301,7 +298,7 @@ func buildTable(resp *agingpb.ReceivablesAgingResponse, l fycha.ReceivablesAging
 	return table
 }
 
-func rowDimensionLabel(l fycha.ReceivablesAgingReportLabels, dim string) string {
+func rowDimensionLabel(l fycha.PayablesAgingReportLabels, dim string) string {
 	return l.PrimaryGroupLabel(dim)
 }
 
@@ -318,21 +315,6 @@ func buildFilterSheetURL(base, asOfDate, rows string) string {
 	params.Set("as-of-date", asOfDate)
 	params.Set("rows", rows)
 	return base + "?" + params.Encode()
-}
-
-// buildAgingToolbarPrefix builds the filter button + chips HTML for the receivables aging toolbar prefix slot.
-func buildAgingToolbarPrefix(filterSheetURL string, activeCount int, asOfDate, rowDim string) template.HTML {
-	badgeHTML := ""
-	if activeCount > 0 {
-		badgeHTML = fmt.Sprintf(`<span class="filter-count-badge">%d</span>`, activeCount)
-	}
-	return template.HTML(fmt.Sprintf(
-		`<div class="report-header-actions"><button type="button" class="fycha-filter-btn" data-testid="report-filters-open-btn" aria-controls="sheetContent" aria-haspopup="dialog" hx-get="%s" hx-target="#sheetContent" hx-swap="innerHTML" hx-push-url="false" onclick="Sheet.open('Filters')"><svg class="icon" aria-hidden="true"><use href="#icon-filter"></use></svg><span>Filters</span>%s</button></div><div class="rr-active-filters"><span class="rr-chip" data-testid="rr-chip-as-of-date"><span class="rr-chip-label">As of:</span> <span class="rr-chip-value">%s</span></span><span class="rr-chip-sep">&middot;</span><span class="rr-chip" data-testid="rr-chip-rows"><span class="rr-chip-label">Group by:</span> <span class="rr-chip-value">%s</span></span></div>`,
-		template.HTMLEscapeString(filterSheetURL),
-		badgeHTML,
-		template.HTMLEscapeString(asOfDate),
-		template.HTMLEscapeString(rowDim),
-	))
 }
 
 func formatCurrency(amount float64) string {

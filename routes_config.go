@@ -41,6 +41,9 @@ type ReportsRoutes struct {
 	// Receivables Aging Report
 	ReceivablesAgingReportURL       string `json:"receivables_aging_report_url"`
 	ReceivablesAgingReportExportURL string `json:"receivables_aging_report_export_url"`
+	// Payables Aging Report
+	PayablesAgingReportURL       string `json:"payables_aging_report_url"`
+	PayablesAgingReportExportURL string `json:"payables_aging_report_export_url"`
 	// Collection Summary Report pivot table
 	CollectionSummaryReportURL       string `json:"collection_summary_report_url"`
 	CollectionSummaryReportExportURL string `json:"collection_summary_report_export_url"`
@@ -67,6 +70,8 @@ func DefaultReportsRoutes() ReportsRoutes {
 		DisbursementReportExportURL: ReportsDisbursementReportExportURL,
 		ReceivablesAgingReportURL:       ReportsReceivablesAgingReportURL,
 		ReceivablesAgingReportExportURL: ReportsReceivablesAgingReportExportURL,
+		PayablesAgingReportURL:          ReportsPayablesAgingReportURL,
+		PayablesAgingReportExportURL:    ReportsPayablesAgingReportExportURL,
 		CollectionSummaryReportURL:       ReportsCollectionSummaryReportURL,
 		CollectionSummaryReportExportURL: ReportsCollectionSummaryReportExportURL,
 	}
@@ -93,6 +98,8 @@ func (r ReportsRoutes) RouteMap() map[string]string {
 		"reports.disbursement_report_export": r.DisbursementReportExportURL,
 		"reports.receivables_aging_report":        r.ReceivablesAgingReportURL,
 		"reports.receivables_aging_report_export": r.ReceivablesAgingReportExportURL,
+		"reports.payables_aging_report":           r.PayablesAgingReportURL,
+		"reports.payables_aging_report_export":    r.PayablesAgingReportExportURL,
 		"reports.collection_summary_report":        r.CollectionSummaryReportURL,
 		"reports.collection_summary_report_export": r.CollectionSummaryReportExportURL,
 	}

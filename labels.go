@@ -55,6 +55,7 @@ type ReportsLabels struct {
 	ExpenditureReport   ExpenditureReportLabels   `json:"expenditureReport"`
 	DisbursementReport  DisbursementReportLabels  `json:"disbursementReport"`
 	ReceivablesAging    ReceivablesAgingReportLabels    `json:"receivablesAging"`
+	PayablesAging       PayablesAgingReportLabels       `json:"payablesAging"`
 	CollectionSummary   CollectionSummaryReportLabels   `json:"collectionSummary"`
 	CostOfSales     CostOfSalesLabels     `json:"costOfSales"`
 	Expenses        ExpensesLabels        `json:"expenses"`
@@ -2956,6 +2957,50 @@ func (l ReceivablesAgingReportLabels) PrimaryGroupLabel(dim string) string {
 		return l.DimensionLocation
 	case "locationArea":
 		return l.DimensionLocationArea
+	default:
+		return dim
+	}
+}
+
+// PayablesAgingReportLabels holds translatable strings for the payables aging report.
+type PayablesAgingReportLabels struct {
+	PageTitle        string `json:"page_title"`
+	PageDescription  string `json:"page_description"`
+	BucketCurrent    string `json:"bucket_current"`
+	Bucket1To30      string `json:"bucket_1_to_30"`
+	Bucket31To60     string `json:"bucket_31_to_60"`
+	Bucket61To90     string `json:"bucket_61_to_90"`
+	BucketOver90     string `json:"bucket_over_90"`
+	TotalOutstanding string `json:"total_outstanding"`
+	InvoiceCount     string `json:"invoice_count"`
+	SummaryGrandTotal    string `json:"summary_grand_total"`
+	SummaryInvoiceCount  string `json:"summary_invoice_count"`
+	SummaryOverdueAmount string `json:"summary_overdue_amount"`
+	EmptyTitle         string `json:"empty_title"`
+	EmptyMessage       string `json:"empty_message"`
+	ExportFilename     string `json:"export_filename"`
+	FilterAsOfDate     string `json:"filter_as_of_date"`
+	FilterRowDimension string `json:"filter_row_dimension"`
+	DimensionSupplier             string `json:"dimension_supplier"`
+	DimensionSupplierCategory     string `json:"dimension_supplier_category"`
+	DimensionLocation             string `json:"dimension_location"`
+	DimensionLocationArea         string `json:"dimension_location_area"`
+	DimensionExpenditureCategory  string `json:"dimension_expenditure_category"`
+}
+
+// PrimaryGroupLabel returns the display label for the given dimension string.
+func (l PayablesAgingReportLabels) PrimaryGroupLabel(dim string) string {
+	switch dim {
+	case "supplier":
+		return l.DimensionSupplier
+	case "supplierCategory":
+		return l.DimensionSupplierCategory
+	case "location":
+		return l.DimensionLocation
+	case "locationArea":
+		return l.DimensionLocationArea
+	case "expenditureCategory":
+		return l.DimensionExpenditureCategory
 	default:
 		return dim
 	}

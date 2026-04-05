@@ -19,6 +19,7 @@ import (
 	expenditurereport "github.com/erniealice/fycha-golang/views/reports/expenditure_report"
 	revenuereport "github.com/erniealice/fycha-golang/views/reports/revenue_report"
 	receivablesagingreport "github.com/erniealice/fycha-golang/views/reports/receivables_aging_report"
+	payablesagingreport "github.com/erniealice/fycha-golang/views/reports/payables_aging_report"
 	collectionsummaryreport "github.com/erniealice/fycha-golang/views/reports/collection_summary_report"
 )
 
@@ -70,6 +71,8 @@ type Module struct {
 	DisbursementReportExport http.HandlerFunc
 	ReceivablesAgingReport        view.View
 	ReceivablesAgingReportExport  http.HandlerFunc
+	PayablesAgingReport           view.View
+	PayablesAgingReportExport     http.HandlerFunc
 	CollectionSummaryReport       view.View
 	CollectionSummaryReportExport http.HandlerFunc
 }
@@ -145,6 +148,20 @@ func NewModule(deps *ModuleDeps) *Module {
 			TableLabels:  deps.TableLabels,
 			Routes:       deps.Routes,
 		}),
+		PayablesAgingReport: payablesagingreport.NewView(&payablesagingreport.Deps{
+			DB:           deps.DB,
+			Labels:       deps.Labels,
+			CommonLabels: deps.CommonLabels,
+			TableLabels:  deps.TableLabels,
+			Routes:       deps.Routes,
+		}),
+		PayablesAgingReportExport: payablesagingreport.NewExportHandler(&payablesagingreport.Deps{
+			DB:           deps.DB,
+			Labels:       deps.Labels,
+			CommonLabels: deps.CommonLabels,
+			TableLabels:  deps.TableLabels,
+			Routes:       deps.Routes,
+		}),
 		CollectionSummaryReport: collectionsummaryreport.NewView(&collectionsummaryreport.Deps{
 			DB:           deps.DB,
 			Labels:       deps.Labels,
@@ -177,6 +194,8 @@ func (m *Module) RegisterRoutes(r view.RouteRegistrar) {
 	handleFunc(r, "GET", m.routes.DisbursementReportExportURL, m.DisbursementReportExport)
 	r.GET(m.routes.ReceivablesAgingReportURL, m.ReceivablesAgingReport)
 	handleFunc(r, "GET", m.routes.ReceivablesAgingReportExportURL, m.ReceivablesAgingReportExport)
+	r.GET(m.routes.PayablesAgingReportURL, m.PayablesAgingReport)
+	handleFunc(r, "GET", m.routes.PayablesAgingReportExportURL, m.PayablesAgingReportExport)
 	r.GET(m.routes.CollectionSummaryReportURL, m.CollectionSummaryReport)
 	handleFunc(r, "GET", m.routes.CollectionSummaryReportExportURL, m.CollectionSummaryReportExport)
 }
