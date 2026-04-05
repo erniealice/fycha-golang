@@ -10,6 +10,14 @@ const (
 	ReportsNetProfitURL           = "/app/reports/net-profit"
 	ReportsRevenueReportURL       = "/app/reports/revenue-report"
 	ReportsRevenueReportExportURL = "/app/reports/revenue-report/export"
+	ReportsExpenditureReportURL       = "/app/reports/expenditure-report"
+	ReportsExpenditureReportExportURL = "/app/reports/expenditure-report/export"
+	ReportsDisbursementReportURL       = "/app/reports/disbursement-report"
+	ReportsDisbursementReportExportURL = "/app/reports/disbursement-report/export"
+	ReportsReceivablesAgingReportURL       = "/app/reports/receivables-aging"
+	ReportsReceivablesAgingReportExportURL = "/app/reports/receivables-aging/export"
+	ReportsCollectionSummaryReportURL       = "/app/reports/collection-summary"
+	ReportsCollectionSummaryReportExportURL = "/app/reports/collection-summary/export"
 
 	// StorageImagesPrefix is the default route prefix for image serving.
 	StorageImagesPrefix = "/storage/images"

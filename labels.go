@@ -52,6 +52,10 @@ type ReportsLabels struct {
 	GrossProfit     GrossProfitLabels     `json:"grossProfit"`
 	Revenue         RevenueLabels         `json:"revenue"`
 	RevenueReport   RevenueReportLabels   `json:"revenueReport"`
+	ExpenditureReport   ExpenditureReportLabels   `json:"expenditureReport"`
+	DisbursementReport  DisbursementReportLabels  `json:"disbursementReport"`
+	ReceivablesAging    ReceivablesAgingReportLabels    `json:"receivablesAging"`
+	CollectionSummary   CollectionSummaryReportLabels   `json:"collectionSummary"`
 	CostOfSales     CostOfSalesLabels     `json:"costOfSales"`
 	Expenses        ExpensesLabels        `json:"expenses"`
 	NetProfit       NetProfitLabels       `json:"netProfit"`
@@ -2691,9 +2695,11 @@ type RevenueReportLabels struct {
 	DimensionYearly       string `json:"dimensionYearly"`
 	DimensionProduct      string `json:"dimensionProduct"`
 	DimensionProductLine  string `json:"dimensionProductLine"`
-	DimensionLocation     string `json:"dimensionLocation"`
-	DimensionLocationArea string `json:"dimensionLocationArea"`
-	SummaryGrandTotal     string `json:"summaryGrandTotal"`
+	DimensionLocation       string `json:"dimensionLocation"`
+	DimensionLocationArea   string `json:"dimensionLocationArea"`
+	DimensionClient         string `json:"dimensionClient"`
+	DimensionClientCategory string `json:"dimensionClientCategory"`
+	SummaryGrandTotal       string `json:"summaryGrandTotal"`
 	SummaryTransactions   string `json:"summaryTransactions"`
 	SummaryAverage        string `json:"summaryAverage"`
 	Total                 string `json:"total"`
@@ -2722,6 +2728,10 @@ func (l RevenueReportLabels) PrimaryGroupLabel(dim string) string {
 		return l.DimensionLocation
 	case "locationArea":
 		return l.DimensionLocationArea
+	case "client", "client_category":
+		return l.DimensionClient
+	case "clientCategory":
+		return l.DimensionClientCategory
 	default:
 		return dim
 	}
@@ -2740,6 +2750,283 @@ func (l RevenueReportLabels) DimensionOptions(active string) []FilterOption {
 		{"productLine", l.DimensionProductLine},
 		{"location", l.DimensionLocation},
 		{"locationArea", l.DimensionLocationArea},
+		{"client", l.DimensionClient},
+		{"clientCategory", l.DimensionClientCategory},
+	}
+	opts := make([]FilterOption, len(dims))
+	for i, d := range dims {
+		opts[i] = FilterOption{Value: d.value, Label: d.label, Selected: d.value == active}
+	}
+	return opts
+}
+
+// ExpenditureReportLabels holds labels for the expenditure report pivot table view.
+type ExpenditureReportLabels struct {
+	Title                    string `json:"title"`
+	Subtitle                 string `json:"subtitle"`
+	ColumnDimension          string `json:"columnDimension"`
+	RowDimension             string `json:"rowDimension"`
+	DimensionMonthly         string `json:"dimensionMonthly"`
+	DimensionQuarterly       string `json:"dimensionQuarterly"`
+	DimensionYearly          string `json:"dimensionYearly"`
+	DimensionProduct         string `json:"dimensionProduct"`
+	DimensionProductLine     string `json:"dimensionProductLine"`
+	DimensionLocation        string `json:"dimensionLocation"`
+	DimensionLocationArea    string `json:"dimensionLocationArea"`
+	DimensionCategory        string `json:"dimensionCategory"`
+	DimensionSupplier        string `json:"dimensionSupplier"`
+	DimensionExpenditureType string `json:"dimensionExpenditureType"`
+	SummaryGrandTotal        string `json:"summaryGrandTotal"`
+	SummaryTransactions      string `json:"summaryTransactions"`
+	SummaryAverage           string `json:"summaryAverage"`
+	Total                    string `json:"total"`
+	Totals                   string `json:"totals"`
+	ExportCsv                string `json:"exportCsv"`
+	Apply                    string `json:"apply"`
+	Clear                    string `json:"clear"`
+	EmptyTitle               string `json:"emptyTitle"`
+	EmptyMessage             string `json:"emptyMessage"`
+}
+
+// PrimaryGroupLabel returns the display label for the given dimension string.
+func (l ExpenditureReportLabels) PrimaryGroupLabel(dim string) string {
+	switch dim {
+	case "monthly":
+		return l.DimensionMonthly
+	case "quarterly":
+		return l.DimensionQuarterly
+	case "yearly":
+		return l.DimensionYearly
+	case "product":
+		return l.DimensionProduct
+	case "productLine":
+		return l.DimensionProductLine
+	case "location":
+		return l.DimensionLocation
+	case "locationArea":
+		return l.DimensionLocationArea
+	case "category":
+		return l.DimensionCategory
+	case "supplier":
+		return l.DimensionSupplier
+	case "expenditureType":
+		return l.DimensionExpenditureType
+	default:
+		return dim
+	}
+}
+
+// DimensionOptions returns all dimension choices as FilterOption slices.
+func (l ExpenditureReportLabels) DimensionOptions(active string) []FilterOption {
+	dims := []struct {
+		value string
+		label string
+	}{
+		{"monthly", l.DimensionMonthly},
+		{"quarterly", l.DimensionQuarterly},
+		{"yearly", l.DimensionYearly},
+		{"product", l.DimensionProduct},
+		{"productLine", l.DimensionProductLine},
+		{"location", l.DimensionLocation},
+		{"locationArea", l.DimensionLocationArea},
+		{"category", l.DimensionCategory},
+		{"supplier", l.DimensionSupplier},
+		{"expenditureType", l.DimensionExpenditureType},
+	}
+	opts := make([]FilterOption, len(dims))
+	for i, d := range dims {
+		opts[i] = FilterOption{Value: d.value, Label: d.label, Selected: d.value == active}
+	}
+	return opts
+}
+
+// DisbursementReportLabels holds labels for the disbursement report pivot table view.
+type DisbursementReportLabels struct {
+	Title                      string `json:"title"`
+	Subtitle                   string `json:"subtitle"`
+	ColumnDimension            string `json:"columnDimension"`
+	RowDimension               string `json:"rowDimension"`
+	DimensionMonthly           string `json:"dimensionMonthly"`
+	DimensionQuarterly         string `json:"dimensionQuarterly"`
+	DimensionYearly            string `json:"dimensionYearly"`
+	DimensionSupplier          string `json:"dimensionSupplier"`
+	DimensionSupplierCategory  string `json:"dimensionSupplierCategory"`
+	DimensionLocation          string `json:"dimensionLocation"`
+	DimensionLocationArea      string `json:"dimensionLocationArea"`
+	DimensionExpenditureCategory string `json:"dimensionExpenditureCategory"`
+	DimensionDisbursementType  string `json:"dimensionDisbursementType"`
+	DimensionDisbursementMethod string `json:"dimensionDisbursementMethod"`
+	SummaryGrandTotal          string `json:"summaryGrandTotal"`
+	SummaryTransactions        string `json:"summaryTransactions"`
+	SummaryAverage             string `json:"summaryAverage"`
+	Total                      string `json:"total"`
+	Totals                     string `json:"totals"`
+	ExportCsv                  string `json:"exportCsv"`
+	Apply                      string `json:"apply"`
+	Clear                      string `json:"clear"`
+	EmptyTitle                 string `json:"emptyTitle"`
+	EmptyMessage               string `json:"emptyMessage"`
+}
+
+// PrimaryGroupLabel returns the display label for the given dimension string.
+func (l DisbursementReportLabels) PrimaryGroupLabel(dim string) string {
+	switch dim {
+	case "monthly":
+		return l.DimensionMonthly
+	case "quarterly":
+		return l.DimensionQuarterly
+	case "yearly":
+		return l.DimensionYearly
+	case "supplier":
+		return l.DimensionSupplier
+	case "supplierCategory":
+		return l.DimensionSupplierCategory
+	case "location":
+		return l.DimensionLocation
+	case "locationArea":
+		return l.DimensionLocationArea
+	case "expenditureCategory":
+		return l.DimensionExpenditureCategory
+	case "disbursementType":
+		return l.DimensionDisbursementType
+	case "disbursementMethod":
+		return l.DimensionDisbursementMethod
+	default:
+		return dim
+	}
+}
+
+// DimensionOptions returns all dimension choices as FilterOption slices.
+func (l DisbursementReportLabels) DimensionOptions(active string) []FilterOption {
+	dims := []struct {
+		value string
+		label string
+	}{
+		{"monthly", l.DimensionMonthly},
+		{"quarterly", l.DimensionQuarterly},
+		{"yearly", l.DimensionYearly},
+		{"supplier", l.DimensionSupplier},
+		{"supplierCategory", l.DimensionSupplierCategory},
+		{"location", l.DimensionLocation},
+		{"locationArea", l.DimensionLocationArea},
+		{"expenditureCategory", l.DimensionExpenditureCategory},
+		{"disbursementType", l.DimensionDisbursementType},
+		{"disbursementMethod", l.DimensionDisbursementMethod},
+	}
+	opts := make([]FilterOption, len(dims))
+	for i, d := range dims {
+		opts[i] = FilterOption{Value: d.value, Label: d.label, Selected: d.value == active}
+	}
+	return opts
+}
+
+// ReceivablesAgingReportLabels holds translatable strings for the receivables aging report.
+type ReceivablesAgingReportLabels struct {
+	PageTitle        string `json:"page_title"`
+	PageDescription  string `json:"page_description"`
+	BucketCurrent    string `json:"bucket_current"`
+	Bucket1To30      string `json:"bucket_1_to_30"`
+	Bucket31To60     string `json:"bucket_31_to_60"`
+	Bucket61To90     string `json:"bucket_61_to_90"`
+	BucketOver90     string `json:"bucket_over_90"`
+	TotalOutstanding string `json:"total_outstanding"`
+	InvoiceCount     string `json:"invoice_count"`
+	SummaryGrandTotal    string `json:"summary_grand_total"`
+	SummaryInvoiceCount  string `json:"summary_invoice_count"`
+	SummaryOverdueAmount string `json:"summary_overdue_amount"`
+	EmptyTitle         string `json:"empty_title"`
+	EmptyMessage       string `json:"empty_message"`
+	ExportFilename     string `json:"export_filename"`
+	FilterAsOfDate     string `json:"filter_as_of_date"`
+	FilterRowDimension string `json:"filter_row_dimension"`
+	DimensionClient         string `json:"dimension_client"`
+	DimensionClientCategory string `json:"dimension_client_category"`
+	DimensionLocation       string `json:"dimension_location"`
+	DimensionLocationArea   string `json:"dimension_location_area"`
+}
+
+// PrimaryGroupLabel returns the display label for the given dimension string.
+func (l ReceivablesAgingReportLabels) PrimaryGroupLabel(dim string) string {
+	switch dim {
+	case "client":
+		return l.DimensionClient
+	case "clientCategory":
+		return l.DimensionClientCategory
+	case "location":
+		return l.DimensionLocation
+	case "locationArea":
+		return l.DimensionLocationArea
+	default:
+		return dim
+	}
+}
+
+// CollectionSummaryReportLabels holds translatable strings for the collection summary pivot-table report.
+type CollectionSummaryReportLabels struct {
+	PageTitle       string `json:"page_title"`
+	PageDescription string `json:"page_description"`
+	DimensionMonthly          string `json:"dimensionMonthly"`
+	DimensionQuarterly        string `json:"dimensionQuarterly"`
+	DimensionYearly           string `json:"dimensionYearly"`
+	DimensionLocation         string `json:"dimensionLocation"`
+	DimensionLocationArea     string `json:"dimensionLocationArea"`
+	DimensionClient           string `json:"dimensionClient"`
+	DimensionClientCategory   string `json:"dimensionClientCategory"`
+	DimensionCollectionMethod string `json:"dimensionCollectionMethod"`
+	DimensionCollectionType   string `json:"dimensionCollectionType"`
+	SummaryGrandTotal   string `json:"summaryGrandTotal"`
+	SummaryTransactions string `json:"summaryTransactions"`
+	SummaryAverage      string `json:"summaryAverage"`
+	Total     string `json:"total"`
+	Totals    string `json:"totals"`
+	ExportCsv string `json:"exportCsv"`
+	Apply     string `json:"apply"`
+	Clear     string `json:"clear"`
+	EmptyTitle string `json:"emptyTitle"`
+	EmptyMessage string `json:"emptyMessage"`
+}
+
+// PrimaryGroupLabel returns the display label for the given dimension string.
+func (l CollectionSummaryReportLabels) PrimaryGroupLabel(dim string) string {
+	switch dim {
+	case "monthly":
+		return l.DimensionMonthly
+	case "quarterly":
+		return l.DimensionQuarterly
+	case "yearly":
+		return l.DimensionYearly
+	case "location":
+		return l.DimensionLocation
+	case "locationArea":
+		return l.DimensionLocationArea
+	case "client":
+		return l.DimensionClient
+	case "clientCategory":
+		return l.DimensionClientCategory
+	case "collectionMethod":
+		return l.DimensionCollectionMethod
+	case "collectionType":
+		return l.DimensionCollectionType
+	default:
+		return dim
+	}
+}
+
+// DimensionOptions returns all dimension choices as FilterOption slices.
+func (l CollectionSummaryReportLabels) DimensionOptions(active string) []FilterOption {
+	dims := []struct {
+		value string
+		label string
+	}{
+		{"monthly", l.DimensionMonthly},
+		{"quarterly", l.DimensionQuarterly},
+		{"yearly", l.DimensionYearly},
+		{"location", l.DimensionLocation},
+		{"locationArea", l.DimensionLocationArea},
+		{"client", l.DimensionClient},
+		{"clientCategory", l.DimensionClientCategory},
+		{"collectionMethod", l.DimensionCollectionMethod},
+		{"collectionType", l.DimensionCollectionType},
 	}
 	opts := make([]FilterOption, len(dims))
 	for i, d := range dims {

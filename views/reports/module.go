@@ -15,7 +15,11 @@ import (
 	grossprofit "github.com/erniealice/fycha-golang/views/reports/gross_profit"
 	netprofit "github.com/erniealice/fycha-golang/views/reports/net_profit"
 	revenue "github.com/erniealice/fycha-golang/views/reports/revenue"
+	disbursementreport "github.com/erniealice/fycha-golang/views/reports/disbursement_report"
+	expenditurereport "github.com/erniealice/fycha-golang/views/reports/expenditure_report"
 	revenuereport "github.com/erniealice/fycha-golang/views/reports/revenue_report"
+	receivablesagingreport "github.com/erniealice/fycha-golang/views/reports/receivables_aging_report"
+	collectionsummaryreport "github.com/erniealice/fycha-golang/views/reports/collection_summary_report"
 )
 
 // routeRegistrarFull extends view.RouteRegistrar with HandleFunc support.
@@ -60,6 +64,14 @@ type Module struct {
 	NetProfit           view.View
 	RevenueReport       view.View
 	RevenueReportExport http.HandlerFunc
+	ExpenditureReport       view.View
+	ExpenditureReportExport http.HandlerFunc
+	DisbursementReport       view.View
+	DisbursementReportExport http.HandlerFunc
+	ReceivablesAgingReport        view.View
+	ReceivablesAgingReportExport  http.HandlerFunc
+	CollectionSummaryReport       view.View
+	CollectionSummaryReportExport http.HandlerFunc
 }
 
 func NewModule(deps *ModuleDeps) *Module {
@@ -91,6 +103,62 @@ func NewModule(deps *ModuleDeps) *Module {
 			TableLabels:  deps.TableLabels,
 			Routes:       deps.Routes,
 		}),
+		ExpenditureReport: expenditurereport.NewView(&expenditurereport.Deps{
+			DB:           deps.DB,
+			Labels:       deps.Labels,
+			CommonLabels: deps.CommonLabels,
+			TableLabels:  deps.TableLabels,
+			Routes:       deps.Routes,
+		}),
+		ExpenditureReportExport: expenditurereport.NewExportHandler(&expenditurereport.Deps{
+			DB:           deps.DB,
+			Labels:       deps.Labels,
+			CommonLabels: deps.CommonLabels,
+			TableLabels:  deps.TableLabels,
+			Routes:       deps.Routes,
+		}),
+		DisbursementReport: disbursementreport.NewView(&disbursementreport.Deps{
+			DB:           deps.DB,
+			Labels:       deps.Labels,
+			CommonLabels: deps.CommonLabels,
+			TableLabels:  deps.TableLabels,
+			Routes:       deps.Routes,
+		}),
+		DisbursementReportExport: disbursementreport.NewExportHandler(&disbursementreport.Deps{
+			DB:           deps.DB,
+			Labels:       deps.Labels,
+			CommonLabels: deps.CommonLabels,
+			TableLabels:  deps.TableLabels,
+			Routes:       deps.Routes,
+		}),
+		ReceivablesAgingReport: receivablesagingreport.NewView(&receivablesagingreport.Deps{
+			DB:           deps.DB,
+			Labels:       deps.Labels,
+			CommonLabels: deps.CommonLabels,
+			TableLabels:  deps.TableLabels,
+			Routes:       deps.Routes,
+		}),
+		ReceivablesAgingReportExport: receivablesagingreport.NewExportHandler(&receivablesagingreport.Deps{
+			DB:           deps.DB,
+			Labels:       deps.Labels,
+			CommonLabels: deps.CommonLabels,
+			TableLabels:  deps.TableLabels,
+			Routes:       deps.Routes,
+		}),
+		CollectionSummaryReport: collectionsummaryreport.NewView(&collectionsummaryreport.Deps{
+			DB:           deps.DB,
+			Labels:       deps.Labels,
+			CommonLabels: deps.CommonLabels,
+			TableLabels:  deps.TableLabels,
+			Routes:       deps.Routes,
+		}),
+		CollectionSummaryReportExport: collectionsummaryreport.NewExportHandler(&collectionsummaryreport.Deps{
+			DB:           deps.DB,
+			Labels:       deps.Labels,
+			CommonLabels: deps.CommonLabels,
+			TableLabels:  deps.TableLabels,
+			Routes:       deps.Routes,
+		}),
 	}
 }
 
@@ -103,4 +171,12 @@ func (m *Module) RegisterRoutes(r view.RouteRegistrar) {
 	r.GET(m.routes.NetProfitURL, m.NetProfit)
 	r.GET(m.routes.RevenueReportURL, m.RevenueReport)
 	handleFunc(r, "GET", m.routes.RevenueReportExportURL, m.RevenueReportExport)
+	r.GET(m.routes.ExpenditureReportURL, m.ExpenditureReport)
+	handleFunc(r, "GET", m.routes.ExpenditureReportExportURL, m.ExpenditureReportExport)
+	r.GET(m.routes.DisbursementReportURL, m.DisbursementReport)
+	handleFunc(r, "GET", m.routes.DisbursementReportExportURL, m.DisbursementReportExport)
+	r.GET(m.routes.ReceivablesAgingReportURL, m.ReceivablesAgingReport)
+	handleFunc(r, "GET", m.routes.ReceivablesAgingReportExportURL, m.ReceivablesAgingReportExport)
+	r.GET(m.routes.CollectionSummaryReportURL, m.CollectionSummaryReport)
+	handleFunc(r, "GET", m.routes.CollectionSummaryReportExportURL, m.CollectionSummaryReportExport)
 }

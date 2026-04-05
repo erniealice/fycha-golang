@@ -3,6 +3,9 @@ package reports
 import (
 	"context"
 	"fmt"
+	"strings"
+	"strconv"
+	"unicode"
 
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
@@ -22,6 +25,9 @@ type ReportConfig struct {
 	// BuildData fetches columns and rows dynamically (DB query or mock data).
 	// Called on every request so data is always fresh.
 	BuildData func(ctx context.Context) ([]types.TableColumn, []types.TableRow, error)
+	// BuildTotals computes the totals row from the fetched rows (optional).
+	// When set, a sticky <tfoot> with bold accounting totals is rendered.
+	BuildTotals func(rows []types.TableRow) []types.TableCell
 }
 
 // ReportPageData holds the data for a report list page.
@@ -66,6 +72,9 @@ func NewReportView(cfg ReportConfig) view.View {
 				Message: "Report data will appear here once transactions are recorded.",
 			},
 		}
+		if cfg.BuildTotals != nil {
+			tableConfig.TotalsRow = cfg.BuildTotals(rows)
+		}
 		types.ApplyTableSettings(tableConfig)
 
 		pageData := &ReportPageData{
@@ -86,6 +95,19 @@ func NewReportView(cfg ReportConfig) view.View {
 
 		return view.OK("report-list", pageData)
 	})
+}
+
+// parseCurrency parses a FormatCurrency string (e.g. "₱1,234.56") back to float64.
+func parseCurrency(s string) float64 {
+	// Strip currency symbol and any non-numeric chars except '.' and '-'
+	clean := strings.Map(func(r rune) rune {
+		if unicode.IsDigit(r) || r == '.' || r == '-' {
+			return r
+		}
+		return -1
+	}, s)
+	v, _ := strconv.ParseFloat(clean, 64)
+	return v
 }
 
 // FormatCurrency formats a float64 as Philippine Peso with commas.

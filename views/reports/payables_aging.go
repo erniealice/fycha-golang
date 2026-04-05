@@ -24,7 +24,38 @@ func NewPayablesAgingView(db *sql.DB, commonLabels pyeza.CommonLabels, tableLabe
 		BuildData: func(ctx context.Context) ([]types.TableColumn, []types.TableRow, error) {
 			return fetchPayablesAging(ctx, db)
 		},
+		BuildTotals: payablesAgingTotals,
 	})
+}
+
+// payablesAgingTotals computes column totals for the payables aging tfoot.
+// Columns: Supplier | Current | 1-30 | 31-60 | 61-90 | Over 90 | Total
+func payablesAgingTotals(rows []types.TableRow) []types.TableCell {
+	if len(rows) == 0 {
+		return nil
+	}
+	// Parse and sum the 6 numeric columns (indices 1-6); index 0 is supplier name.
+	var current, d30, d60, d90, over90, total float64
+	for _, row := range rows {
+		if len(row.Cells) < 7 {
+			continue
+		}
+		current += parseCurrency(row.Cells[1].Value)
+		d30 += parseCurrency(row.Cells[2].Value)
+		d60 += parseCurrency(row.Cells[3].Value)
+		d90 += parseCurrency(row.Cells[4].Value)
+		over90 += parseCurrency(row.Cells[5].Value)
+		total += parseCurrency(row.Cells[6].Value)
+	}
+	return []types.TableCell{
+		{Value: "Total"},
+		{Value: FormatCurrency(current), Align: "right"},
+		{Value: FormatCurrency(d30), Align: "right"},
+		{Value: FormatCurrency(d60), Align: "right"},
+		{Value: FormatCurrency(d90), Align: "right"},
+		{Value: FormatCurrency(over90), Align: "right"},
+		{Value: FormatCurrency(total), Align: "right"},
+	}
 }
 
 func fetchPayablesAging(ctx context.Context, db *sql.DB) ([]types.TableColumn, []types.TableRow, error) {
@@ -38,27 +69,45 @@ func fetchPayablesAging(ctx context.Context, db *sql.DB) ([]types.TableColumn, [
 		{Key: "total", Label: "Total", Sortable: true, Align: "right"},
 	}
 
-	// vendor_name is stored directly on expenditure; fall back to supplier company_name via vendor_id
+	// Compute outstanding = total_amount - paid disbursements per expenditure.
+	// Use COALESCE(supplier_id, vendor_id) to support both old and new P2P schema.
+	// Include both 'purchase' and 'expense' types that create payables.
 	query := `
+		WITH outstanding AS (
+			SELECT
+				e.id,
+				COALESCE(NULLIF(TRIM(s.company_name), ''), NULLIF(TRIM(e.name), ''), 'Unknown') AS supplier_name,
+				e.total_amount - COALESCE(paid.total_paid, 0) AS outstanding_amount,
+				CURRENT_DATE - COALESCE(e.due_date, e.expenditure_date)::date AS days_overdue
+			FROM expenditure e
+			LEFT JOIN supplier s ON s.id = e.supplier_id
+			LEFT JOIN (
+				SELECT d.expenditure_id, SUM(d.amount) AS total_paid
+				FROM treasury_disbursement d
+				WHERE d.active = true AND d.status IN ('paid', 'completed')
+				GROUP BY d.expenditure_id
+			) paid ON paid.expenditure_id = e.id
+			WHERE e.active = true
+			  AND e.expenditure_type IN ('purchase', 'expense')
+			  AND e.status NOT IN ('paid', 'cancelled')
+			  AND e.total_amount - COALESCE(paid.total_paid, 0) > 0
+		)
 		SELECT
-			COALESCE(NULLIF(e.vendor_name, ''), s.company_name, 'Unknown') AS supplier_name,
-			COALESCE(SUM(CASE WHEN CURRENT_DATE - COALESCE(e.due_date, e.expenditure_date)::date <= 0 THEN e.total_amount ELSE 0 END), 0) AS current_amt,
-			COALESCE(SUM(CASE WHEN CURRENT_DATE - COALESCE(e.due_date, e.expenditure_date)::date BETWEEN 1 AND 30 THEN e.total_amount ELSE 0 END), 0) AS days_30,
-			COALESCE(SUM(CASE WHEN CURRENT_DATE - COALESCE(e.due_date, e.expenditure_date)::date BETWEEN 31 AND 60 THEN e.total_amount ELSE 0 END), 0) AS days_60,
-			COALESCE(SUM(CASE WHEN CURRENT_DATE - COALESCE(e.due_date, e.expenditure_date)::date BETWEEN 61 AND 90 THEN e.total_amount ELSE 0 END), 0) AS days_90,
-			COALESCE(SUM(CASE WHEN CURRENT_DATE - COALESCE(e.due_date, e.expenditure_date)::date > 90 THEN e.total_amount ELSE 0 END), 0) AS over_90,
-			COALESCE(SUM(e.total_amount), 0) AS total
-		FROM expenditure e
-		LEFT JOIN supplier s ON e.vendor_id = s.id
-		WHERE e.expenditure_type = 'purchase'
-		  AND e.status NOT IN ('paid', 'cancelled')
+			supplier_name,
+			COALESCE(SUM(CASE WHEN days_overdue <= 0 THEN outstanding_amount ELSE 0 END), 0) AS current_amt,
+			COALESCE(SUM(CASE WHEN days_overdue BETWEEN 1 AND 30 THEN outstanding_amount ELSE 0 END), 0) AS days_30,
+			COALESCE(SUM(CASE WHEN days_overdue BETWEEN 31 AND 60 THEN outstanding_amount ELSE 0 END), 0) AS days_60,
+			COALESCE(SUM(CASE WHEN days_overdue BETWEEN 61 AND 90 THEN outstanding_amount ELSE 0 END), 0) AS days_90,
+			COALESCE(SUM(CASE WHEN days_overdue > 90 THEN outstanding_amount ELSE 0 END), 0) AS over_90,
+			COALESCE(SUM(outstanding_amount), 0) AS total
+		FROM outstanding
 		GROUP BY supplier_name
 		ORDER BY total DESC
 	`
 
 	dbRows, err := db.QueryContext(ctx, query)
 	if err != nil {
-		return columns, nil, nil
+		return columns, nil, fmt.Errorf("payables aging query: %w", err)
 	}
 	defer dbRows.Close()
 
@@ -66,21 +115,21 @@ func fetchPayablesAging(ctx context.Context, db *sql.DB) ([]types.TableColumn, [
 	idx := 0
 	for dbRows.Next() {
 		var name string
-		var current, d30, d60, d90, over90, total int64
+		var current, d30, d60, d90, over90, total float64
 		if err := dbRows.Scan(&name, &current, &d30, &d60, &d90, &over90, &total); err != nil {
-			continue
+			return columns, nil, fmt.Errorf("payables aging scan: %w", err)
 		}
 		idx++
 		rows = append(rows, types.TableRow{
 			ID: fmt.Sprintf("pa-%d", idx),
 			Cells: []types.TableCell{
 				{Value: name},
-				{Value: FormatCurrency(float64(current) / 100)},
-				{Value: FormatCurrency(float64(d30) / 100)},
-				{Value: FormatCurrency(float64(d60) / 100)},
-				{Value: FormatCurrency(float64(d90) / 100)},
-				{Value: FormatCurrency(float64(over90) / 100)},
-				{Value: FormatCurrency(float64(total) / 100)},
+				{Value: FormatCurrency(current / 100)},
+				{Value: FormatCurrency(d30 / 100)},
+				{Value: FormatCurrency(d60 / 100)},
+				{Value: FormatCurrency(d90 / 100)},
+				{Value: FormatCurrency(over90 / 100)},
+				{Value: FormatCurrency(total / 100)},
 			},
 		})
 	}

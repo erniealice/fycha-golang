@@ -1,0 +1,292 @@
+{{/* Collection Summary Report filter sheet — loaded into #sheetContent via HTMX.
+     Expects CollectionSummaryFilterSheetData with Filter, PeriodLabels, Labels,
+     ReportURL, PrimaryDimension, RowDimension, PrimaryOptions, RowOptions. */}}
+
+{{define "collection-summary-report-filter-sheet"}}
+<form class="filter-sheet-form rr-filter-form"
+      id="collectionSummaryFilterForm"
+      hx-get="{{.ReportURL}}"
+      hx-target=".page-content"
+      hx-swap="innerHTML show:none"
+      hx-push-url="true"
+      hx-indicator=".page-content"
+      hx-on::before-request="Sheet.close()"
+      hx-on::after-settle="window.scrollTo(0,0)">
+
+    <div class="rr-filter-body">
+
+    {{/* ─── Period Section ─── */}}
+    <div class="filter-sheet-section">
+        <h3 class="filter-sheet-section-title">Period</h3>
+        <input type="hidden" name="period" value="{{.Filter.ActivePreset}}">
+        <div class="period-presets">
+            {{range .Filter.PeriodPresets}}
+            <button type="button" class="preset-btn{{if .Selected}} active{{end}}"
+                    data-preset="{{.Value}}">{{.Label}}</button>
+            {{end}}
+        </div>
+        <div class="filter-dates{{if ne .Filter.ActivePreset "custom"}} hidden{{end}}" id="custom-dates">
+            <div class="filter-group">
+                <label class="filter-label" for="filter-start">{{.PeriodLabels.DateStart}}</label>
+                <input type="date" class="filter-input" name="start" id="filter-start" value="{{.Filter.StartDate}}">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label" for="filter-end">{{.PeriodLabels.DateEnd}}</label>
+                <input type="date" class="filter-input" name="end" id="filter-end" value="{{.Filter.EndDate}}">
+            </div>
+        </div>
+    </div>
+
+    {{/* ─── Columns (Primary Dimension) ─── */}}
+    <div class="filter-sheet-section" id="rr-columns-section">
+        <h3 class="filter-sheet-section-title">{{.Labels.ColumnDimension}}</h3>
+
+        {{/* Group: By Period */}}
+        <div class="rr-dim-group">
+            <div class="rr-dim-group-label">By Period</div>
+            <div class="groupby-options">
+                {{range .PrimaryOptions}}
+                {{if or (eq .Value "monthly") (eq .Value "quarterly") (eq .Value "yearly")}}
+                <label class="groupby-option{{if .Selected}} active{{end}}" data-dim-group="period">
+                    <input type="radio" name="primary" value="{{.Value}}"{{if .Selected}} checked{{end}}>
+                    {{.Label}}
+                </label>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+
+        {{/* Group: By Entity */}}
+        <div class="rr-dim-group">
+            <div class="rr-dim-group-label">By Entity</div>
+            <div class="groupby-options">
+                {{range .PrimaryOptions}}
+                {{if or (eq .Value "client") (eq .Value "clientCategory")}}
+                <label class="groupby-option{{if .Selected}} active{{end}}" data-dim-group="entity">
+                    <input type="radio" name="primary" value="{{.Value}}"{{if .Selected}} checked{{end}}>
+                    {{.Label}}
+                </label>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+
+        {{/* Group: By Location */}}
+        <div class="rr-dim-group">
+            <div class="rr-dim-group-label">By Location</div>
+            <div class="groupby-options">
+                {{range .PrimaryOptions}}
+                {{if or (eq .Value "location") (eq .Value "locationArea")}}
+                <label class="groupby-option{{if .Selected}} active{{end}}" data-dim-group="location">
+                    <input type="radio" name="primary" value="{{.Value}}"{{if .Selected}} checked{{end}}>
+                    {{.Label}}
+                </label>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+
+        {{/* Group: By Collection */}}
+        <div class="rr-dim-group">
+            <div class="rr-dim-group-label">By Collection</div>
+            <div class="groupby-options">
+                {{range .PrimaryOptions}}
+                {{if or (eq .Value "collectionMethod") (eq .Value "collectionType")}}
+                <label class="groupby-option{{if .Selected}} active{{end}}" data-dim-group="collection">
+                    <input type="radio" name="primary" value="{{.Value}}"{{if .Selected}} checked{{end}}>
+                    {{.Label}}
+                </label>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+
+        {{/* Group: By Product */}}
+        <div class="rr-dim-group">
+            <div class="rr-dim-group-label">By Product</div>
+            <div class="groupby-options">
+                {{range .PrimaryOptions}}
+                {{if or (eq .Value "product") (eq .Value "productLine")}}
+                <label class="groupby-option{{if .Selected}} active{{end}}" data-dim-group="product">
+                    <input type="radio" name="primary" value="{{.Value}}"{{if .Selected}} checked{{end}}>
+                    {{.Label}}
+                </label>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+    </div>
+
+    {{/* ─── Rows (Row Dimension) ─── */}}
+    <div class="filter-sheet-section" id="rr-rows-section">
+        <h3 class="filter-sheet-section-title">{{.Labels.RowDimension}}</h3>
+
+        {{/* Group: By Period */}}
+        <div class="rr-dim-group" data-row-group="period">
+            <div class="rr-dim-group-label">By Period</div>
+            <div class="groupby-options">
+                {{range .RowOptions}}
+                {{if or (eq .Value "monthly") (eq .Value "quarterly") (eq .Value "yearly")}}
+                <label class="groupby-option{{if .Selected}} active{{end}}" data-dim-group="period">
+                    <input type="radio" name="rows" value="{{.Value}}"{{if .Selected}} checked{{end}}>
+                    {{.Label}}
+                </label>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+
+        {{/* Group: By Entity */}}
+        <div class="rr-dim-group" data-row-group="entity">
+            <div class="rr-dim-group-label">By Entity</div>
+            <div class="groupby-options">
+                {{range .RowOptions}}
+                {{if or (eq .Value "client") (eq .Value "clientCategory")}}
+                <label class="groupby-option{{if .Selected}} active{{end}}" data-dim-group="entity">
+                    <input type="radio" name="rows" value="{{.Value}}"{{if .Selected}} checked{{end}}>
+                    {{.Label}}
+                </label>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+
+        {{/* Group: By Location */}}
+        <div class="rr-dim-group" data-row-group="location">
+            <div class="rr-dim-group-label">By Location</div>
+            <div class="groupby-options">
+                {{range .RowOptions}}
+                {{if or (eq .Value "location") (eq .Value "locationArea")}}
+                <label class="groupby-option{{if .Selected}} active{{end}}" data-dim-group="location">
+                    <input type="radio" name="rows" value="{{.Value}}"{{if .Selected}} checked{{end}}>
+                    {{.Label}}
+                </label>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+
+        {{/* Group: By Collection */}}
+        <div class="rr-dim-group" data-row-group="collection">
+            <div class="rr-dim-group-label">By Collection</div>
+            <div class="groupby-options">
+                {{range .RowOptions}}
+                {{if or (eq .Value "collectionMethod") (eq .Value "collectionType")}}
+                <label class="groupby-option{{if .Selected}} active{{end}}" data-dim-group="collection">
+                    <input type="radio" name="rows" value="{{.Value}}"{{if .Selected}} checked{{end}}>
+                    {{.Label}}
+                </label>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+
+        {{/* Group: By Product */}}
+        <div class="rr-dim-group" data-row-group="product">
+            <div class="rr-dim-group-label">By Product</div>
+            <div class="groupby-options">
+                {{range .RowOptions}}
+                {{if or (eq .Value "product") (eq .Value "productLine")}}
+                <label class="groupby-option{{if .Selected}} active{{end}}" data-dim-group="product">
+                    <input type="radio" name="rows" value="{{.Value}}"{{if .Selected}} checked{{end}}>
+                    {{.Label}}
+                </label>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
+    </div>
+
+    </div>{{/* end .rr-filter-body */}}
+
+    {{/* ─── Sticky Footer ─── */}}
+    <div class="rr-filter-footer">
+        <button type="submit" class="btn btn-primary rr-apply-btn" id="rrApplyBtn" data-testid="report-filters-apply">{{.Labels.Apply}}</button>
+        <a href="{{.ReportURL}}" class="btn btn-ghost" data-testid="report-filters-clear"
+           hx-get="{{.ReportURL}}"
+           hx-target=".page-content"
+           hx-swap="innerHTML show:none"
+           hx-push-url="true"
+           hx-indicator=".page-content"
+           hx-on::before-request="Sheet.close()">{{.Labels.Clear}}</a>
+    </div>
+</form>
+
+<script>
+(function() {
+    'use strict';
+    var form = document.getElementById('collectionSummaryFilterForm');
+    if (!form) return;
+
+    // Dimension group mapping: which group does each radio value belong to?
+    var dimGroups = {
+        'monthly': 'period', 'quarterly': 'period', 'yearly': 'period',
+        'client': 'entity', 'clientCategory': 'entity',
+        'location': 'location', 'locationArea': 'location',
+        'collectionMethod': 'collection', 'collectionType': 'collection',
+        'product': 'product', 'productLine': 'product'
+    };
+
+    function getSelectedGroup(name) {
+        var checked = form.querySelector('input[name="' + name + '"]:checked');
+        return checked ? dimGroups[checked.value] || null : null;
+    }
+
+    function enforceConflictRules() {
+        var colGroup = getSelectedGroup('primary');
+        var rowGroup = getSelectedGroup('rows');
+
+        // Disable row options in the same group as the selected column
+        var rowGroups = form.querySelectorAll('#rr-rows-section .rr-dim-group');
+        rowGroups.forEach(function(g) {
+            var groupName = g.getAttribute('data-row-group');
+            var isConflict = groupName === colGroup;
+            g.classList.toggle('rr-dim-disabled', isConflict);
+            g.querySelectorAll('input[type="radio"]').forEach(function(r) {
+                r.disabled = isConflict;
+                if (isConflict && r.checked) {
+                    r.checked = false;
+                    r.closest('.groupby-option').classList.remove('active');
+                }
+            });
+        });
+
+        // Disable column options in the same group as the selected row
+        var colLabels = form.querySelectorAll('#rr-columns-section .groupby-option');
+        colLabels.forEach(function(label) {
+            var radio = label.querySelector('input[type="radio"]');
+            if (!radio) return;
+            var valGroup = dimGroups[radio.value];
+            var isConflict = valGroup === rowGroup;
+            label.classList.toggle('rr-dim-disabled', isConflict);
+            radio.disabled = isConflict;
+        });
+
+        // Check if both dimensions have a selection
+        var hasCol = !!form.querySelector('input[name="primary"]:checked:not(:disabled)');
+        var hasRow = !!form.querySelector('input[name="rows"]:checked:not(:disabled)');
+        var applyBtn = document.getElementById('rrApplyBtn');
+        if (applyBtn) {
+            applyBtn.disabled = !(hasCol && hasRow);
+            applyBtn.classList.toggle('btn-disabled', !(hasCol && hasRow));
+        }
+    }
+
+    // Active styling for radio changes
+    form.addEventListener('change', function(e) {
+        if (e.target.type !== 'radio') return;
+        var container = e.target.closest('.filter-sheet-section');
+        if (!container) return;
+        var name = e.target.name;
+        container.querySelectorAll('input[name="' + name + '"]').forEach(function(r) {
+            var opt = r.closest('.groupby-option');
+            if (opt) opt.classList.toggle('active', r.checked);
+        });
+        enforceConflictRules();
+    });
+
+    // Initial enforcement
+    enforceConflictRules();
+})();
+</script>
+{{end}}

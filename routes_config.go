@@ -32,6 +32,18 @@ type ReportsRoutes struct {
 	// Revenue Report pivot table
 	RevenueReportURL       string `json:"revenue_report_url"`
 	RevenueReportExportURL string `json:"revenue_report_export_url"`
+	// Expenditure Report pivot table
+	ExpenditureReportURL       string `json:"expenditure_report_url"`
+	ExpenditureReportExportURL string `json:"expenditure_report_export_url"`
+	// Disbursement Report pivot table
+	DisbursementReportURL       string `json:"disbursement_report_url"`
+	DisbursementReportExportURL string `json:"disbursement_report_export_url"`
+	// Receivables Aging Report
+	ReceivablesAgingReportURL       string `json:"receivables_aging_report_url"`
+	ReceivablesAgingReportExportURL string `json:"receivables_aging_report_export_url"`
+	// Collection Summary Report pivot table
+	CollectionSummaryReportURL       string `json:"collection_summary_report_url"`
+	CollectionSummaryReportExportURL string `json:"collection_summary_report_export_url"`
 }
 
 // DefaultReportsRoutes returns a ReportsRoutes populated from package-level consts.
@@ -49,6 +61,14 @@ func DefaultReportsRoutes() ReportsRoutes {
 		EquityChangesURL:       ReportsEquityChangesURL,
 		RevenueReportURL:       ReportsRevenueReportURL,
 		RevenueReportExportURL: ReportsRevenueReportExportURL,
+		ExpenditureReportURL:       ReportsExpenditureReportURL,
+		ExpenditureReportExportURL: ReportsExpenditureReportExportURL,
+		DisbursementReportURL:       ReportsDisbursementReportURL,
+		DisbursementReportExportURL: ReportsDisbursementReportExportURL,
+		ReceivablesAgingReportURL:       ReportsReceivablesAgingReportURL,
+		ReceivablesAgingReportExportURL: ReportsReceivablesAgingReportExportURL,
+		CollectionSummaryReportURL:       ReportsCollectionSummaryReportURL,
+		CollectionSummaryReportExportURL: ReportsCollectionSummaryReportExportURL,
 	}
 }
 
@@ -67,6 +87,14 @@ func (r ReportsRoutes) RouteMap() map[string]string {
 		"reports.equity_changes":        r.EquityChangesURL,
 		"reports.revenue_report":        r.RevenueReportURL,
 		"reports.revenue_report_export": r.RevenueReportExportURL,
+		"reports.expenditure_report":        r.ExpenditureReportURL,
+		"reports.expenditure_report_export": r.ExpenditureReportExportURL,
+		"reports.disbursement_report":        r.DisbursementReportURL,
+		"reports.disbursement_report_export": r.DisbursementReportExportURL,
+		"reports.receivables_aging_report":        r.ReceivablesAgingReportURL,
+		"reports.receivables_aging_report_export": r.ReceivablesAgingReportExportURL,
+		"reports.collection_summary_report":        r.CollectionSummaryReportURL,
+		"reports.collection_summary_report_export": r.CollectionSummaryReportExportURL,
 	}
 }
 

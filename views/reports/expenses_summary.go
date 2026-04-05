@@ -13,7 +13,7 @@ import (
 // NewExpensesSummaryView creates the expenses summary report with DB data.
 func NewExpensesSummaryView(db *sql.DB, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
 	return NewReportView(ReportConfig{
-		ActiveNav:    "expenses",
+		ActiveNav:    "expense",
 		ActiveSubNav: "expenses-summary",
 		Title:        "Expenses Summary",
 		Subtitle:     "Summary of expenses by category and period",
