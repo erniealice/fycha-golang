@@ -85,6 +85,21 @@
                 {{end}}
             </div>
         </div>
+
+        {{/* Group: By Client */}}
+        <div class="rr-dim-group">
+            <div class="rr-dim-group-label">By Client</div>
+            <div class="groupby-options">
+                {{range .PrimaryOptions}}
+                {{if or (eq .Value "client") (eq .Value "clientCategory")}}
+                <label class="groupby-option{{if .Selected}} active{{end}}" data-dim-group="client">
+                    <input type="radio" name="primary" value="{{.Value}}"{{if .Selected}} checked{{end}}>
+                    {{.Label}}
+                </label>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
     </div>
 
     {{/* ─── Rows (Row Dimension) ─── */}}
@@ -135,6 +150,21 @@
                 {{end}}
             </div>
         </div>
+
+        {{/* Group: By Client */}}
+        <div class="rr-dim-group" data-row-group="client">
+            <div class="rr-dim-group-label">By Client</div>
+            <div class="groupby-options">
+                {{range .RowOptions}}
+                {{if or (eq .Value "client") (eq .Value "clientCategory")}}
+                <label class="groupby-option{{if .Selected}} active{{end}}" data-dim-group="client">
+                    <input type="radio" name="rows" value="{{.Value}}"{{if .Selected}} checked{{end}}>
+                    {{.Label}}
+                </label>
+                {{end}}
+                {{end}}
+            </div>
+        </div>
     </div>
 
     </div>{{/* end .rr-filter-body */}}
@@ -162,7 +192,8 @@
     var dimGroups = {
         'monthly': 'period', 'quarterly': 'period', 'yearly': 'period',
         'product': 'product', 'productLine': 'product',
-        'location': 'location', 'locationArea': 'location'
+        'location': 'location', 'locationArea': 'location',
+        'client': 'client', 'clientCategory': 'client'
     };
 
     function getSelectedGroup(name) {
