@@ -324,21 +324,17 @@ func buildTable(items []*reportpb.GrossProfitLineItem, summary *reportpb.GrossPr
 		} else if summary.GetOverallMargin() < 30 {
 			marginVariant = "warning"
 		}
-		totalsRow := types.TableRow{
-			ID: "__totals__",
-			Cells: []types.TableCell{
-				{Type: "name", Value: l.Totals},
-				{Type: "text", Value: formatCurrency(float64(summary.GetTotalRevenue()) / 100.0)},
-				{Type: "text", Value: formatCurrency(float64(summary.GetTotalDiscount()) / 100.0)},
-				{Type: "text", Value: formatCurrency(float64(summary.GetNetRevenue()) / 100.0)},
-				{Type: "text", Value: formatCurrency(float64(summary.GetTotalCogs()) / 100.0)},
-				{Type: "text", Value: formatCurrency(float64(summary.GetTotalGrossProfit()) / 100.0)},
-				{Type: "badge", Value: fmt.Sprintf("%.1f%%", summary.GetOverallMargin()), Variant: marginVariant},
-				{Type: "text", Value: strconv.FormatInt(summary.GetTotalUnitsSold(), 10)},
-				{Type: "text", Value: strconv.FormatInt(summary.GetTotalTransactions(), 10)},
-			},
+		table.TotalsRow = []types.TableCell{
+			{Type: "name", Value: l.Totals},
+			{Type: "text", Value: formatCurrency(float64(summary.GetTotalRevenue()) / 100.0)},
+			{Type: "text", Value: formatCurrency(float64(summary.GetTotalDiscount()) / 100.0)},
+			{Type: "text", Value: formatCurrency(float64(summary.GetNetRevenue()) / 100.0)},
+			{Type: "text", Value: formatCurrency(float64(summary.GetTotalCogs()) / 100.0)},
+			{Type: "text", Value: formatCurrency(float64(summary.GetTotalGrossProfit()) / 100.0)},
+			{Type: "badge", Value: fmt.Sprintf("%.1f%%", summary.GetOverallMargin()), Variant: marginVariant},
+			{Type: "text", Value: strconv.FormatInt(summary.GetTotalUnitsSold(), 10)},
+			{Type: "text", Value: strconv.FormatInt(summary.GetTotalTransactions(), 10)},
 		}
-		rows = append(rows, totalsRow)
 	}
 
 	table.Rows = rows

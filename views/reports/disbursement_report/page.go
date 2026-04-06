@@ -394,10 +394,7 @@ func buildPivotTable(resp *disbreportpb.DisbursementReportResponse, l fycha.Disb
 			Value: formatCurrency(float64(summary.GetGrandTotal()) / 100.0),
 		})
 
-		rows = append(rows, types.TableRow{
-			ID:    "__totals__",
-			Cells: totalsCells,
-		})
+		table.TotalsRow = totalsCells
 	}
 
 	table.Rows = rows
