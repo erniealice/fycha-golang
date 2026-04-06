@@ -20,6 +20,7 @@ func MapTableLabels(common pyeza.CommonLabels) types.TableLabels {
 		Columns:            common.Table.Columns,
 		Export:             common.Table.Export,
 		DensityLabel:       common.Table.Density.Title,
+		DensityDense:       common.Table.Density.Dense,
 		DensityDefault:     common.Table.Density.Default,
 		DensityComfortable: common.Table.Density.Comfortable,
 		DensityCompact:     common.Table.Density.Compact,
