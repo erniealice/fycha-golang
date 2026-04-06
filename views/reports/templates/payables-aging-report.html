@@ -10,23 +10,7 @@
      data-page-css="/assets/css/fycha/fycha-report.css?v={{.CacheVersion}}"
      data-page-js="/assets/js/fycha/fycha-report-filter.js?v={{.CacheVersion}}">
 
-    {{/* ─── Toolbar: Filter button + active filter chips ─── */}}
-    <div class="rr-toolbar">
-        {{template "report-filter-btn" .}}
-        <div class="rr-active-filters">
-            <span class="rr-chip" data-testid="rr-chip-as-of-date">
-                <span class="rr-chip-label">As of:</span>
-                <span class="rr-chip-value">{{.AsOfDate}}</span>
-            </span>
-            <span class="rr-chip-sep">&middot;</span>
-            <span class="rr-chip" data-testid="rr-chip-rows">
-                <span class="rr-chip-label">Group by:</span>
-                <span class="rr-chip-value">{{.RowDimension}}</span>
-            </span>
-        </div>
-    </div>
-
-    {{/* ─── Table Card ─── */}}
+    {{/* ─── Table Card (filter button + chips rendered in toolbar prefix) ─── */}}
     <div class="report-table-wrapper" data-testid="payables-aging-table">
         {{template "table-card" .Table}}
     </div>

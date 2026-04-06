@@ -97,8 +97,8 @@ func NewReportView(cfg ReportConfig) view.View {
 	})
 }
 
-// parseCurrency parses a FormatCurrency string (e.g. "₱1,234.56") back to float64.
-func parseCurrency(s string) float64 {
+// ParseCurrency parses a FormatCurrency string (e.g. "₱1,234.56") back to float64.
+func ParseCurrency(s string) float64 {
 	// Strip currency symbol and any non-numeric chars except '.' and '-'
 	clean := strings.Map(func(r rune) rune {
 		if unicode.IsDigit(r) || r == '.' || r == '-' {

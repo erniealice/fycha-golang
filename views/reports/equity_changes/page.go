@@ -1,4 +1,4 @@
-package reports
+package equity_changes
 
 import (
 	"context"

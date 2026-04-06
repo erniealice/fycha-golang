@@ -1,4 +1,4 @@
-package reports
+package income_statement
 
 import (
 	"context"
@@ -156,9 +156,9 @@ func NewIncomeStatementView(deps *IncomeStatementDeps) view.View {
 			EndDate:          endDate,
 			PeriodLabel:      periodLabel,
 			PeriodPresets:    periodPresets,
-			TotalRevenue:     formatCurrencyFS(totalRevenue),
-			TotalExpenses:    formatCurrencyFS(totalExpenses),
-			NetIncome:        formatCurrencyFS(netIncome),
+			TotalRevenue:     FormatCurrencyFS(totalRevenue),
+			TotalExpenses:    FormatCurrencyFS(totalExpenses),
+			NetIncome:        FormatCurrencyFS(netIncome),
 			NetIncomeVariant: netIncomeVariant,
 			NetIncomeTrend:   "+12%",
 			Sections:         sections,
@@ -182,16 +182,16 @@ func calcISKPIs(sections []ISStatementSection) (totalRevenue, totalExpenses, net
 	for _, s := range sections {
 		switch s.Title {
 		case "REVENUE":
-			totalRevenue = parseISAmount(s.Subtotal)
+			totalRevenue = ParseISAmount(s.Subtotal)
 		case "OPERATING EXPENSES", "OTHER EXPENSES", "COST OF SALES":
-			totalExpenses += parseISAmount(s.Subtotal)
+			totalExpenses += ParseISAmount(s.Subtotal)
 		}
 	}
 	netIncome = totalRevenue - totalExpenses
 	return
 }
 
-func parseISAmount(s string) float64 {
+func ParseISAmount(s string) float64 {
 	// Extract digits, decimal point, and leading minus sign from formatted currency strings.
 	var result float64
 	clean := ""
@@ -293,7 +293,7 @@ func mockISSections() []ISStatementSection {
 // Currency formatter (package-level, shared by all financial statement views)
 // ---------------------------------------------------------------------------
 
-func formatCurrencyFS(amount float64) string {
+func FormatCurrencyFS(amount float64) string {
 	negative := amount < 0
 	if negative {
 		amount = -amount

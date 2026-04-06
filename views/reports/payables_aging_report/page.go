@@ -136,6 +136,15 @@ func NewView(deps *Deps) view.View {
 			activeCount++
 		}
 
+		// Inject filter button + dimension chips into the table toolbar prefix
+		table.ToolbarPrefixTemplate = "report-aging-toolbar-prefix"
+		table.ToolbarPrefixData = fycha.AgingToolbarPrefixData{
+			FilterSheetURL:    filterSheetURL,
+			ActiveFilterCount: activeCount,
+			AsOfDate:          asOfDate,
+			GroupByValue:      rows,
+		}
+
 		pageData := &PageData{
 			PageData: types.PageData{
 				CacheVersion: viewCtx.CacheVersion,
@@ -147,7 +156,7 @@ func NewView(deps *Deps) view.View {
 				HeaderIcon:   "icon-bar-chart",
 				CommonLabels: deps.CommonLabels,
 			},
-			ContentTemplate:   "payables-aging-report",
+			ContentTemplate:   "payables-aging-report-content",
 			Labels:            l,
 			Summary:           summary,
 			Table:             table,

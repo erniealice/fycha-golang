@@ -1,4 +1,4 @@
-package reports
+package cash_book
 
 import (
 	"context"
@@ -8,11 +8,12 @@ import (
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
+	reports "github.com/erniealice/fycha-golang/views/reports"
 )
 
 // NewCashBookView creates the cash book report with DB data.
 func NewCashBookView(db *sql.DB, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
-	return NewReportView(ReportConfig{
+	return reports.NewReportView(reports.ReportConfig{
 		ActiveNav:    "cash",
 		ActiveSubNav: "cash-book",
 		Title:        "Cash Book",
@@ -94,7 +95,7 @@ func fetchCashBook(ctx context.Context, db *sql.DB) ([]types.TableColumn, []type
 				{Value: desc},
 				{Value: ref},
 				{Type: "badge", Value: txType, Variant: variant},
-				{Value: FormatCurrency(amount / 100)},
+				{Value: reports.FormatCurrency(amount / 100)},
 			},
 		})
 	}

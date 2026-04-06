@@ -1,4 +1,4 @@
-package reports
+package lapsing_schedule
 
 import (
 	"context"
@@ -7,6 +7,8 @@ import (
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
+
+	reports "github.com/erniealice/fycha-golang/views/reports"
 )
 
 // MockLapsingAsset represents an asset in the lapsing schedule.
@@ -33,7 +35,7 @@ func mockLapsingAssets() []MockLapsingAsset {
 
 // NewLapsingScheduleView creates the lapsing schedule report (mock data).
 func NewLapsingScheduleView(commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
-	return NewReportView(ReportConfig{
+	return reports.NewReportView(reports.ReportConfig{
 		ActiveNav:    "asset",
 		ActiveSubNav: "lapsing-schedule",
 		Title:        "Lapsing Schedule",
@@ -58,11 +60,11 @@ func NewLapsingScheduleView(commonLabels pyeza.CommonLabels, tableLabels types.T
 					ID: fmt.Sprintf("lap-%d", i+1),
 					Cells: []types.TableCell{
 						{Value: a.Name},
-						{Value: FormatCurrency(a.Cost)},
+						{Value: reports.FormatCurrency(a.Cost)},
 						{Value: fmt.Sprintf("%d months", a.UsefulLifeMonths)},
-						{Value: FormatCurrency(a.MonthlyDepr)},
-						{Value: FormatCurrency(a.Accumulated)},
-						{Value: FormatCurrency(a.BookValue)},
+						{Value: reports.FormatCurrency(a.MonthlyDepr)},
+						{Value: reports.FormatCurrency(a.Accumulated)},
+						{Value: reports.FormatCurrency(a.BookValue)},
 					},
 				}
 			}

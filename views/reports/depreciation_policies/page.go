@@ -1,4 +1,4 @@
-package reports
+package depreciation_policies
 
 import (
 	"context"
@@ -7,6 +7,8 @@ import (
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
+
+	reports "github.com/erniealice/fycha-golang/views/reports"
 )
 
 // MockDepreciationPolicy represents a depreciation policy.
@@ -31,7 +33,7 @@ func mockDepreciationPolicies() []MockDepreciationPolicy {
 
 // NewDepreciationPoliciesView creates the depreciation policies report (mock data).
 func NewDepreciationPoliciesView(commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
-	return NewReportView(ReportConfig{
+	return reports.NewReportView(reports.ReportConfig{
 		ActiveNav:    "asset",
 		ActiveSubNav: "depreciation-policies",
 		Title:        "Depreciation Policies",

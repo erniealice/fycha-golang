@@ -1,8 +1,4 @@
-{{/* Filter button — opens the filter sheet via HTMX.
-     Expects .ReportURL string, .ActiveFilterCount int, and .FilterSheetURL string in the page data.
-     FilterSheetURL carries the current query params so the sheet reflects current state. */}}
-
-{{define "report-filter-btn"}}
+{{define "report-aging-toolbar-prefix"}}
 <div class="report-header-actions">
     <button type="button" class="btn btn-primary"
             data-testid="report-filters-open-btn"
@@ -19,5 +15,16 @@
         <span class="filter-count-badge">{{.ActiveFilterCount}}</span>
         {{end}}
     </button>
+</div>
+<div class="rr-active-filters">
+    <span class="rr-chip" data-testid="rr-chip-as-of-date">
+        <span class="rr-chip-label">As of:</span>
+        <span class="rr-chip-value">{{.AsOfDate}}</span>
+    </span>
+    <span class="rr-chip-sep">&middot;</span>
+    <span class="rr-chip" data-testid="rr-chip-rows">
+        <span class="rr-chip-label">Group by:</span>
+        <span class="rr-chip-value">{{.GroupByValue}}</span>
+    </span>
 </div>
 {{end}}

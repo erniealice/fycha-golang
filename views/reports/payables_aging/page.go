@@ -1,4 +1,4 @@
-package reports
+package payables_aging
 
 import (
 	"context"
@@ -8,11 +8,12 @@ import (
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
+	reports "github.com/erniealice/fycha-golang/views/reports"
 )
 
 // NewPayablesAgingView creates the payables aging report with DB data.
 func NewPayablesAgingView(db *sql.DB, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
-	return NewReportView(ReportConfig{
+	return reports.NewReportView(reports.ReportConfig{
 		ActiveNav:    "supplier",
 		ActiveSubNav: "payables-aging",
 		Title:        "Payables Aging",
@@ -40,21 +41,21 @@ func payablesAgingTotals(rows []types.TableRow) []types.TableCell {
 		if len(row.Cells) < 7 {
 			continue
 		}
-		current += parseCurrency(row.Cells[1].Value)
-		d30 += parseCurrency(row.Cells[2].Value)
-		d60 += parseCurrency(row.Cells[3].Value)
-		d90 += parseCurrency(row.Cells[4].Value)
-		over90 += parseCurrency(row.Cells[5].Value)
-		total += parseCurrency(row.Cells[6].Value)
+		current += reports.ParseCurrency(row.Cells[1].Value)
+		d30 += reports.ParseCurrency(row.Cells[2].Value)
+		d60 += reports.ParseCurrency(row.Cells[3].Value)
+		d90 += reports.ParseCurrency(row.Cells[4].Value)
+		over90 += reports.ParseCurrency(row.Cells[5].Value)
+		total += reports.ParseCurrency(row.Cells[6].Value)
 	}
 	return []types.TableCell{
 		{Value: "Total"},
-		{Value: FormatCurrency(current), Align: "right"},
-		{Value: FormatCurrency(d30), Align: "right"},
-		{Value: FormatCurrency(d60), Align: "right"},
-		{Value: FormatCurrency(d90), Align: "right"},
-		{Value: FormatCurrency(over90), Align: "right"},
-		{Value: FormatCurrency(total), Align: "right"},
+		{Value: reports.FormatCurrency(current), Align: "right"},
+		{Value: reports.FormatCurrency(d30), Align: "right"},
+		{Value: reports.FormatCurrency(d60), Align: "right"},
+		{Value: reports.FormatCurrency(d90), Align: "right"},
+		{Value: reports.FormatCurrency(over90), Align: "right"},
+		{Value: reports.FormatCurrency(total), Align: "right"},
 	}
 }
 
@@ -124,12 +125,12 @@ func fetchPayablesAging(ctx context.Context, db *sql.DB) ([]types.TableColumn, [
 			ID: fmt.Sprintf("pa-%d", idx),
 			Cells: []types.TableCell{
 				{Value: name},
-				{Value: FormatCurrency(current / 100)},
-				{Value: FormatCurrency(d30 / 100)},
-				{Value: FormatCurrency(d60 / 100)},
-				{Value: FormatCurrency(d90 / 100)},
-				{Value: FormatCurrency(over90 / 100)},
-				{Value: FormatCurrency(total / 100)},
+				{Value: reports.FormatCurrency(current / 100)},
+				{Value: reports.FormatCurrency(d30 / 100)},
+				{Value: reports.FormatCurrency(d60 / 100)},
+				{Value: reports.FormatCurrency(d90 / 100)},
+				{Value: reports.FormatCurrency(over90 / 100)},
+				{Value: reports.FormatCurrency(total / 100)},
 			},
 		})
 	}

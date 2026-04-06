@@ -3,7 +3,6 @@ package receivables_aging_report
 import (
 	"context"
 	"fmt"
-	"html/template"
 	"log"
 	"net/url"
 	"strconv"
@@ -137,7 +136,13 @@ func NewView(deps *Deps) view.View {
 		}
 
 		// Inject filter button + dimension chips into the table toolbar prefix
-		table.ToolbarPrefix = buildAgingToolbarPrefix(filterSheetURL, activeCount, asOfDate, rows)
+		table.ToolbarPrefixTemplate = "report-aging-toolbar-prefix"
+		table.ToolbarPrefixData = fycha.AgingToolbarPrefixData{
+			FilterSheetURL:    filterSheetURL,
+			ActiveFilterCount: activeCount,
+			AsOfDate:          asOfDate,
+			GroupByValue:      rows,
+		}
 
 		pageData := &PageData{
 			PageData: types.PageData{
@@ -150,7 +155,7 @@ func NewView(deps *Deps) view.View {
 				HeaderIcon:   "icon-bar-chart",
 				CommonLabels: deps.CommonLabels,
 			},
-			ContentTemplate:   "receivables-aging-report",
+			ContentTemplate:   "receivables-aging-report-content",
 			Labels:            l,
 			Summary:           summary,
 			Table:             table,
@@ -318,21 +323,6 @@ func buildFilterSheetURL(base, asOfDate, rows string) string {
 	params.Set("as-of-date", asOfDate)
 	params.Set("rows", rows)
 	return base + "?" + params.Encode()
-}
-
-// buildAgingToolbarPrefix builds the filter button + chips HTML for the receivables aging toolbar prefix slot.
-func buildAgingToolbarPrefix(filterSheetURL string, activeCount int, asOfDate, rowDim string) template.HTML {
-	badgeHTML := ""
-	if activeCount > 0 {
-		badgeHTML = fmt.Sprintf(`<span class="filter-count-badge">%d</span>`, activeCount)
-	}
-	return template.HTML(fmt.Sprintf(
-		`<div class="report-header-actions"><button type="button" class="fycha-filter-btn" data-testid="report-filters-open-btn" aria-controls="sheetContent" aria-haspopup="dialog" hx-get="%s" hx-target="#sheetContent" hx-swap="innerHTML" hx-push-url="false" onclick="Sheet.open('Filters')"><svg class="icon" aria-hidden="true"><use href="#icon-filter"></use></svg><span>Filters</span>%s</button></div><div class="rr-active-filters"><span class="rr-chip" data-testid="rr-chip-as-of-date"><span class="rr-chip-label">As of:</span> <span class="rr-chip-value">%s</span></span><span class="rr-chip-sep">&middot;</span><span class="rr-chip" data-testid="rr-chip-rows"><span class="rr-chip-label">Group by:</span> <span class="rr-chip-value">%s</span></span></div>`,
-		template.HTMLEscapeString(filterSheetURL),
-		badgeHTML,
-		template.HTMLEscapeString(asOfDate),
-		template.HTMLEscapeString(rowDim),
-	))
 }
 
 func formatCurrency(amount float64) string {

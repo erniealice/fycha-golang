@@ -43,6 +43,9 @@ import (
 	loansmod "github.com/erniealice/fycha-golang/views/loans"
 	payrollmod "github.com/erniealice/fycha-golang/views/payroll"
 	reportmod "github.com/erniealice/fycha-golang/views/reports"
+	cashbookview "github.com/erniealice/fycha-golang/views/reports/cash_book"
+	depreciationview "github.com/erniealice/fycha-golang/views/reports/depreciation_policies"
+	lapsingview "github.com/erniealice/fycha-golang/views/reports/lapsing_schedule"
 )
 
 // ---------------------------------------------------------------------------
@@ -264,9 +267,9 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 			assetmod.NewModule(assetDeps).RegisterRoutes(ctx.Routes)
 
 			// Assets → Reports → Lapsing Schedule
-			ctx.Routes.GET(assetRoutes.LapsingScheduleURL, reportmod.NewLapsingScheduleView(ctx.Common, ctx.Table))
+			ctx.Routes.GET(assetRoutes.LapsingScheduleURL, lapsingview.NewLapsingScheduleView(ctx.Common, ctx.Table))
 			// Assets → Settings → Depreciation Policies
-			ctx.Routes.GET(assetRoutes.DepreciationPoliciesURL, reportmod.NewDepreciationPoliciesView(ctx.Common, ctx.Table))
+			ctx.Routes.GET(assetRoutes.DepreciationPoliciesURL, depreciationview.NewDepreciationPoliciesView(ctx.Common, ctx.Table))
 		}
 
 		// =====================================================================
@@ -388,7 +391,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 			}).RegisterRoutes(ctx.Routes)
 
 			// Cash → Reports → Cash Book
-			ctx.Routes.GET(fycha.CashBookURL, reportmod.NewCashBookView(ctx.SqlDB, ctx.Common, ctx.Table))
+			ctx.Routes.GET(fycha.CashBookURL, cashbookview.NewCashBookView(ctx.SqlDB, ctx.Common, ctx.Table))
 		}
 
 		// =====================================================================

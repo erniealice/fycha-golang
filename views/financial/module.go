@@ -2,7 +2,10 @@ package financial
 
 import (
 	fycha "github.com/erniealice/fycha-golang"
-	fsviews "github.com/erniealice/fycha-golang/views/reports"
+	balancesheetview "github.com/erniealice/fycha-golang/views/reports/balance_sheet"
+	cashflowview "github.com/erniealice/fycha-golang/views/reports/cash_flow"
+	equitychangesview "github.com/erniealice/fycha-golang/views/reports/equity_changes"
+	incomestatementview "github.com/erniealice/fycha-golang/views/reports/income_statement"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -26,22 +29,22 @@ type Module struct {
 // NewModule creates a financial statements module with real report views.
 func NewModule(deps *ModuleDeps) *Module {
 	return &Module{
-		incomeStatement: fsviews.NewIncomeStatementView(&fsviews.IncomeStatementDeps{
+		incomeStatement: incomestatementview.NewIncomeStatementView(&incomestatementview.IncomeStatementDeps{
 			CommonLabels: deps.CommonLabels,
 			TableLabels:  deps.TableLabels,
 			Labels:       deps.Labels,
 		}),
-		balanceSheet: fsviews.NewBalanceSheetView(&fsviews.BalanceSheetDeps{
+		balanceSheet: balancesheetview.NewBalanceSheetView(&balancesheetview.BalanceSheetDeps{
 			CommonLabels: deps.CommonLabels,
 			TableLabels:  deps.TableLabels,
 			Labels:       deps.Labels,
 		}),
-		cashFlow: fsviews.NewCashFlowView(&fsviews.CashFlowDeps{
+		cashFlow: cashflowview.NewCashFlowView(&cashflowview.CashFlowDeps{
 			CommonLabels: deps.CommonLabels,
 			TableLabels:  deps.TableLabels,
 			Labels:       deps.Labels,
 		}),
-		equityChanges: fsviews.NewEquityChangesView(&fsviews.EquityChangesDeps{
+		equityChanges: equitychangesview.NewEquityChangesView(&equitychangesview.EquityChangesDeps{
 			CommonLabels: deps.CommonLabels,
 			TableLabels:  deps.TableLabels,
 			Labels:       deps.Labels,

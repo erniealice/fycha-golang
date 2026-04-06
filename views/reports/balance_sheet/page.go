@@ -1,4 +1,4 @@
-package reports
+package balance_sheet
 
 import (
 	"context"
@@ -176,6 +176,52 @@ func calcBSKPIs(sections []BSSection) (totalAssets, totalLiab, totalEquity float
 		}
 	}
 	return
+}
+
+// parseISAmount extracts a float64 from a formatted currency string.
+// Copied from income_statement package to avoid cross-sibling dependency.
+func parseISAmount(s string) float64 {
+	var result float64
+	clean := ""
+	for _, ch := range s {
+		if ch == '-' || (ch >= '0' && ch <= '9') || ch == '.' {
+			clean += string(ch)
+		}
+	}
+	fmt.Sscanf(clean, "%f", &result)
+	return result
+}
+
+// formatCurrencyFS formats a float64 as a Philippine peso currency string.
+// Copied from income_statement package to avoid cross-sibling dependency.
+func formatCurrencyFS(amount float64) string {
+	negative := amount < 0
+	if negative {
+		amount = -amount
+	}
+	whole := int64(amount)
+	frac := int64((amount-float64(whole))*100 + 0.5)
+	if frac >= 100 {
+		whole++
+		frac -= 100
+	}
+	wholeStr := fmt.Sprintf("%d", whole)
+	n := len(wholeStr)
+	if n > 3 {
+		var result []byte
+		for i, ch := range wholeStr {
+			if i > 0 && (n-i)%3 == 0 {
+				result = append(result, ',')
+			}
+			result = append(result, byte(ch))
+		}
+		wholeStr = string(result)
+	}
+	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
+	if negative {
+		formatted = "-" + formatted
+	}
+	return formatted
 }
 
 // ---------------------------------------------------------------------------

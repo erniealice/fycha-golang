@@ -1,4 +1,4 @@
-package reports
+package cash_flow
 
 import (
 	"context"
