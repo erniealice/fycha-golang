@@ -6,7 +6,7 @@
       id="payablesAgingFilterForm"
       hx-get="{{.ReportURL}}"
       hx-target=".page-content"
-      hx-swap="innerHTML show:none"
+      hx-swap="outerHTML show:none"
       hx-push-url="true"
       hx-indicator=".page-content"
       hx-on::before-request="Sheet.close()"
@@ -46,7 +46,7 @@
            data-testid="report-filters-clear"
            hx-get="{{.ReportURL}}"
            hx-target=".page-content"
-           hx-swap="innerHTML show:none"
+           hx-swap="outerHTML show:none"
            hx-push-url="true"
            hx-indicator=".page-content"
            hx-on::before-request="Sheet.close()">Clear</a>

@@ -216,8 +216,11 @@ func buildSummary(s *agingpb.ReceivablesAgingSummary, l fycha.ReceivablesAgingRe
 }
 
 func buildTable(resp *agingpb.ReceivablesAgingResponse, l fycha.ReceivablesAgingReportLabels, tableLabels types.TableLabels, rowDim string) *types.TableConfig {
-	// Fixed columns for aging buckets
+	// Fixed columns for aging buckets. The name column is listed first so that
+	// ApplyColumnStyles maps columns[i] to cells[i] correctly (cells[0] is the
+	// "name" type cell; columns[0] must correspond to it).
 	columns := []types.TableColumn{
+		{Key: "row_key", Label: rowDimensionLabel(l, rowDim), Sortable: true},
 		{Key: "current", Label: l.BucketCurrent, Sortable: true, Align: "right", MinWidth: "7.5rem"},
 		{Key: "days_1_30", Label: l.Bucket1To30, Sortable: true, Align: "right", MinWidth: "7.5rem"},
 		{Key: "days_31_60", Label: l.Bucket31To60, Sortable: true, Align: "right", MinWidth: "7.5rem"},
@@ -228,9 +231,8 @@ func buildTable(resp *agingpb.ReceivablesAgingResponse, l fycha.ReceivablesAging
 	}
 
 	table := &types.TableConfig{
-		ID:              "receivablesAgingTable",
-		NameColumnLabel: rowDimensionLabel(l, rowDim),
-		Columns:         columns,
+		ID:      "receivablesAgingTable",
+		Columns: columns,
 		ShowSearch:      false,
 		ShowFilters:     false,
 		ShowSort:        false,

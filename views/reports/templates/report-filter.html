@@ -6,7 +6,7 @@
 <form class="filter-sheet-form"
       hx-get="{{.ReportURL}}"
       hx-target="closest .page-content"
-      hx-swap="innerHTML"
+      hx-swap="outerHTML"
       hx-push-url="true">
 
     {{/* ─── Period Section ─── */}}
@@ -52,7 +52,7 @@
         <a href="{{.ReportURL}}" class="btn btn-ghost" data-testid="report-filters-clear"
            hx-get="{{.ReportURL}}"
            hx-target="closest .page-content"
-           hx-swap="innerHTML"
+           hx-swap="outerHTML"
            hx-push-url="true"
            onclick="Sheet.close()">Clear</a>
     </div>

@@ -7,7 +7,7 @@
       id="disbursementReportFilterForm"
       hx-get="{{.ReportURL}}"
       hx-target=".page-content"
-      hx-swap="innerHTML show:none"
+      hx-swap="outerHTML show:none"
       hx-push-url="true"
       hx-indicator=".page-content"
       hx-on::before-request="Sheet.close()"
@@ -175,7 +175,7 @@
         <a href="{{.ReportURL}}" class="btn btn-ghost" data-testid="report-filters-clear"
            hx-get="{{.ReportURL}}"
            hx-target=".page-content"
-           hx-swap="innerHTML show:none"
+           hx-swap="outerHTML show:none"
            hx-push-url="true"
            hx-indicator=".page-content"
            hx-on::before-request="Sheet.close()">{{.Labels.Clear}}</a>
