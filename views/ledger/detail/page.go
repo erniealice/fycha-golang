@@ -329,11 +329,11 @@ type EntryRow struct {
 
 func buildEntriesTable(entries []EntryRow, labels fycha.AccountLabels, tableLabels types.TableLabels, routes fycha.AccountRoutes) *types.TableConfig {
 	columns := []types.TableColumn{
-		{Key: "date", Label: labels.Columns.Date, Sortable: true, Width: "100px"},
-		{Key: "entry_number", Label: labels.Columns.EntryNumber, Sortable: true, Width: "110px"},
+		{Key: "date", Label: labels.Columns.Date, Sortable: true, WidthClass: "col-lg"},
+		{Key: "entry_number", Label: labels.Columns.EntryNumber, Sortable: true, WidthClass: "col-xl"},
 		{Key: "description", Label: labels.Columns.Description, Sortable: false},
-		{Key: "debit", Label: labels.Columns.Debit, Sortable: false, Width: "130px", Align: "right"},
-		{Key: "credit", Label: labels.Columns.Credit, Sortable: false, Width: "130px", Align: "right"},
+		{Key: "debit", Label: labels.Columns.Debit, Sortable: false, WidthClass: "col-3xl", Align: "right"},
+		{Key: "credit", Label: labels.Columns.Credit, Sortable: false, WidthClass: "col-3xl", Align: "right"},
 	}
 
 	rows := make([]types.TableRow, len(entries))

@@ -166,11 +166,11 @@ func buildPettyCashRegisterTableConfig(deps *PettyCashDeps, perms *types.UserPer
 func pettyCashRegisterColumns(l fycha.PettyCashLabels) []types.TableColumn {
 	return []types.TableColumn{
 		{Key: "name", Label: l.Columns.Name, Sortable: true},
-		{Key: "authorized_amount", Label: l.Columns.AuthorizedAmount, Sortable: true, Width: "160px"},
-		{Key: "current_balance", Label: l.Columns.CurrentBalance, Sortable: true, Width: "150px"},
+		{Key: "authorized_amount", Label: l.Columns.AuthorizedAmount, Sortable: true, WidthClass: "col-5xl"},
+		{Key: "current_balance", Label: l.Columns.CurrentBalance, Sortable: true, WidthClass: "col-4xl"},
 		{Key: "custodian", Label: l.Columns.Custodian, Sortable: true},
 		{Key: "location", Label: l.Columns.Location, Sortable: true},
-		{Key: "status", Label: l.Columns.Status, Sortable: true, Width: "110px"},
+		{Key: "status", Label: l.Columns.Status, Sortable: true, WidthClass: "col-xl"},
 	}
 }
 
@@ -225,8 +225,8 @@ func buildReplenishmentTableConfig(deps *PettyCashDeps) *types.TableConfig {
 	l := deps.Labels
 	columns := []types.TableColumn{
 		{Key: "fund", Label: l.Columns.Fund, Sortable: true},
-		{Key: "amount", Label: l.Columns.Amount, Sortable: true, Width: "140px"},
-		{Key: "date", Label: l.Columns.Date, Sortable: true, Width: "130px"},
+		{Key: "amount", Label: l.Columns.Amount, Sortable: true, WidthClass: "col-3xl"},
+		{Key: "date", Label: l.Columns.Date, Sortable: true, WidthClass: "col-3xl"},
 		{Key: "notes", Label: l.Columns.Notes, Sortable: false},
 	}
 
@@ -285,8 +285,8 @@ func buildCustodianBalancesTableConfig(deps *PettyCashDeps) *types.TableConfig {
 	columns := []types.TableColumn{
 		{Key: "custodian", Label: l.Columns.Custodian, Sortable: true},
 		{Key: "location", Label: l.Columns.Location, Sortable: true},
-		{Key: "total_funds", Label: l.Columns.TotalFunds, Sortable: true, Width: "120px"},
-		{Key: "total_balance", Label: l.Columns.TotalBalance, Sortable: true, Width: "150px"},
+		{Key: "total_funds", Label: l.Columns.TotalFunds, Sortable: true, WidthClass: "col-2xl"},
+		{Key: "total_balance", Label: l.Columns.TotalBalance, Sortable: true, WidthClass: "col-4xl"},
 	}
 
 	type custodianRow struct {

@@ -125,10 +125,10 @@ func buildDepositTableConfig(deps *DepositDeps, statusFilter string, perms *type
 func depositColumns(l fycha.DepositLabels) []types.TableColumn {
 	return []types.TableColumn{
 		{Key: "counterparty", Label: l.Columns.Counterparty, Sortable: true},
-		{Key: "direction", Label: l.Columns.Direction, Sortable: true, Width: "160px"},
-		{Key: "amount", Label: l.Columns.Amount, Sortable: true, Width: "140px"},
-		{Key: "deposit_date", Label: l.Columns.DepositDate, Sortable: true, Width: "130px"},
-		{Key: "status", Label: l.Columns.Status, Sortable: true, Width: "130px"},
+		{Key: "direction", Label: l.Columns.Direction, Sortable: true, WidthClass: "col-5xl"},
+		{Key: "amount", Label: l.Columns.Amount, Sortable: true, WidthClass: "col-3xl"},
+		{Key: "deposit_date", Label: l.Columns.DepositDate, Sortable: true, WidthClass: "col-3xl"},
+		{Key: "status", Label: l.Columns.Status, Sortable: true, WidthClass: "col-3xl"},
 		{Key: "notes", Label: l.Columns.Notes, Sortable: false},
 	}
 }

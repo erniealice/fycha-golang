@@ -163,8 +163,8 @@ func buildTableConfig(deps *Deps, accounts []EquityAccountRow, perms *types.User
 	columns := []types.TableColumn{
 		{Key: "name", Label: l.Columns.Name, Sortable: false},
 		{Key: "owner", Label: l.Columns.OwnerName, Sortable: false},
-		{Key: "type", Label: l.Columns.AccountType, Sortable: false, Width: "160px"},
-		{Key: "balance", Label: l.Columns.Balance, Sortable: false, Width: "140px", Align: "right"},
+		{Key: "type", Label: l.Columns.AccountType, Sortable: false, WidthClass: "col-5xl"},
+		{Key: "balance", Label: l.Columns.Balance, Sortable: false, WidthClass: "col-3xl", Align: "right"},
 	}
 
 	rows := []types.TableRow{}

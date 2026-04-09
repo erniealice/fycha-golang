@@ -181,12 +181,12 @@ func buildTableConfig(deps *Deps, status string, entries []JournalRow, perms *ty
 
 func journalColumns(l fycha.JournalLabels) []types.TableColumn {
 	return []types.TableColumn{
-		{Key: "entry_number", Label: l.Columns.EntryNumber, Sortable: true, Width: "110px"},
-		{Key: "date", Label: l.Columns.Date, Sortable: true, Width: "100px"},
+		{Key: "entry_number", Label: l.Columns.EntryNumber, Sortable: true, WidthClass: "col-xl"},
+		{Key: "date", Label: l.Columns.Date, Sortable: true, WidthClass: "col-lg"},
 		{Key: "description", Label: l.Columns.Description, Sortable: false},
-		{Key: "amount", Label: l.Columns.Amount, Sortable: false, Width: "140px", Align: "right"},
-		{Key: "source", Label: l.Columns.Source, Sortable: false, Width: "120px"},
-		{Key: "status", Label: l.Columns.Status, Sortable: false, Width: "100px"},
+		{Key: "amount", Label: l.Columns.Amount, Sortable: false, WidthClass: "col-3xl", Align: "right"},
+		{Key: "source", Label: l.Columns.Source, Sortable: false, WidthClass: "col-2xl"},
+		{Key: "status", Label: l.Columns.Status, Sortable: false, WidthClass: "col-lg"},
 	}
 }
 

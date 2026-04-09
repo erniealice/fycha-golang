@@ -127,7 +127,7 @@ func NewIncomeStatementView(deps *IncomeStatementDeps) view.View {
 			}
 		}
 		if sections == nil {
-			sections = mockISSections()
+			sections = mockISSections(deps.Labels.IncomeStatement.Sections)
 		}
 
 		// Calculate KPIs from sections
@@ -178,14 +178,19 @@ func NewIncomeStatementView(deps *IncomeStatementDeps) view.View {
 func calcISKPIs(sections []ISStatementSection) (totalRevenue, totalExpenses, netIncome float64) {
 	// Sections are: Revenue, Cost of Sales, (Gross Profit calc), Operating Expenses,
 	// (Operating Income calc), Other Expenses, (Net Income calc).
-	// We identify by title prefix.
-	for _, s := range sections {
-		switch s.Title {
-		case "REVENUE":
-			totalRevenue = ParseISAmount(s.Subtotal)
-		case "OPERATING EXPENSES", "OTHER EXPENSES", "COST OF SALES":
-			totalExpenses += ParseISAmount(s.Subtotal)
+	// We identify by position: revenue is first, remainder are expenses or calculated totals.
+	if len(sections) == 0 {
+		return
+	}
+	totalRevenue = ParseISAmount(sections[0].Subtotal)
+	for i := 1; i < len(sections); i++ {
+		s := sections[i]
+		// Skip calculated total rows (Gross Profit, Operating Income, Net Income) which have Bold=true
+		// and no sub-groups/lines of their own, to avoid double-counting.
+		if s.Bold && len(s.Lines) == 0 && len(s.Groups) == 0 {
+			continue
 		}
+		totalExpenses += ParseISAmount(s.Subtotal)
 	}
 	netIncome = totalRevenue - totalExpenses
 	return
@@ -210,10 +215,46 @@ func ParseISAmount(s string) float64 {
 
 // mockISSections returns a realistic income statement for a Philippine salon/spa.
 // Numbers are based on the plan doc examples.
-func mockISSections() []ISStatementSection {
+func mockISSections(sl fycha.IncomeStatementSectionLabels) []ISStatementSection {
+	rev := sl.Revenue
+	if rev == "" {
+		rev = "REVENUE"
+	}
+	cos := sl.CostOfSales
+	if cos == "" {
+		cos = "COST OF SALES"
+	}
+	gp := sl.GrossProfit
+	if gp == "" {
+		gp = "GROSS PROFIT"
+	}
+	opex := sl.OperatingExpenses
+	if opex == "" {
+		opex = "OPERATING EXPENSES"
+	}
+	sell := sl.SellingExpenses
+	if sell == "" {
+		sell = "Selling Expenses"
+	}
+	ga := sl.GeneralAdmin
+	if ga == "" {
+		ga = "General & Administrative"
+	}
+	oi := sl.OperatingIncome
+	if oi == "" {
+		oi = "OPERATING INCOME"
+	}
+	other := sl.OtherExpenses
+	if other == "" {
+		other = "OTHER EXPENSES"
+	}
+	ni := sl.NetIncome
+	if ni == "" {
+		ni = "NET INCOME"
+	}
 	return []ISStatementSection{
 		{
-			Title: "REVENUE",
+			Title: rev,
 			Lines: []ISStatementLine{
 				{Code: "4010", Name: "Hair Services Revenue", CurrentPeriod: "₱380,000.00", PriorPeriod: "₱345,000.00", Change: "+10.1%"},
 				{Code: "4020", Name: "Nail Services Revenue", CurrentPeriod: "₱52,000.00", PriorPeriod: "₱48,000.00", Change: "+8.3%"},
@@ -223,7 +264,7 @@ func mockISSections() []ISStatementSection {
 			Bold:     true,
 		},
 		{
-			Title: "COST OF SALES",
+			Title: cos,
 			Lines: []ISStatementLine{
 				{Code: "5010", Name: "Salon Supplies Used", CurrentPeriod: "₱28,000.00", PriorPeriod: "₱25,500.00", Change: "+9.8%"},
 				{Code: "5020", Name: "Cost of Products Sold", CurrentPeriod: "₱12,000.00", PriorPeriod: "₱11,200.00", Change: "+7.1%"},
@@ -232,16 +273,16 @@ func mockISSections() []ISStatementSection {
 			Bold:     false,
 		},
 		{
-			Title:    "GROSS PROFIT",
+			Title:    gp,
 			Lines:    nil,
 			Subtotal: "₱410,000.00",
 			Bold:     true,
 		},
 		{
-			Title: "OPERATING EXPENSES",
+			Title: opex,
 			Groups: []ISStatementGroup{
 				{
-					Title: "Selling Expenses",
+					Title: sell,
 					Lines: []ISStatementLine{
 						{Code: "6410", Name: "Marketing & Advertising", CurrentPeriod: "₱18,000.00", PriorPeriod: "₱15,000.00", Change: "+20.0%"},
 						{Code: "5030", Name: "Service Commission Expense", CurrentPeriod: "₱38,000.00", PriorPeriod: "₱34,500.00", Change: "+10.1%"},
@@ -249,7 +290,7 @@ func mockISSections() []ISStatementSection {
 					Subtotal: "₱56,000.00",
 				},
 				{
-					Title: "General & Administrative",
+					Title: ga,
 					Lines: []ISStatementLine{
 						{Code: "6110", Name: "Salaries & Wages", CurrentPeriod: "₱180,000.00", PriorPeriod: "₱175,000.00", Change: "+2.9%"},
 						{Code: "6120", Name: "SSS / PhilHealth / Pag-IBIG", CurrentPeriod: "₱12,400.00", PriorPeriod: "₱12,400.00", Change: "0.0%"},
@@ -266,13 +307,13 @@ func mockISSections() []ISStatementSection {
 			Bold:     false,
 		},
 		{
-			Title:    "OPERATING INCOME",
+			Title:    oi,
 			Lines:    nil,
 			Subtotal: "₱75,000.00",
 			Bold:     true,
 		},
 		{
-			Title: "OTHER EXPENSES",
+			Title: other,
 			Lines: []ISStatementLine{
 				{Code: "7010", Name: "Bank Charges & Fees", CurrentPeriod: "₱5,500.00", PriorPeriod: "₱4,800.00", Change: "+14.6%"},
 				{Code: "7020", Name: "Interest Expense", CurrentPeriod: "₱2,000.00", PriorPeriod: "₱2,000.00", Change: "0.0%"},
@@ -281,7 +322,7 @@ func mockISSections() []ISStatementSection {
 			Bold:     false,
 		},
 		{
-			Title:    "NET INCOME",
+			Title:    ni,
 			Lines:    nil,
 			Subtotal: "₱67,500.00",
 			Bold:     true,

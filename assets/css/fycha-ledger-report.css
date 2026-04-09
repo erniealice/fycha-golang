@@ -252,7 +252,7 @@
 /* ── Grand Total Row ── */
 .table-totals-row td {
     font-weight: var(--font-weight-bold);
-    border-top: 2px solid var(--text-primary);
+    border-top: var(--border-width-thick) solid var(--border);
     padding-top: var(--spacing-md);
 }
 

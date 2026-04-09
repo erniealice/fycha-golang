@@ -69,7 +69,7 @@
       <div class="card__header">
         <h4 class="card__title">{{.Labels.Detail.Info.Title}}</h4>
         {{if .CanEdit}}
-        <a href="{{.EditURL}}" class="btn btn--secondary btn--sm" hx-get="{{.EditURL}}" hx-target="#sheetContent" hx-swap="innerHTML" hx-push-url="false"
+        <a href="{{.EditURL}}" class="btn btn-secondary btn-sm" hx-get="{{.EditURL}}" hx-target="#sheetContent" hx-swap="innerHTML" hx-push-url="false"
            hx-on::after-request="Sheet.open()">
           {{template "icon-edit"}}
           <span>{{.Labels.Actions.Edit}}</span>

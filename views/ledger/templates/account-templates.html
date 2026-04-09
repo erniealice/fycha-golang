@@ -90,7 +90,7 @@
         {{if gt .AccountCount 0}}
           {{if .PreviewURL}}
           <button type="button"
-            class="btn btn--secondary btn--sm"
+            class="btn btn-secondary btn-sm"
             hx-get="{{.PreviewURL}}"
             hx-target="#dialogContent"
             hx-swap="innerHTML"
@@ -100,11 +100,11 @@
           </button>
           {{end}}
           {{if .IsApplied}}
-          <span class="btn btn--ghost btn--sm" aria-disabled="true">{{$.Labels.AlreadyApplied}}</span>
+          <span class="btn btn-ghost btn-sm" aria-disabled="true">{{$.Labels.AlreadyApplied}}</span>
           {{else}}
             {{if .ApplyURL}}
             <button type="button"
-              class="btn btn--primary btn--sm"
+              class="btn btn-primary btn-sm"
               hx-post="{{.ApplyURL}}"
               hx-confirm="{{$.Labels.ConfirmApply}}"
               hx-swap="none"
@@ -114,7 +114,7 @@
             {{end}}
           {{end}}
         {{else}}
-          <span class="btn btn--ghost btn--sm" aria-disabled="true">{{$.Labels.ComingSoon}}</span>
+          <span class="btn btn-ghost btn-sm" aria-disabled="true">{{$.Labels.ComingSoon}}</span>
         {{end}}
       </div>
 
@@ -173,10 +173,10 @@
   <p class="dialog-note">{{.Labels.SkipNote}}</p>
 </div>
 <div class="dialog-footer">
-  <button type="button" class="btn btn--secondary" onclick="Dialog.close()">{{.CommonLabels.Buttons.Cancel}}</button>
+  <button type="button" class="btn btn-secondary" onclick="Dialog.close()">{{.CommonLabels.Buttons.Cancel}}</button>
   {{if .ApplyURL}}
   <button type="button"
-    class="btn btn--primary"
+    class="btn btn-primary"
     hx-post="{{.ApplyURL}}"
     hx-swap="none"
     hx-on::after-request="AccountTemplates.handleApplyResponse(event); Dialog.close();">

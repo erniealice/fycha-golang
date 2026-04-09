@@ -67,24 +67,71 @@ type ReportsLabels struct {
 	BalanceSheet    BalanceSheetLabels    `json:"balanceSheet"`
 	CashFlow        CashFlowLabels        `json:"cashFlow"`
 	EquityChanges   EquityChangesLabels   `json:"equityChanges"`
+	TrialBalance    TrialBalanceLabels    `json:"trialBalance"`
+}
+
+// TrialBalanceLabels holds translatable strings for the Trial Balance report page.
+type TrialBalanceLabels struct {
+	Title         string `json:"title"`
+	Subtitle      string `json:"subtitle"`
+	Totals        string `json:"totals"`
+	EmptyTitle    string `json:"emptyTitle"`
+	EmptyMessage  string `json:"emptyMessage"`
 }
 
 // IncomeStatementLabels holds translatable strings for the Income Statement page.
 type IncomeStatementLabels struct {
 	Title    string `json:"title"`
 	Subtitle string `json:"subtitle"`
+	Sections IncomeStatementSectionLabels `json:"sections"`
+}
+
+// IncomeStatementSectionLabels holds the section titles for the income statement.
+type IncomeStatementSectionLabels struct {
+	Revenue           string `json:"revenue"`
+	CostOfSales       string `json:"costOfSales"`
+	GrossProfit       string `json:"grossProfit"`
+	OperatingExpenses string `json:"operatingExpenses"`
+	SellingExpenses   string `json:"sellingExpenses"`
+	GeneralAdmin      string `json:"generalAdmin"`
+	OperatingIncome   string `json:"operatingIncome"`
+	OtherExpenses     string `json:"otherExpenses"`
+	NetIncome         string `json:"netIncome"`
 }
 
 // BalanceSheetLabels holds translatable strings for the Balance Sheet page.
 type BalanceSheetLabels struct {
 	Title    string `json:"title"`
 	Subtitle string `json:"subtitle"`
+	Sections BalanceSheetSectionLabels `json:"sections"`
+}
+
+// BalanceSheetSectionLabels holds the section and classification titles for the balance sheet.
+type BalanceSheetSectionLabels struct {
+	Assets                string `json:"assets"`
+	CurrentAssets         string `json:"currentAssets"`
+	NonCurrentAssets      string `json:"nonCurrentAssets"`
+	Liabilities           string `json:"liabilities"`
+	CurrentLiabilities    string `json:"currentLiabilities"`
+	NonCurrentLiabilities string `json:"nonCurrentLiabilities"`
+	Equity                string `json:"equity"`
 }
 
 // CashFlowLabels holds translatable strings for the Cash Flow Statement page.
 type CashFlowLabels struct {
 	Title    string `json:"title"`
 	Subtitle string `json:"subtitle"`
+	Sections CashFlowSectionLabels `json:"sections"`
+}
+
+// CashFlowSectionLabels holds the activity section titles for the cash flow statement.
+type CashFlowSectionLabels struct {
+	OperatingActivities  string `json:"operatingActivities"`
+	InvestingActivities  string `json:"investingActivities"`
+	FinancingActivities  string `json:"financingActivities"`
+	NetCashOperating     string `json:"netCashOperating"`
+	NetCashInvesting     string `json:"netCashInvesting"`
+	NetCashFinancing     string `json:"netCashFinancing"`
 }
 
 // EquityChangesLabels holds translatable strings for the Statement of Changes in Equity page.

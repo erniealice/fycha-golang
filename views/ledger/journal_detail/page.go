@@ -271,11 +271,11 @@ func protoToViewModel(e *jepb.JournalEntry) journalViewModel {
 
 func buildLinesTable(lines []LineRow, labels fycha.JournalLabels, tableLabels types.TableLabels) *types.TableConfig {
 	columns := []types.TableColumn{
-		{Key: "account_code", Label: labels.Lines.AccountCode, Width: "120px"},
+		{Key: "account_code", Label: labels.Lines.AccountCode, WidthClass: "col-2xl"},
 		{Key: "account_name", Label: labels.Lines.AccountName},
 		{Key: "memo", Label: labels.Lines.Memo},
-		{Key: "debit", Label: labels.Lines.Debit, Width: "130px", Align: "right"},
-		{Key: "credit", Label: labels.Lines.Credit, Width: "130px", Align: "right"},
+		{Key: "debit", Label: labels.Lines.Debit, WidthClass: "col-3xl", Align: "right"},
+		{Key: "credit", Label: labels.Lines.Credit, WidthClass: "col-3xl", Align: "right"},
 	}
 
 	rows := make([]types.TableRow, len(lines))

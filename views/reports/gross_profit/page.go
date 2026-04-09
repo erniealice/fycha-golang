@@ -247,24 +247,24 @@ func buildTable(items []*reportpb.GrossProfitLineItem, summary *reportpb.GrossPr
 			{
 				Label: l.RevenueGroup,
 				Columns: []types.TableColumn{
-					{Key: "totalRevenue", Label: l.GrossRevenue, Sortable: true, Align: "right", MinWidth: "120px"},
-					{Key: "totalDiscount", Label: l.Discount, Sortable: true, Align: "right", MinWidth: "100px"},
-					{Key: "netRevenue", Label: l.NetRevenue, Sortable: true, Align: "right", MinWidth: "120px"},
+					{Key: "totalRevenue", Label: l.GrossRevenue, Sortable: true, Align: "right", MinWidth: "7.5rem"},
+					{Key: "totalDiscount", Label: l.Discount, Sortable: true, Align: "right", MinWidth: "6.25rem"},
+					{Key: "netRevenue", Label: l.NetRevenue, Sortable: true, Align: "right", MinWidth: "7.5rem"},
 				},
 			},
 			{
 				Label: l.ProfitabilityGroup,
 				Columns: []types.TableColumn{
-					{Key: "cogs", Label: l.COGS, Sortable: true, Align: "right", MinWidth: "120px"},
-					{Key: "grossProfit", Label: l.GrossProfit, Sortable: true, Align: "right", MinWidth: "120px"},
-					{Key: "margin", Label: l.Margin, Sortable: true, Align: "right", MinWidth: "80px"},
+					{Key: "cogs", Label: l.COGS, Sortable: true, Align: "right", MinWidth: "7.5rem"},
+					{Key: "grossProfit", Label: l.GrossProfit, Sortable: true, Align: "right", MinWidth: "7.5rem"},
+					{Key: "margin", Label: l.Margin, Sortable: true, Align: "right", MinWidth: "5rem"},
 				},
 			},
 			{
 				Label: l.VolumeGroup,
 				Columns: []types.TableColumn{
-					{Key: "unitsSold", Label: l.UnitsSold, Sortable: true, Align: "right", MinWidth: "80px"},
-					{Key: "txnCount", Label: l.Transactions, Sortable: true, Align: "right", MinWidth: "80px"},
+					{Key: "unitsSold", Label: l.UnitsSold, Sortable: true, Align: "right", MinWidth: "5rem"},
+					{Key: "txnCount", Label: l.Transactions, Sortable: true, Align: "right", MinWidth: "5rem"},
 				},
 			},
 		},

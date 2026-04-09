@@ -115,7 +115,7 @@ The "Post" submit button is disabled while the entry is unbalanced.
       </table>
 
       <div class="journal-lines-footer">
-        <button type="button" class="btn btn--ghost btn--sm" id="je-add-line">
+        <button type="button" class="btn btn-ghost btn-sm" id="je-add-line">
           {{template "icon-plus"}}
           {{.Labels.AddLine}}
         </button>
@@ -132,12 +132,12 @@ The "Post" submit button is disabled while the entry is unbalanced.
 
   {{/* ---- Sheet footer ---- */}}
   <div class="sheet-footer">
-    <button type="button" class="btn btn--ghost" onclick="Sheet.close()">{{.CommonLabels.Buttons.Cancel}}</button>
+    <button type="button" class="btn btn-ghost" onclick="Sheet.close()">{{.CommonLabels.Buttons.Cancel}}</button>
     <div class="sheet-footer__actions">
-      <button type="submit" name="submit" value="draft" class="btn btn--secondary">
+      <button type="submit" name="submit" value="draft" class="btn btn-secondary">
         {{.Labels.SaveDraft}}
       </button>
-      <button type="submit" name="submit" value="post" class="btn btn--primary" id="je-post-btn" disabled>
+      <button type="submit" name="submit" value="post" class="btn btn-primary" id="je-post-btn" disabled>
         {{.Labels.PostEntry}}
       </button>
     </div>

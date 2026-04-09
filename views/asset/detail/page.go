@@ -333,7 +333,7 @@ func buildMaintenanceTable(records []MaintenanceRow, labels fycha.AssetLabels, t
 		{Key: "date", Label: labels.Columns.Date, Sortable: true},
 		{Key: "type", Label: labels.Columns.Type, Sortable: true},
 		{Key: "description", Label: labels.Columns.Description},
-		{Key: "status", Label: labels.Columns.Status, Width: "120px"},
+		{Key: "status", Label: labels.Columns.Status, WidthClass: "col-2xl"},
 		{Key: "cost", Label: labels.Columns.Cost, Align: "right"},
 	}
 

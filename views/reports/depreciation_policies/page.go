@@ -48,7 +48,7 @@ func NewDepreciationPoliciesView(commonLabels pyeza.CommonLabels, tableLabels ty
 				{Key: "method", Label: "Method", Sortable: true},
 				{Key: "useful-life", Label: "Default Useful Life", Sortable: true, Align: "right"},
 				{Key: "salvage", Label: "Salvage Rate", Sortable: true, Align: "right"},
-				{Key: "status", Label: "Status", Sortable: true, Width: "120px"},
+				{Key: "status", Label: "Status", Sortable: true, WidthClass: "col-2xl"},
 			}
 			policies := mockDepreciationPolicies()
 			rows := make([]types.TableRow, len(policies))

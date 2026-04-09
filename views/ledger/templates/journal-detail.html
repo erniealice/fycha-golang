@@ -42,7 +42,7 @@
       <div class="card__header">
         <h4 class="card__title">{{.Labels.Detail.Info.Title}}</h4>
         {{if .CanEdit}}
-        <a href="{{.EditURL}}" class="btn btn--secondary btn--sm"
+        <a href="{{.EditURL}}" class="btn btn-secondary btn-sm"
            hx-get="{{.EditURL}}" hx-target="#sheetContent" hx-swap="innerHTML" hx-push-url="false"
            hx-on::after-request="Sheet.open()">
           {{template "icon-edit"}}
@@ -153,7 +153,7 @@
   {{if or .CanPost .CanReverse .CanDelete}}
   <div class="detail-actions">
     {{if .CanPost}}
-    <button class="btn btn--primary"
+    <button class="btn btn-primary"
             hx-post="{{.PostURL}}" hx-swap="none"
             hx-confirm="{{.Labels.Confirm.Post}}">
       {{template "icon-check"}}
@@ -161,7 +161,7 @@
     </button>
     {{end}}
     {{if .CanDelete}}
-    <button class="btn btn--danger"
+    <button class="btn btn-danger"
             hx-post="{{.DeleteURL}}?id={{.ID}}" hx-swap="none"
             hx-confirm="{{.Labels.Confirm.Delete}}">
       {{template "icon-trash"}}
@@ -169,7 +169,7 @@
     </button>
     {{end}}
     {{if .CanReverse}}
-    <button class="btn btn--warning"
+    <button class="btn btn-warning"
             hx-post="{{.ReverseURL}}" hx-swap="none"
             hx-confirm="{{.Labels.Confirm.Reverse}}">
       {{template "icon-rotate-ccw"}}

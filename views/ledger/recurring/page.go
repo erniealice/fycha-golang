@@ -163,9 +163,9 @@ func buildTableConfig(deps *Deps, templates []RecurringTemplateRow, perms *types
 func templateColumns(l fycha.RecurringTemplateLabels) []types.TableColumn {
 	return []types.TableColumn{
 		{Key: "name", Label: l.Columns.Name, Sortable: false},
-		{Key: "frequency", Label: l.Columns.Frequency, Sortable: false, Width: "120px"},
-		{Key: "next_run", Label: l.Columns.NextRun, Sortable: false, Width: "120px"},
-		{Key: "status", Label: l.Columns.Status, Sortable: false, Width: "110px"},
+		{Key: "frequency", Label: l.Columns.Frequency, Sortable: false, WidthClass: "col-2xl"},
+		{Key: "next_run", Label: l.Columns.NextRun, Sortable: false, WidthClass: "col-2xl"},
+		{Key: "status", Label: l.Columns.Status, Sortable: false, WidthClass: "col-xl"},
 	}
 }
 

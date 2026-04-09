@@ -6,8 +6,8 @@
 <form class="filter-sheet-form rr-filter-form"
       id="collectionSummaryFilterForm"
       hx-get="{{.ReportURL}}"
-      hx-target=".page-content"
-      hx-swap="outerHTML show:none"
+      hx-target="#main-content"
+      hx-swap="innerHTML show:none"
       hx-push-url="true"
       hx-indicator=".page-content"
       hx-on::before-request="Sheet.close()"
@@ -204,8 +204,8 @@
         <button type="submit" class="btn btn-primary rr-apply-btn" id="rrApplyBtn" data-testid="report-filters-apply">{{.Labels.Apply}}</button>
         <a href="{{.ReportURL}}" class="btn btn-ghost" data-testid="report-filters-clear"
            hx-get="{{.ReportURL}}"
-           hx-target=".page-content"
-           hx-swap="outerHTML show:none"
+           hx-target="#main-content"
+           hx-swap="innerHTML show:none"
            hx-push-url="true"
            hx-indicator=".page-content"
            hx-on::before-request="Sheet.close()">{{.Labels.Clear}}</a>

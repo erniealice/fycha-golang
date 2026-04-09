@@ -55,6 +55,7 @@ type TBTotals struct {
 type TrialBalanceDeps struct {
 	Routes       fycha.LedgerStatementRoutes
 	Labels       fycha.AccountLabels
+	ReportLabels fycha.TrialBalanceLabels
 	CommonLabels pyeza.CommonLabels
 	TableLabels  types.TableLabels
 
@@ -100,15 +101,24 @@ func NewTrialBalanceView(deps *TrialBalanceDeps) view.View {
 			asOfDate = lastDay.Format("2006-01-02")
 		}
 
+		rl := deps.ReportLabels
+		title := rl.Title
+		if title == "" {
+			title = "Trial Balance"
+		}
+		subtitle := rl.Subtitle
+		if subtitle == "" {
+			subtitle = "Verify that total debits equal total credits"
+		}
 		pageData := &TrialBalancePageData{
 			PageData: types.PageData{
 				CacheVersion:   viewCtx.CacheVersion,
-				Title:          "Trial Balance",
+				Title:          title,
 				CurrentPath:    viewCtx.CurrentPath,
 				ActiveNav:      deps.Routes.ActiveNav,
 				ActiveSubNav:   "trial-balance",
-				HeaderTitle:    "Trial Balance",
-				HeaderSubtitle: "Verify that total debits equal total credits",
+				HeaderTitle:    title,
+				HeaderSubtitle: subtitle,
 				HeaderIcon:     "icon-check-square",
 				CommonLabels:   deps.CommonLabels,
 			},
@@ -133,7 +143,7 @@ func NewTrialBalanceView(deps *TrialBalanceDeps) view.View {
 			pageData.HasData = true
 			pageData.Groups = buildTBGroups(accounts)
 			pageData.Totals = buildTBTotals(pageData.Groups)
-			pageData.Table = buildTBTable(pageData.Groups, pageData.Totals, deps.TableLabels)
+			pageData.Table = buildTBTable(pageData.Groups, pageData.Totals, deps.TableLabels, rl)
 		}
 
 		if viewCtx.IsHTMX {
@@ -213,12 +223,24 @@ func buildTBTotals(groups []TBElementGroup) TBTotals {
 // Table builder
 // ---------------------------------------------------------------------------
 
-func buildTBTable(groups []TBElementGroup, totals TBTotals, tableLabels types.TableLabels) *types.TableConfig {
+func buildTBTable(groups []TBElementGroup, totals TBTotals, tableLabels types.TableLabels, rl fycha.TrialBalanceLabels) *types.TableConfig {
+	emptyTitle := rl.EmptyTitle
+	if emptyTitle == "" {
+		emptyTitle = "No accounts with balances"
+	}
+	emptyMessage := rl.EmptyMessage
+	if emptyMessage == "" {
+		emptyMessage = "No accounts have non-zero balances as of the selected date."
+	}
+	totalsLabel := rl.Totals
+	if totalsLabel == "" {
+		totalsLabel = "TOTALS"
+	}
 	columns := []types.TableColumn{
-		{Key: "code", Label: "Code", Sortable: false, Width: "100px"},
+		{Key: "code", Label: "Code", Sortable: false, WidthClass: "col-lg"},
 		{Key: "name", Label: "Account Name", Sortable: false},
-		{Key: "debit", Label: "Debit Balance", Sortable: false, Width: "150px", Align: "right"},
-		{Key: "credit", Label: "Credit Balance", Sortable: false, Width: "150px", Align: "right"},
+		{Key: "debit", Label: "Debit Balance", Sortable: false, WidthClass: "col-4xl", Align: "right"},
+		{Key: "credit", Label: "Credit Balance", Sortable: false, WidthClass: "col-4xl", Align: "right"},
 	}
 
 	rowGroups := make([]types.TableRowGroup, 0, len(groups))
@@ -288,7 +310,7 @@ func buildTBTable(groups []TBElementGroup, totals TBTotals, tableLabels types.Ta
 
 	totalsGroup := types.TableRowGroup{
 		ID:    "totals",
-		Title: "TOTALS",
+		Title: totalsLabel,
 		Rows: []types.TableRow{
 			{
 				ID: "grand-totals",
@@ -323,8 +345,8 @@ func buildTBTable(groups []TBElementGroup, totals TBTotals, tableLabels types.Ta
 		ShowEntries: true,
 		Labels:      tableLabels,
 		EmptyState: types.TableEmptyState{
-			Title:   "No accounts with balances",
-			Message: "No accounts have non-zero balances as of the selected date.",
+			Title:   emptyTitle,
+			Message: emptyMessage,
 		},
 	}
 }

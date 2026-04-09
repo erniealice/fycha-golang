@@ -134,10 +134,10 @@ func employeeColumns(l fycha.PayrollLabels) []types.TableColumn {
 	return []types.TableColumn{
 		{Key: "name", Label: c.Name, Sortable: true},
 		{Key: "position", Label: c.Position, Sortable: true},
-		{Key: "department", Label: c.Department, Sortable: true, Width: "150px"},
-		{Key: "basic_salary", Label: c.BasicSalary, Sortable: true, Width: "150px", Align: "right"},
-		{Key: "pay_frequency", Label: c.PayFrequency, Sortable: true, Width: "140px"},
-		{Key: "status", Label: c.Status, Sortable: true, Width: "110px"},
+		{Key: "department", Label: c.Department, Sortable: true, WidthClass: "col-4xl"},
+		{Key: "basic_salary", Label: c.BasicSalary, Sortable: true, WidthClass: "col-4xl", Align: "right"},
+		{Key: "pay_frequency", Label: c.PayFrequency, Sortable: true, WidthClass: "col-3xl"},
+		{Key: "status", Label: c.Status, Sortable: true, WidthClass: "col-xl"},
 	}
 }
 

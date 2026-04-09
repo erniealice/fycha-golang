@@ -33,7 +33,7 @@ func fetchCashBook(ctx context.Context, db *sql.DB) ([]types.TableColumn, []type
 		{Key: "date", Label: "Date", Sortable: true},
 		{Key: "description", Label: "Description", Sortable: true},
 		{Key: "reference", Label: "Reference", Sortable: true},
-		{Key: "type", Label: "Type", Sortable: true, Width: "120px"},
+		{Key: "type", Label: "Type", Sortable: true, WidthClass: "col-2xl"},
 		{Key: "amount", Label: "Amount", Sortable: true, Align: "right"},
 	}
 

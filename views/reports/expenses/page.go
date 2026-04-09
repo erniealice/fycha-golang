@@ -93,9 +93,9 @@ func NewView(deps *Deps) view.View {
 			{Key: "reference", Label: l.Reference, Sortable: true},
 			{Key: "vendor", Label: l.Vendor, Sortable: true},
 			{Key: "category", Label: l.Category, Sortable: true},
-			{Key: "date", Label: l.Date, Sortable: true, Width: "140px"},
-			{Key: "amount", Label: l.Amount, Sortable: true, Width: "140px", Align: "right"},
-			{Key: "status", Label: l.Status, Sortable: true, Width: "120px"},
+			{Key: "date", Label: l.Date, Sortable: true, WidthClass: "col-3xl"},
+			{Key: "amount", Label: l.Amount, Sortable: true, WidthClass: "col-3xl", Align: "right"},
+			{Key: "status", Label: l.Status, Sortable: true, WidthClass: "col-2xl"},
 		}
 
 		rows := buildRows(records)

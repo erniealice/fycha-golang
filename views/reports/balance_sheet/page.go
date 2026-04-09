@@ -103,7 +103,7 @@ func NewBalanceSheetView(deps *BalanceSheetDeps) view.View {
 			}
 		}
 		if sections == nil {
-			sections = mockBSSections()
+			sections = mockBSSections(deps.Labels.BalanceSheet.Sections)
 		}
 
 		// Parse KPIs from sections
@@ -165,15 +165,16 @@ func NewBalanceSheetView(deps *BalanceSheetDeps) view.View {
 // ---------------------------------------------------------------------------
 
 func calcBSKPIs(sections []BSSection) (totalAssets, totalLiab, totalEquity float64) {
-	for _, s := range sections {
-		switch s.Title {
-		case "ASSETS":
-			totalAssets = parseISAmount(s.Total)
-		case "LIABILITIES":
-			totalLiab = parseISAmount(s.Total)
-		case "EQUITY":
-			totalEquity = parseISAmount(s.Total)
-		}
+	// Sections follow the standard order: Assets, Liabilities, Equity.
+	// Use positional logic: first section = assets, second = liabilities, third = equity.
+	if len(sections) >= 1 {
+		totalAssets = parseISAmount(sections[0].Total)
+	}
+	if len(sections) >= 2 {
+		totalLiab = parseISAmount(sections[1].Total)
+	}
+	if len(sections) >= 3 {
+		totalEquity = parseISAmount(sections[2].Total)
 	}
 	return
 }
@@ -230,13 +231,41 @@ func formatCurrencyFS(amount float64) string {
 
 // mockBSSections returns a realistic balance sheet for a Philippine salon/spa.
 // Assets = ₱1,245,800 = Liabilities (₱548,200) + Equity (₱697,600)
-func mockBSSections() []BSSection {
+func mockBSSections(sl fycha.BalanceSheetSectionLabels) []BSSection {
+	assets := sl.Assets
+	if assets == "" {
+		assets = "ASSETS"
+	}
+	curAssets := sl.CurrentAssets
+	if curAssets == "" {
+		curAssets = "Current Assets"
+	}
+	nonCurAssets := sl.NonCurrentAssets
+	if nonCurAssets == "" {
+		nonCurAssets = "Non-Current Assets"
+	}
+	liab := sl.Liabilities
+	if liab == "" {
+		liab = "LIABILITIES"
+	}
+	curLiab := sl.CurrentLiabilities
+	if curLiab == "" {
+		curLiab = "Current Liabilities"
+	}
+	nonCurLiab := sl.NonCurrentLiabilities
+	if nonCurLiab == "" {
+		nonCurLiab = "Non-Current Liabilities"
+	}
+	equity := sl.Equity
+	if equity == "" {
+		equity = "EQUITY"
+	}
 	return []BSSection{
 		{
-			Title: "ASSETS",
+			Title: assets,
 			Classifications: []BSClassification{
 				{
-					Title: "Current Assets",
+					Title: curAssets,
 					Lines: []BSLine{
 						{Code: "1010", Name: "Cash in Bank", Amount: "₱182,500.00"},
 						{Code: "1020", Name: "Petty Cash", Amount: "₱9,000.00"},
@@ -251,7 +280,7 @@ func mockBSSections() []BSSection {
 					Subtotal: "₱408,000.00",
 				},
 				{
-					Title: "Non-Current Assets",
+					Title: nonCurAssets,
 					Lines: []BSLine{
 						{Code: "1510", Name: "Salon Chairs & Stations", Amount: "₱120,000.00"},
 						{Code: "1515", Name: "Accum. Depreciation — Salon Chairs", Amount: "(₱30,000.00)", IsNegative: true},
@@ -269,10 +298,10 @@ func mockBSSections() []BSSection {
 			IsBold: true,
 		},
 		{
-			Title: "LIABILITIES",
+			Title: liab,
 			Classifications: []BSClassification{
 				{
-					Title: "Current Liabilities",
+					Title: curLiab,
 					Lines: []BSLine{
 						{Code: "2010", Name: "Accounts Payable", Amount: "₱48,200.00"},
 						{Code: "2110", Name: "Accrued Salaries & Wages", Amount: "₱85,000.00"},
@@ -284,7 +313,7 @@ func mockBSSections() []BSSection {
 					Subtotal: "₱191,200.00",
 				},
 				{
-					Title: "Non-Current Liabilities",
+					Title: nonCurLiab,
 					Lines: []BSLine{
 						{Code: "2510", Name: "Bank Loan — BDO", Amount: "₱200,000.00"},
 						{Code: "2520", Name: "Equipment Finance Payable", Amount: "₱157,000.00"},
@@ -296,7 +325,7 @@ func mockBSSections() []BSSection {
 			IsBold: true,
 		},
 		{
-			Title: "EQUITY",
+			Title: equity,
 			Lines: []BSLine{
 				{Code: "3010", Name: "Owner's Capital — Maria Santos", Amount: "₱500,000.00"},
 				{Code: "3011", Name: "Owner's Capital — Juan dela Cruz", Amount: "₱300,000.00"},

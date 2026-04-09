@@ -117,10 +117,10 @@ func NewView(deps *Deps) view.View {
 		// Table
 		columns := []types.TableColumn{
 			{Key: "group", Label: l.Item, Sortable: true},
-			{Key: "cogs", Label: l.COGS, Sortable: true, Align: "right", MinWidth: "120px"},
-			{Key: "revenue", Label: l.NetRevenue, Sortable: true, Align: "right", MinWidth: "120px"},
-			{Key: "ratio", Label: l.COGSPct, Sortable: true, Align: "right", MinWidth: "80px"},
-			{Key: "units", Label: l.Units, Sortable: true, Align: "right", MinWidth: "80px"},
+			{Key: "cogs", Label: l.COGS, Sortable: true, Align: "right", MinWidth: "7.5rem"},
+			{Key: "revenue", Label: l.NetRevenue, Sortable: true, Align: "right", MinWidth: "7.5rem"},
+			{Key: "ratio", Label: l.COGSPct, Sortable: true, Align: "right", MinWidth: "5rem"},
+			{Key: "units", Label: l.Units, Sortable: true, Align: "right", MinWidth: "5rem"},
 		}
 
 		rows := make([]types.TableRow, 0, len(resp.GetLineItems()))

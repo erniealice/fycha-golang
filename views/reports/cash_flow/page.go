@@ -131,11 +131,14 @@ func NewCashFlowView(deps *CashFlowDeps) view.View {
 			}
 		}
 		if activities == nil {
-			activities, verification = mockCFData()
+			activities, verification = mockCFData(deps.Labels.CashFlow.Sections)
 		}
 
-		// Extract KPIs
+		// Extract KPIs — operating activities is always the first section.
 		operatingCF := ""
+		if len(activities) > 0 {
+			operatingCF = activities[0].NetTotal
+		}
 		netChange := ""
 		if verification != nil {
 			netChange = verification.NetChange
@@ -143,12 +146,6 @@ func NewCashFlowView(deps *CashFlowDeps) view.View {
 		endingCash := ""
 		if verification != nil {
 			endingCash = verification.EndingBalance
-		}
-		for _, act := range activities {
-			if act.Title == "OPERATING ACTIVITIES" {
-				operatingCF = act.NetTotal
-				break
-			}
 		}
 
 		pageData := &CashFlowPageData{
@@ -190,10 +187,34 @@ func NewCashFlowView(deps *CashFlowDeps) view.View {
 
 // mockCFData returns realistic cash flow statement data (direct method).
 // Based on plan doc Section 5 example output.
-func mockCFData() ([]CFActivity, *CFVerification) {
+func mockCFData(sl fycha.CashFlowSectionLabels) ([]CFActivity, *CFVerification) {
+	opTitle := sl.OperatingActivities
+	if opTitle == "" {
+		opTitle = "OPERATING ACTIVITIES"
+	}
+	invTitle := sl.InvestingActivities
+	if invTitle == "" {
+		invTitle = "INVESTING ACTIVITIES"
+	}
+	finTitle := sl.FinancingActivities
+	if finTitle == "" {
+		finTitle = "FINANCING ACTIVITIES"
+	}
+	netOpLabel := sl.NetCashOperating
+	if netOpLabel == "" {
+		netOpLabel = "Net Cash from Operating Activities"
+	}
+	netInvLabel := sl.NetCashInvesting
+	if netInvLabel == "" {
+		netInvLabel = "Net Cash used in Investing Activities"
+	}
+	netFinLabel := sl.NetCashFinancing
+	if netFinLabel == "" {
+		netFinLabel = "Net Cash used in Financing Activities"
+	}
 	activities := []CFActivity{
 		{
-			Title: "OPERATING ACTIVITIES",
+			Title: opTitle,
 			Lines: []CFLine{
 				{Name: "Collections from customers (AR)", Amount: "₱500,000.00", IndentLevel: 1},
 				{Name: "Subscription/package payments received", Amount: "₱48,000.00", IndentLevel: 1},
@@ -208,22 +229,22 @@ func mockCFData() ([]CFActivity, *CFVerification) {
 				{Name: "Bank charges", Amount: "(₱3,000.00)", IsNegative: true, IndentLevel: 1},
 			},
 			NetTotal:   "₱109,500.00",
-			NetLabel:   "Net Cash from Operating Activities",
+			NetLabel:   netOpLabel,
 			IsPositive: true,
 		},
 		{
-			Title: "INVESTING ACTIVITIES",
+			Title: invTitle,
 			Lines: []CFLine{
 				{Name: "Purchase of salon equipment", Amount: "(₱25,000.00)", IsNegative: true, IndentLevel: 1},
 				{Name: "Purchase of office furniture", Amount: "(₱12,000.00)", IsNegative: true, IndentLevel: 1},
 				{Name: "Proceeds from sale of old equipment", Amount: "₱10,000.00", IndentLevel: 1},
 			},
 			NetTotal:   "(₱27,000.00)",
-			NetLabel:   "Net Cash used in Investing Activities",
+			NetLabel:   netInvLabel,
 			IsPositive: false,
 		},
 		{
-			Title: "FINANCING ACTIVITIES",
+			Title: finTitle,
 			Lines: []CFLine{
 				{Name: "Bank loan received", Amount: "₱0.00", IndentLevel: 1},
 				{Name: "Loan principal repayment", Amount: "(₱10,000.00)", IsNegative: true, IndentLevel: 1},
@@ -232,7 +253,7 @@ func mockCFData() ([]CFActivity, *CFVerification) {
 				{Name: "Owner contributions", Amount: "₱0.00", IndentLevel: 1},
 			},
 			NetTotal:   "(₱32,000.00)",
-			NetLabel:   "Net Cash used in Financing Activities",
+			NetLabel:   netFinLabel,
 			IsPositive: false,
 		},
 	}
