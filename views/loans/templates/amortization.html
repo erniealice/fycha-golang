@@ -39,11 +39,11 @@
               <td class="text-right">{{.ClosingBalance}}</td>
               <td>
                 {{if eq .Status "paid"}}
-                  {{template "badge" dict "Variant" "sage" "Label" "Paid"}}
+                  {{template "status-badge" (dict "Status" "success" "Label" "Paid")}}
                 {{else if eq .Status "due"}}
-                  {{template "badge" dict "Variant" "amber" "Label" "Due"}}
+                  {{template "status-badge" (dict "Status" "warning" "Label" "Due")}}
                 {{else}}
-                  {{template "badge" dict "Variant" "default" "Label" "Upcoming"}}
+                  {{template "status-badge" (dict "Status" "default" "Label" "Upcoming")}}
                 {{end}}
               </td>
             </tr>
