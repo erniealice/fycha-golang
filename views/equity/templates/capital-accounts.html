@@ -8,25 +8,6 @@
 <div class="page-content page-content--table">
   {{template "table-card" .Table}}
 
-  {{/* Add / Edit equity account sheet-form */}}
-  {{template "sheet-form" dict
-    "ID"          "equity-account-sheet"
-    "Title"       .Labels.Sheet.AddCapitalAccount
-    "LoadURL"     ""
-    "FooterType"  "save"
-    "SaveLabel"   .Labels.Sheet.RecordTransaction
-    "CancelLabel" .CommonLabels.Buttons.Cancel
-  }}
-
-  {{/* Guided transaction form sheet */}}
-  {{template "sheet-form" dict
-    "ID"          "equity-transaction-sheet"
-    "Title"       .Labels.Sheet.RecordTransaction
-    "LoadURL"     ""
-    "FooterType"  "save"
-    "SaveLabel"   .Labels.Sheet.PostTransaction
-    "CancelLabel" .CommonLabels.Buttons.Cancel
-  }}
 
 </div>
 {{end}}

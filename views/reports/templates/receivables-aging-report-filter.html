@@ -9,7 +9,7 @@
       hx-swap="innerHTML show:none"
       hx-push-url="true"
       hx-indicator=".page-content"
-      hx-on::before-request="Sheet.close()"
+      hx-on::before-request="lf.Sheet.close()"
       hx-on::after-settle="window.scrollTo(0,0)">
 
     <div class="rr-filter-body">
@@ -19,7 +19,8 @@
         <h4 class="rr-dim-group-label">{{.Labels.FilterAsOfDate}}</h4>
         <div class="filter-dates">
             <input type="date" name="as-of-date" value="{{.AsOfDate}}"
-                   class="form-input" data-testid="aging-as-of-date">
+                   class="form-input" data-testid="aging-as-of-date"
+                   aria-label="{{.Labels.FilterAsOfDate}}">
         </div>
     </div>
 
@@ -49,7 +50,7 @@
            hx-swap="innerHTML show:none"
            hx-push-url="true"
            hx-indicator=".page-content"
-           hx-on::before-request="Sheet.close()">Clear</a>
+           hx-on::before-request="lf.Sheet.close()">Clear</a>
     </div>
 </form>
 {{end}}

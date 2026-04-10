@@ -8,15 +8,6 @@
 <div class="page-content page-content--table">
   {{template "table-card" .Table}}
 
-  {{/* Record payment sheet-form */}}
-  {{template "sheet-form" dict
-    "ID"          "record-payment-sheet"
-    "Title"       .Labels.Sheet.RecordPayment
-    "LoadURL"     .RecordPaymentURL
-    "FooterType"  "save"
-    "SaveLabel"   .Labels.Sheet.PostPayment
-    "CancelLabel" .CommonLabels.Buttons.Cancel
-  }}
 
 </div>
 {{end}}

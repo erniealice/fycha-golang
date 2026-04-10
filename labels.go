@@ -602,6 +602,12 @@ type AccountLabels struct {
 	Detail        AccountDetailLabels        `json:"detail"`
 	Templates     AccountTemplatesLabels     `json:"templates"`
 	GeneralLedger AccountGeneralLedgerLabels `json:"generalLedger"`
+	BadDebt       BadDebtLabels              `json:"badDebt"`
+}
+
+// BadDebtLabels holds translatable strings for the Bad Debt Policy settings page.
+type BadDebtLabels struct {
+	Title string `json:"title"`
 }
 
 // AccountTemplatesLabels holds translatable strings for the Account Templates settings page.

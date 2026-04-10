@@ -270,7 +270,7 @@ func NewModule(deps *ModuleDeps) *Module {
 		FiscalPeriodClose: fiscalview.NewCloseAction(fiscalActionDeps),
 
 		RecurringTemplates: recurringview.NewView(recurringDeps),
-		BadDebtPolicy:      badDebtPolicyView(deps.CommonLabels),
+		BadDebtPolicy:      badDebtPolicyView(deps.CommonLabels, deps.Labels),
 	}
 }
 
@@ -335,7 +335,11 @@ func (m *Module) RegisterRoutes(r view.RouteRegistrar) {
 
 // badDebtPolicyView returns a view that renders the bad-debt-policy template.
 // The template is a coming-soon placeholder; it uses CommonLabels for icon injection.
-func badDebtPolicyView(commonLabels pyeza.CommonLabels) view.View {
+func badDebtPolicyView(commonLabels pyeza.CommonLabels, labels fycha.AccountLabels) view.View {
+	title := labels.BadDebt.Title
+	if title == "" {
+		title = "Bad Debt Policy"
+	}
 	return view.ViewFunc(func(_ context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		templateName := "bad-debt-policy"
 		if viewCtx.IsHTMX {
@@ -343,11 +347,11 @@ func badDebtPolicyView(commonLabels pyeza.CommonLabels) view.View {
 		}
 		return view.OK(templateName, &types.PageData{
 			CacheVersion: viewCtx.CacheVersion,
-			Title:        "Bad Debt Policy",
+			Title:        title,
 			CurrentPath:  viewCtx.CurrentPath,
 			ActiveNav:    "ledger",
 			ActiveSubNav: "bad-debt-policy",
-			HeaderTitle:  "Bad Debt Policy",
+			HeaderTitle:  title,
 			HeaderIcon:   "icon-alert-triangle",
 			CommonLabels: commonLabels,
 		})

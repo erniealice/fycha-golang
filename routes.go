@@ -31,16 +31,16 @@ const (
 	AssetDashboardURL        = "/app/assets/dashboard"
 	AssetListURL             = "/app/assets/list/{status}"
 	AssetDetailURL           = "/app/assets/detail/{id}"
-	AssetTabActionURL        = "/action/assets/{id}/tab/{tab}"
-	AssetAttachmentUploadURL = "/action/assets/{id}/attachments/upload"
-	AssetAttachmentDeleteURL = "/action/assets/{id}/attachments/delete"
-	AssetTableURL            = "/action/assets/table/{status}"
-	AssetAddURL              = "/action/assets/add"
-	AssetEditURL             = "/action/assets/edit/{id}"
-	AssetDeleteURL           = "/action/assets/delete"
-	AssetBulkDeleteURL       = "/action/assets/bulk-delete"
-	AssetSetStatusURL        = "/action/assets/set-status"
-	AssetBulkSetStatusURL    = "/action/assets/bulk-set-status"
+	AssetTabActionURL        = "/action/asset/{id}/tab/{tab}"
+	AssetAttachmentUploadURL = "/action/asset/{id}/attachments/upload"
+	AssetAttachmentDeleteURL = "/action/asset/{id}/attachments/delete"
+	AssetTableURL            = "/action/asset/table/{status}"
+	AssetAddURL              = "/action/asset/add"
+	AssetEditURL             = "/action/asset/edit/{id}"
+	AssetDeleteURL           = "/action/asset/delete"
+	AssetBulkDeleteURL       = "/action/asset/bulk-delete"
+	AssetSetStatusURL        = "/action/asset/set-status"
+	AssetBulkSetStatusURL    = "/action/asset/bulk-set-status"
 
 	// Asset report/settings routes
 	AssetLapsingScheduleURL      = "/app/assets/reports/lapsing-schedule"
@@ -50,21 +50,21 @@ const (
 	LedgerBaseURL       = "/app/ledger/"
 	AccountListURL      = "/app/ledger/accounts/list"
 	AccountDetailURL    = "/app/ledger/accounts/detail/{id}"
-	AccountTabActionURL = "/action/ledger/accounts/{id}/tab/{tab}"
+	AccountTabActionURL = "/action/ledger/account/{id}/tab/{tab}"
 	AccountTreeURL      = "/app/ledger/accounts/tree"
 	AccountTemplatesURL = "/app/ledger/settings/account-templates"
-	AccountAddURL       = "/action/ledger/accounts/add"
-	AccountEditURL      = "/action/ledger/accounts/edit/{id}"
-	AccountDeleteURL    = "/action/ledger/accounts/delete"
+	AccountAddURL       = "/action/ledger/account/add"
+	AccountEditURL      = "/action/ledger/account/edit/{id}"
+	AccountDeleteURL    = "/action/ledger/account/delete"
 
 	// Ledger — Journal Entries
 	JournalListURL    = "/app/ledger/journals/list/{status}"
 	JournalDetailURL  = "/app/ledger/journals/detail/{id}"
-	JournalAddURL     = "/action/ledger/journals/add"
-	JournalEditURL    = "/action/ledger/journals/edit/{id}"
-	JournalPostURL    = "/action/ledger/journals/post/{id}"
-	JournalReverseURL = "/action/ledger/journals/reverse/{id}"
-	JournalDeleteURL  = "/action/ledger/journals/delete"
+	JournalAddURL     = "/action/ledger/journal/add"
+	JournalEditURL    = "/action/ledger/journal/edit/{id}"
+	JournalPostURL    = "/action/ledger/journal/post/{id}"
+	JournalReverseURL = "/action/ledger/journal/reverse/{id}"
+	JournalDeleteURL  = "/action/ledger/journal/delete"
 
 	// Ledger — Accounting Statements (internal tools)
 	LedgerGeneralLedgerURL = "/app/ledger/reports/general-ledger"
@@ -73,8 +73,8 @@ const (
 	// Ledger — Fiscal Periods / Settings
 	FiscalPeriodListURL   = "/app/ledger/settings/fiscal-periods"
 	FiscalPeriodDetailURL = "/app/ledger/settings/fiscal-periods/detail/{id}"
-	FiscalPeriodAddURL    = "/action/ledger/fiscal-periods/add"
-	FiscalPeriodCloseURL  = "/action/ledger/fiscal-periods/close/{id}"
+	FiscalPeriodAddURL    = "/action/ledger/fiscal-period/add"
+	FiscalPeriodCloseURL  = "/action/ledger/fiscal-period/close/{id}"
 
 	// Ledger — Bad Debt Policy
 	BadDebtPolicyURL = "/app/ledger/settings/bad-debt-policy"
@@ -91,9 +91,9 @@ const (
 	// Funding — Loans
 	LoanListURL         = "/app/funding/loans/list/{status}"
 	LoanDetailURL       = "/app/funding/loans/detail/{id}"
-	LoanAddURL          = "/app/funding/loans/add"
+	LoanAddURL          = "/action/funding/loan/add"
 	LoanAmortizationURL = "/app/funding/loans/amortization"
-	LoanPaymentAddURL   = "/action/funding/loans/payment/add"
+	LoanPaymentAddURL   = "/action/funding/loan/payment/add"
 	LoanPaymentListURL  = "/app/funding/loans/payments/{status}"
 
 	// Funding — Equity

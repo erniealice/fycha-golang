@@ -30,14 +30,14 @@
      ============================================= */}}
 {{define "asset-tab-info"}}
 <div class="tab-scroll">
-    <h4 class="detail-section-title">{{.Labels.Detail.BasicInfo.Title}}</h4>
+    <h3 class="detail-section-title">{{.Labels.Detail.BasicInfo.Title}}</h3>
 
     <div id="info-result" class="form-result form-result--hidden" aria-live="polite" aria-atomic="true"></div>
 
     <form id="info-edit-form"
           hx-post="{{.EditURL}}"
           hx-swap="none"
-          hx-on::after-request="handleInfoUpdate(event)">
+          hx-on::after-request="lf.handleInfoUpdate(event)">
         <input type="hidden" name="id" value="{{.ID}}">
 
         <div class="form-row single">
@@ -81,7 +81,8 @@
 </div>
 
 <script>
-function handleInfoUpdate(evt) {
+window.lf = window.lf || {};
+lf.handleInfoUpdate = function(evt) {
     var el = document.getElementById('info-result');
     if (!el) return;
     if (evt.detail.successful) {
@@ -93,7 +94,7 @@ function handleInfoUpdate(evt) {
         el.textContent = msg;
     }
     setTimeout(function() { el.classList.add('form-result--hidden'); }, 5000);
-}
+};
 </script>
 {{end}}
 
@@ -102,7 +103,7 @@ function handleInfoUpdate(evt) {
      ============================================= */}}
 {{define "asset-tab-depreciation"}}
 <div class="tab-scroll">
-    <h4 class="detail-section-title">Depreciation Schedule</h4>
+    <h3 class="detail-section-title">Depreciation Schedule</h3>
     {{template "table-card" .DepreciationTable}}
 </div>
 {{end}}
@@ -112,7 +113,7 @@ function handleInfoUpdate(evt) {
      ============================================= */}}
 {{define "asset-tab-maintenance"}}
 <div class="tab-scroll">
-    <h4 class="detail-section-title">Maintenance History</h4>
+    <h3 class="detail-section-title">Maintenance History</h3>
     {{template "table-card" .MaintenanceTable}}
 </div>
 {{end}}
@@ -122,7 +123,7 @@ function handleInfoUpdate(evt) {
      ============================================= */}}
 {{define "asset-tab-transactions"}}
 <div class="tab-scroll">
-    <h4 class="detail-section-title">Transaction History</h4>
+    <h3 class="detail-section-title">Transaction History</h3>
     {{template "table-card" .TransactionTable}}
 </div>
 {{end}}

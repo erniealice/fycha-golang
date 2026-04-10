@@ -48,13 +48,13 @@
 
     {{/* ─── Footer ─── */}}
     <div class="filter-sheet-footer">
-        <button type="submit" class="btn btn-primary" data-testid="report-filters-apply" onclick="Sheet.close()">Apply Filters</button>
+        <button type="submit" class="btn btn-primary" data-testid="report-filters-apply" onclick="lf.Sheet.close()">Apply Filters</button>
         <a href="{{.ReportURL}}" class="btn btn-ghost" data-testid="report-filters-clear"
            hx-get="{{.ReportURL}}"
            hx-target="#main-content"
            hx-swap="innerHTML"
            hx-push-url="true"
-           onclick="Sheet.close()">Clear</a>
+           onclick="lf.Sheet.close()">Clear</a>
     </div>
 </form>
 {{end}}

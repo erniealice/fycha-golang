@@ -108,7 +108,7 @@
               hx-post="{{.ApplyURL}}"
               hx-confirm="{{$.Labels.ConfirmApply}}"
               hx-swap="none"
-              hx-on::after-request="AccountTemplates.handleApplyResponse(event)">
+              hx-on::after-request="lf.AccountTemplates.handleApplyResponse(event)">
               {{$.Labels.ApplyTemplate}}
             </button>
             {{end}}
@@ -173,13 +173,13 @@
   <p class="dialog-note">{{.Labels.SkipNote}}</p>
 </div>
 <div class="dialog-footer">
-  <button type="button" class="btn btn-secondary" onclick="Dialog.close()">{{.CommonLabels.Buttons.Cancel}}</button>
+  <button type="button" class="btn btn-secondary" onclick="lf.Dialog.close()">{{.CommonLabels.Buttons.Cancel}}</button>
   {{if .ApplyURL}}
   <button type="button"
     class="btn btn-primary"
     hx-post="{{.ApplyURL}}"
     hx-swap="none"
-    hx-on::after-request="AccountTemplates.handleApplyResponse(event); Dialog.close();">
+    hx-on::after-request="lf.AccountTemplates.handleApplyResponse(event); lf.Dialog.close();">
     {{.Labels.ApplyTemplate}}
   </button>
   {{end}}
