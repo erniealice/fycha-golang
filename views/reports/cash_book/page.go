@@ -95,7 +95,7 @@ func fetchCashBook(ctx context.Context, db *sql.DB) ([]types.TableColumn, []type
 				{Value: desc},
 				{Value: ref},
 				{Type: "badge", Value: txType, Variant: variant},
-				{Value: reports.FormatCurrency(amount / 100)},
+				types.MoneyCell(amount, "PHP", true),
 			},
 		})
 	}

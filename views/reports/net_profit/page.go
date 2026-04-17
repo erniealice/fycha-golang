@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
@@ -127,21 +126,30 @@ func NewView(deps *Deps) view.View {
 			netVariant = "warning"
 		}
 
+		c0 := types.MoneyCell(netRevenueF, "PHP", true)
+		c1 := types.MoneyCell(grossProfitF, "PHP", true)
+		c2 := types.MoneyCell(totalExpenses, "PHP", true)
+		c3 := types.MoneyCell(netProfit, "PHP", true)
 		summary := []fycha.SummaryMetric{
-			{Label: l.SummaryRevenue, Value: formatCurrency(netRevenueF)},
-			{Label: l.SummaryGross, Value: formatCurrency(grossProfitF)},
-			{Label: l.SummaryExpenses, Value: formatCurrency(totalExpenses)},
-			{Label: l.SummaryNetProfit, Value: formatCurrency(netProfit), Highlight: true, Variant: netVariant},
+			{Label: l.SummaryRevenue, Value: c0.Currency + " " + c0.Value},
+			{Label: l.SummaryGross, Value: c1.Currency + " " + c1.Value},
+			{Label: l.SummaryExpenses, Value: c2.Currency + " " + c2.Value},
+			{Label: l.SummaryNetProfit, Value: c3.Currency + " " + c3.Value, Highlight: true, Variant: netVariant},
 		}
 
 		// P&L statement line items
+		li0 := types.MoneyCell(netRevenueF, "PHP", true)
+		li1 := types.MoneyCell(totalCogsF, "PHP", true)
+		li2 := types.MoneyCell(grossProfitF, "PHP", true)
+		li3 := types.MoneyCell(totalExpenses, "PHP", true)
+		li4 := types.MoneyCell(netProfit, "PHP", true)
 		lineItems := []fycha.PLLineItem{
-			{Label: l.Revenue, Value: formatCurrency(netRevenueF)},
-			{Label: l.CostOfSales, Value: formatCurrency(totalCogsF)},
-			{Label: l.GrossProfit, Value: formatCurrency(grossProfitF), IsTotal: true},
+			{Label: l.Revenue, Value: li0.Currency + " " + li0.Value},
+			{Label: l.CostOfSales, Value: li1.Currency + " " + li1.Value},
+			{Label: l.GrossProfit, Value: li2.Currency + " " + li2.Value, IsTotal: true},
 			{Label: l.GrossMargin, Value: fmt.Sprintf("%.1f%%", grossMargin)},
-			{Label: l.Expenses, Value: formatCurrency(totalExpenses)},
-			{Label: l.NetProfit, Value: formatCurrency(netProfit), IsTotal: true},
+			{Label: l.Expenses, Value: li3.Currency + " " + li3.Value},
+			{Label: l.NetProfit, Value: li4.Currency + " " + li4.Value, IsTotal: true},
 			{Label: l.NetMargin, Value: fmt.Sprintf("%.1f%%", netMargin), Variant: netVariant},
 		}
 
@@ -205,32 +213,3 @@ func toFloat64(v any) float64 {
 	}
 }
 
-func formatCurrency(amount float64) string {
-	negative := amount < 0
-	if negative {
-		amount = -amount
-	}
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := strconv.FormatInt(whole, 10)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-	if negative {
-		formatted = "-" + formatted
-	}
-	return formatted
-}

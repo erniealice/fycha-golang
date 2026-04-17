@@ -156,9 +156,9 @@ func NewIncomeStatementView(deps *IncomeStatementDeps) view.View {
 			EndDate:          endDate,
 			PeriodLabel:      periodLabel,
 			PeriodPresets:    periodPresets,
-			TotalRevenue:     FormatCurrencyFS(totalRevenue),
-			TotalExpenses:    FormatCurrencyFS(totalExpenses),
-			NetIncome:        FormatCurrencyFS(netIncome),
+			TotalRevenue:     func() string { c := types.MoneyCell(totalRevenue, "PHP", false); return c.Currency + " " + c.Value }(),
+			TotalExpenses:    func() string { c := types.MoneyCell(totalExpenses, "PHP", false); return c.Currency + " " + c.Value }(),
+			NetIncome:        func() string { c := types.MoneyCell(netIncome, "PHP", false); return c.Currency + " " + c.Value }(),
 			NetIncomeVariant: netIncomeVariant,
 			NetIncomeTrend:   "+12%",
 			Sections:         sections,
@@ -330,36 +330,3 @@ func mockISSections(sl fycha.IncomeStatementSectionLabels) []ISStatementSection 
 	}
 }
 
-// ---------------------------------------------------------------------------
-// Currency formatter (package-level, shared by all financial statement views)
-// ---------------------------------------------------------------------------
-
-func FormatCurrencyFS(amount float64) string {
-	negative := amount < 0
-	if negative {
-		amount = -amount
-	}
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := fmt.Sprintf("%d", whole)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-	if negative {
-		formatted = "-" + formatted
-	}
-	return formatted
-}

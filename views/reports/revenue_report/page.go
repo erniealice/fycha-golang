@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"strconv"
 	"time"
 
 	fycha "github.com/erniealice/fycha-golang"
@@ -269,10 +268,12 @@ func buildSummary(s *revreportpb.RevenueReportSummary, l fycha.RevenueReportLabe
 	if txnCount > 0 {
 		avgTxn = grandTotal / float64(txnCount)
 	}
+	rr0 := types.MoneyCell(grandTotal, "PHP", true)
+	rr1 := types.MoneyCell(avgTxn, "PHP", true)
 	return []fycha.SummaryMetric{
-		{Label: l.SummaryGrandTotal, Value: formatCurrency(grandTotal), Highlight: true},
+		{Label: l.SummaryGrandTotal, Value: rr0.Currency + " " + rr0.Value, Highlight: true},
 		{Label: l.SummaryTransactions, Value: fmt.Sprintf("%d", txnCount)},
-		{Label: l.SummaryAverage, Value: formatCurrency(avgTxn)},
+		{Label: l.SummaryAverage, Value: rr1.Currency + " " + rr1.Value},
 	}
 }
 
@@ -320,22 +321,33 @@ func buildPivotTable(resp *revreportpb.RevenueReportResponse, l fycha.RevenueRep
 		},
 	}
 
-	// Flatten columns for ApplyColumnStyles
-	var allColumns []types.TableColumn
+	// Flatten columns for ApplyColumnStyles — prepend a name column so
+	// indices align with the cells slice (which has the name cell at [0]).
+	allColumns := []types.TableColumn{
+		{Key: "name", Align: "left"},
+	}
 	for _, group := range table.ColumnGroups {
 		allColumns = append(allColumns, group.Columns...)
 	}
 
+	currency := "PHP" // report currency
+
 	rows := make([]types.TableRow, 0, len(resp.GetRows()))
-	for _, row := range resp.GetRows() {
+	for i, row := range resp.GetRows() {
 		// Build cell map from row cells for quick lookup
 		cellMap := make(map[string]*revreportpb.RevenueReportCell, len(row.GetCells()))
 		for _, c := range row.GetCells() {
 			cellMap[c.GetColumnKey()] = c
 		}
 
+		// Show currency only on the first row; middle rows omit it
+		rowCurrency := ""
+		if i == 0 {
+			rowCurrency = currency
+		}
+
 		cells := []types.TableCell{
-			{Type: "name", Value: row.GetRowKey()},
+			{Type: "name", Value: row.GetRowKey(), Align: "left"},
 		}
 		dataAttrs := map[string]string{}
 
@@ -344,19 +356,13 @@ func buildPivotTable(resp *revreportpb.RevenueReportResponse, l fycha.RevenueRep
 			if c, ok := cellMap[ck]; ok {
 				val = c.GetTotalRevenue()
 			}
-			cells = append(cells, types.TableCell{
-				Type:  "text",
-				Value: formatCurrency(float64(val) / 100.0),
-			})
-			dataAttrs[ck] = fmt.Sprintf("%.2f", float64(val)/100.0)
+			cells = append(cells, types.MoneyCell(float64(val), rowCurrency, true))
+			dataAttrs[ck] = fmt.Sprintf("%d", val)
 		}
 
 		// Total cell
-		cells = append(cells, types.TableCell{
-			Type:  "text",
-			Value: formatCurrency(float64(row.GetRowTotal()) / 100.0),
-		})
-		dataAttrs["total"] = fmt.Sprintf("%.2f", float64(row.GetRowTotal())/100.0)
+		cells = append(cells, types.MoneyCell(float64(row.GetRowTotal()), rowCurrency, true))
+		dataAttrs["total"] = fmt.Sprintf("%d", row.GetRowTotal())
 
 		rows = append(rows, types.TableRow{
 			ID:        row.GetRowKey(),
@@ -374,22 +380,16 @@ func buildPivotTable(resp *revreportpb.RevenueReportResponse, l fycha.RevenueRep
 		}
 
 		totalsCells := []types.TableCell{
-			{Type: "name", Value: l.Totals},
+			{Type: "name", Value: l.Totals, Align: "left"},
 		}
 		for _, ck := range columnKeys {
 			var val int64
 			if ct, ok := colTotalMap[ck]; ok {
 				val = ct.GetTotalRevenue()
 			}
-			totalsCells = append(totalsCells, types.TableCell{
-				Type:  "text",
-				Value: formatCurrency(float64(val) / 100.0),
-			})
+			totalsCells = append(totalsCells, types.MoneyCell(float64(val), currency, true))
 		}
-		totalsCells = append(totalsCells, types.TableCell{
-			Type:  "text",
-			Value: formatCurrency(float64(summary.GetGrandTotal()) / 100.0),
-		})
+		totalsCells = append(totalsCells, types.MoneyCell(float64(summary.GetGrandTotal()), currency, true))
 
 		table.TotalsRow = totalsCells
 	}
@@ -430,32 +430,3 @@ func buildFilterSheetURL(base, primary, rows, period, start, end string) string 
 	return base + "?" + params.Encode()
 }
 
-func formatCurrency(amount float64) string {
-	negative := amount < 0
-	if negative {
-		amount = -amount
-	}
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := strconv.FormatInt(whole, 10)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-	if negative {
-		formatted = "(" + formatted + ")"
-	}
-	return formatted
-}

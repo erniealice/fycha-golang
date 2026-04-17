@@ -219,8 +219,8 @@ func buildTableRows(assets []AssetRow, l fycha.AssetLabels, routes fycha.AssetRo
 				{Type: "text", Value: name},
 				{Type: "text", Value: asset.CategoryName},
 				{Type: "text", Value: asset.LocationName},
-				{Type: "text", Value: formatCurrency(asset.AcquisitionCost)},
-				{Type: "text", Value: formatCurrency(asset.BookValue)},
+				types.MoneyCell(asset.AcquisitionCost, "PHP", false),
+				types.MoneyCell(asset.BookValue, "PHP", false),
 				{Type: "badge", Value: recordStatus, Variant: statusVariant(recordStatus)},
 			},
 			DataAttrs: map[string]string{
@@ -228,36 +228,14 @@ func buildTableRows(assets []AssetRow, l fycha.AssetLabels, routes fycha.AssetRo
 				"asset_number":     asset.AssetNumber,
 				"category":         asset.CategoryName,
 				"location":         asset.LocationName,
-				"acquisition_cost": formatCurrency(asset.AcquisitionCost),
-				"book_value":       formatCurrency(asset.BookValue),
+				"acquisition_cost": fmt.Sprintf("%.2f", asset.AcquisitionCost),
+				"book_value":       fmt.Sprintf("%.2f", asset.BookValue),
 				"status":           recordStatus,
 			},
 			Actions: actions,
 		})
 	}
 	return rows
-}
-
-func formatCurrency(amount float64) string {
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := fmt.Sprintf("%d", whole)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	return fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
 }
 
 func statusTitle(l fycha.AssetLabels, status string) string {

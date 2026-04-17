@@ -60,11 +60,11 @@ func NewLapsingScheduleView(commonLabels pyeza.CommonLabels, tableLabels types.T
 					ID: fmt.Sprintf("lap-%d", i+1),
 					Cells: []types.TableCell{
 						{Value: a.Name},
-						{Value: reports.FormatCurrency(a.Cost)},
+						types.MoneyCell(a.Cost, "PHP", false),
 						{Value: fmt.Sprintf("%d months", a.UsefulLifeMonths)},
-						{Value: reports.FormatCurrency(a.MonthlyDepr)},
-						{Value: reports.FormatCurrency(a.Accumulated)},
-						{Value: reports.FormatCurrency(a.BookValue)},
+						types.MoneyCell(a.MonthlyDepr, "PHP", false),
+						types.MoneyCell(a.Accumulated, "PHP", false),
+						types.MoneyCell(a.BookValue, "PHP", false),
 					},
 				}
 			}

@@ -2,7 +2,6 @@ package dashboard
 
 import (
 	"context"
-	"fmt"
 	"html/template"
 
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
@@ -16,7 +15,7 @@ import (
 // DashboardStats holds count/value data for stat cards.
 type DashboardStats struct {
 	TotalAssets      int
-	TotalBookValue   string
+	TotalBookValue   types.TableCell
 	FullyDepreciated int
 	UnderMaintenance int
 }
@@ -53,7 +52,7 @@ func NewView(deps *Deps) view.View {
 		// Mock statistics
 		stats := DashboardStats{
 			TotalAssets:      24,
-			TotalBookValue:   formatCurrency(1_245_750.00),
+			TotalBookValue:   types.MoneyCell(1_245_750_00, "PHP", true),
 			FullyDepreciated: 3,
 			UnderMaintenance: 2,
 		}
@@ -112,24 +111,3 @@ func NewView(deps *Deps) view.View {
 	})
 }
 
-func formatCurrency(amount float64) string {
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := fmt.Sprintf("%d", whole)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	return fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-}

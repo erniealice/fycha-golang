@@ -110,25 +110,3 @@ func ParseCurrency(s string) float64 {
 	return v
 }
 
-// FormatCurrency formats a float64 as Philippine Peso with commas.
-func FormatCurrency(amount float64) string {
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := fmt.Sprintf("%d", whole)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	return fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-}

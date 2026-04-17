@@ -203,8 +203,8 @@ func buildPettyCashRegisterRows(items []MockPettyCashFund, l fycha.PettyCashLabe
 			ID: id,
 			Cells: []types.TableCell{
 				{Type: "text", Value: item.Name},
-				{Type: "text", Value: formatPCCurrency(item.AuthorizedAmount)},
-				{Type: "text", Value: formatPCCurrency(item.CurrentBalance)},
+				types.MoneyCell(item.AuthorizedAmount, "PHP", false),
+				types.MoneyCell(item.CurrentBalance, "PHP", false),
 				{Type: "text", Value: item.CustodianName},
 				{Type: "text", Value: item.LocationName},
 				{Type: "badge", Value: statusLabel, Variant: statusVariant},
@@ -248,7 +248,7 @@ func buildReplenishmentTableConfig(deps *PettyCashDeps) *types.TableConfig {
 			ID: fmt.Sprintf("replen-%d", i),
 			Cells: []types.TableCell{
 				{Type: "text", Value: r.FundName},
-				{Type: "text", Value: formatPCCurrency(r.Amount)},
+				types.MoneyCell(r.Amount, "PHP", false),
 				{Type: "text", Value: r.Date},
 				{Type: "text", Value: r.Notes},
 			},
@@ -309,7 +309,7 @@ func buildCustodianBalancesTableConfig(deps *PettyCashDeps) *types.TableConfig {
 				{Type: "text", Value: r.Custodian},
 				{Type: "text", Value: r.Location},
 				{Type: "text", Value: fmt.Sprintf("%d", r.TotalFunds)},
-				{Type: "text", Value: formatPCCurrency(r.TotalBalance)},
+				types.MoneyCell(r.TotalBalance, "PHP", false),
 			},
 		})
 	}
@@ -338,24 +338,3 @@ func buildCustodianBalancesTableConfig(deps *PettyCashDeps) *types.TableConfig {
 	return tableConfig
 }
 
-func formatPCCurrency(amount float64) string {
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := fmt.Sprintf("%d", whole)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	return fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-}

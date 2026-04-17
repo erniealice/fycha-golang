@@ -107,9 +107,11 @@ func NewView(deps *Deps) view.View {
 			cogsRatio = (float64(s.GetTotalCogs()) / float64(s.GetNetRevenue())) * 100
 		}
 
+		cogsCell := types.MoneyCell(float64(s.GetTotalCogs()), "PHP", true)
+		revenueCell := types.MoneyCell(float64(s.GetNetRevenue()), "PHP", true)
 		summary := []fycha.SummaryMetric{
-			{Label: l.SummaryTotalCOGS, Value: formatCurrency(float64(s.GetTotalCogs()) / 100.0), Highlight: true},
-			{Label: l.SummaryRevenue, Value: formatCurrency(float64(s.GetNetRevenue()) / 100.0)},
+			{Label: l.SummaryTotalCOGS, Value: cogsCell.Currency + " " + cogsCell.Value, Highlight: true},
+			{Label: l.SummaryRevenue, Value: revenueCell.Currency + " " + revenueCell.Value},
 			{Label: l.SummaryCOGSRatio, Value: fmt.Sprintf("%.1f%%", cogsRatio)},
 			{Label: l.SummaryUnits, Value: strconv.FormatInt(s.GetTotalUnitsSold(), 10)},
 		}
@@ -133,14 +135,14 @@ func NewView(deps *Deps) view.View {
 				ID: item.GetGroupKey(),
 				Cells: []types.TableCell{
 					{Type: "name", Value: item.GetGroupKey()},
-					{Type: "text", Value: formatCurrency(float64(item.GetCostOfGoodsSold()) / 100.0)},
-					{Type: "text", Value: formatCurrency(float64(item.GetNetRevenue()) / 100.0)},
+					types.MoneyCell(float64(item.GetCostOfGoodsSold()), "PHP", true),
+					types.MoneyCell(float64(item.GetNetRevenue()), "PHP", true),
 					{Type: "text", Value: fmt.Sprintf("%.1f%%", ratio)},
 					{Type: "text", Value: strconv.FormatInt(item.GetUnitsSold(), 10)},
 				},
 				DataAttrs: map[string]string{
-					"cogs":    fmt.Sprintf("%.2f", float64(item.GetCostOfGoodsSold())/100.0),
-					"revenue": fmt.Sprintf("%.2f", float64(item.GetNetRevenue())/100.0),
+					"cogs":    fmt.Sprintf("%d", item.GetCostOfGoodsSold()),
+					"revenue": fmt.Sprintf("%d", item.GetNetRevenue()),
 					"ratio":   fmt.Sprintf("%.1f", ratio),
 					"units":   strconv.FormatInt(item.GetUnitsSold(), 10),
 				},
@@ -213,34 +215,4 @@ func NewView(deps *Deps) view.View {
 		}
 		return view.OK("cost-of-sales", pageData)
 	})
-}
-
-func formatCurrency(amount float64) string {
-	negative := amount < 0
-	if negative {
-		amount = -amount
-	}
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := strconv.FormatInt(whole, 10)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-	if negative {
-		formatted = "-" + formatted
-	}
-	return formatted
 }

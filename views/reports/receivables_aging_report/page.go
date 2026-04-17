@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"strconv"
 	"time"
 
 	fycha "github.com/erniealice/fycha-golang"
@@ -198,7 +197,6 @@ func buildSummary(s *agingpb.ReceivablesAgingSummary, l fycha.ReceivablesAgingRe
 	if s == nil {
 		s = &agingpb.ReceivablesAgingSummary{}
 	}
-	grandTotal := float64(s.GetGrandTotalOutstanding()) / 100.0
 	invoiceCount := s.GetTotalInvoiceCount()
 
 	// Overdue = everything past the current bucket
@@ -206,12 +204,13 @@ func buildSummary(s *agingpb.ReceivablesAgingSummary, l fycha.ReceivablesAgingRe
 	if b := s.GetBuckets(); b != nil {
 		currentBucket = b.GetCurrent()
 	}
-	overdueTotal := float64(s.GetGrandTotalOutstanding()-currentBucket) / 100.0
 
+	grandTotalCell := types.MoneyCell(float64(s.GetGrandTotalOutstanding()), "PHP", true)
+	overdueCell := types.MoneyCell(float64(s.GetGrandTotalOutstanding()-currentBucket), "PHP", true)
 	return []fycha.SummaryMetric{
-		{Label: l.SummaryGrandTotal, Value: formatCurrency(grandTotal), Highlight: true},
+		{Label: l.SummaryGrandTotal, Value: grandTotalCell.Currency + " " + grandTotalCell.Value, Highlight: true},
 		{Label: l.SummaryInvoiceCount, Value: fmt.Sprintf("%d", invoiceCount)},
-		{Label: l.SummaryOverdueAmount, Value: formatCurrency(overdueTotal), Variant: "danger"},
+		{Label: l.SummaryOverdueAmount, Value: overdueCell.Currency + " " + overdueCell.Value, Variant: "danger"},
 	}
 }
 
@@ -247,31 +246,37 @@ func buildTable(resp *agingpb.ReceivablesAgingResponse, l fycha.ReceivablesAging
 		},
 	}
 
+	currency := "PHP"
 	rows := make([]types.TableRow, 0, len(resp.GetRows()))
-	for _, row := range resp.GetRows() {
+	for i, row := range resp.GetRows() {
 		b := row.GetBuckets()
 		if b == nil {
 			b = &agingpb.AgingBuckets{}
 		}
 
+		rowCurrency := ""
+		if i == 0 {
+			rowCurrency = currency
+		}
+
 		cells := []types.TableCell{
 			{Type: "name", Value: row.GetRowKey()},
-			{Type: "text", Value: formatCurrency(float64(b.GetCurrent()) / 100.0)},
-			{Type: "text", Value: formatCurrency(float64(b.GetDays_1_30()) / 100.0)},
-			{Type: "text", Value: formatCurrency(float64(b.GetDays_31_60()) / 100.0)},
-			{Type: "text", Value: formatCurrency(float64(b.GetDays_61_90()) / 100.0)},
-			{Type: "text", Value: formatCurrency(float64(b.GetDaysOver_90()) / 100.0)},
-			{Type: "text", Value: formatCurrency(float64(row.GetTotalOutstanding()) / 100.0)},
+			types.MoneyCell(float64(b.GetCurrent()), rowCurrency, true),
+			types.MoneyCell(float64(b.GetDays_1_30()), rowCurrency, true),
+			types.MoneyCell(float64(b.GetDays_31_60()), rowCurrency, true),
+			types.MoneyCell(float64(b.GetDays_61_90()), rowCurrency, true),
+			types.MoneyCell(float64(b.GetDaysOver_90()), rowCurrency, true),
+			types.MoneyCell(float64(row.GetTotalOutstanding()), rowCurrency, true),
 			{Type: "text", Value: fmt.Sprintf("%d", row.GetInvoiceCount())},
 		}
 
 		dataAttrs := map[string]string{
-			"current":       fmt.Sprintf("%.2f", float64(b.GetCurrent())/100.0),
-			"days_1_30":     fmt.Sprintf("%.2f", float64(b.GetDays_1_30())/100.0),
-			"days_31_60":    fmt.Sprintf("%.2f", float64(b.GetDays_31_60())/100.0),
-			"days_61_90":    fmt.Sprintf("%.2f", float64(b.GetDays_61_90())/100.0),
-			"days_over_90":  fmt.Sprintf("%.2f", float64(b.GetDaysOver_90())/100.0),
-			"total":         fmt.Sprintf("%.2f", float64(row.GetTotalOutstanding())/100.0),
+			"current":       fmt.Sprintf("%d", b.GetCurrent()),
+			"days_1_30":     fmt.Sprintf("%d", b.GetDays_1_30()),
+			"days_31_60":    fmt.Sprintf("%d", b.GetDays_31_60()),
+			"days_61_90":    fmt.Sprintf("%d", b.GetDays_61_90()),
+			"days_over_90":  fmt.Sprintf("%d", b.GetDaysOver_90()),
+			"total":         fmt.Sprintf("%d", row.GetTotalOutstanding()),
 			"invoice_count": fmt.Sprintf("%d", row.GetInvoiceCount()),
 		}
 
@@ -295,12 +300,12 @@ func buildTable(resp *agingpb.ReceivablesAgingResponse, l fycha.ReceivablesAging
 		}
 		table.TotalsRow = []types.TableCell{
 			{Value: "Total"},
-			{Value: formatCurrency(float64(sb.GetCurrent()) / 100.0), Align: "right"},
-			{Value: formatCurrency(float64(sb.GetDays_1_30()) / 100.0), Align: "right"},
-			{Value: formatCurrency(float64(sb.GetDays_31_60()) / 100.0), Align: "right"},
-			{Value: formatCurrency(float64(sb.GetDays_61_90()) / 100.0), Align: "right"},
-			{Value: formatCurrency(float64(sb.GetDaysOver_90()) / 100.0), Align: "right"},
-			{Value: formatCurrency(float64(summary.GetGrandTotalOutstanding()) / 100.0), Align: "right"},
+			types.MoneyCell(float64(sb.GetCurrent()), currency, true),
+			types.MoneyCell(float64(sb.GetDays_1_30()), currency, true),
+			types.MoneyCell(float64(sb.GetDays_31_60()), currency, true),
+			types.MoneyCell(float64(sb.GetDays_61_90()), currency, true),
+			types.MoneyCell(float64(sb.GetDaysOver_90()), currency, true),
+			types.MoneyCell(float64(summary.GetGrandTotalOutstanding()), currency, true),
 			{Value: fmt.Sprintf("%d", summary.GetTotalInvoiceCount()), Align: "right"},
 		}
 	}
@@ -327,32 +332,3 @@ func buildFilterSheetURL(base, asOfDate, rows string) string {
 	return base + "?" + params.Encode()
 }
 
-func formatCurrency(amount float64) string {
-	negative := amount < 0
-	if negative {
-		amount = -amount
-	}
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := strconv.FormatInt(whole, 10)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-	if negative {
-		formatted = "(" + formatted + ")"
-	}
-	return formatted
-}

@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 
 	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
 	fycha "github.com/erniealice/fycha-golang"
@@ -87,10 +86,13 @@ func NewView(deps *Deps) view.View {
 			netVariant = "warning"
 		}
 
+		cd0 := types.MoneyCell(float64(s.GetNetRevenue())/100.0, "PHP", true)
+		cd1 := types.MoneyCell(totalExpenses, "PHP", true)
+		cd2 := types.MoneyCell(netProfit, "PHP", true)
 		summary := []fycha.SummaryMetric{
-			{Label: l.RevenueCard, Value: formatCurrency(float64(s.GetNetRevenue()) / 100.0)},
-			{Label: l.ExpensesCard, Value: formatCurrency(totalExpenses)},
-			{Label: l.NetProfitCard, Value: formatCurrency(netProfit), Highlight: true, Variant: netVariant},
+			{Label: l.RevenueCard, Value: cd0.Currency + " " + cd0.Value},
+			{Label: l.ExpensesCard, Value: cd1.Currency + " " + cd1.Value},
+			{Label: l.NetProfitCard, Value: cd2.Currency + " " + cd2.Value, Highlight: true, Variant: netVariant},
 			{Label: l.NetMarginCard, Value: fmt.Sprintf("%.1f%%", netMargin), Variant: netVariant},
 		}
 
@@ -154,32 +156,3 @@ func toFloat64(v any) float64 {
 	}
 }
 
-func formatCurrency(amount float64) string {
-	negative := amount < 0
-	if negative {
-		amount = -amount
-	}
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := strconv.FormatInt(whole, 10)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-	if negative {
-		formatted = "-" + formatted
-	}
-	return formatted
-}

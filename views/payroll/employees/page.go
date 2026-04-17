@@ -2,7 +2,6 @@ package employees
 
 import (
 	"context"
-	"fmt"
 
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
@@ -159,7 +158,7 @@ func buildTableRows(employees []EmployeeRow, l fycha.PayrollLabels, perms *types
 				{Type: "text", Value: emp.Name},
 				{Type: "text", Value: emp.Position},
 				{Type: "text", Value: emp.Department},
-				{Type: "text", Value: formatCurrency(emp.BasicSalary)},
+				types.MoneyCell(emp.BasicSalary, "PHP", false),
 				{Type: "text", Value: payFrequencyLabel(l, emp.PayFrequency)},
 				{Type: "badge", Value: statusLabel, Variant: statusVariant},
 			},
@@ -190,24 +189,3 @@ func payFrequencyLabel(l fycha.PayrollLabels, freq string) string {
 	}
 }
 
-func formatCurrency(amount float64) string {
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := fmt.Sprintf("%d", whole)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	return fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-}

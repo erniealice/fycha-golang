@@ -208,14 +208,17 @@ func buildTBTotals(groups []TBElementGroup) TBTotals {
 		diff = -diff
 	}
 	isBalanced := diff < 0.01 // floating-point tolerance
+	cellTotalDebit := types.MoneyCell(totalDebit, "PHP", false)
+	cellTotalCredit := types.MoneyCell(totalCredit, "PHP", false)
+	cellDiff := types.MoneyCell(diff, "PHP", false)
 	return TBTotals{
 		TotalDebit:     totalDebit,
 		TotalCredit:    totalCredit,
 		Difference:     diff,
 		IsBalanced:     isBalanced,
-		TotalDebitStr:  formatCurrencyGL(totalDebit),
-		TotalCreditStr: formatCurrencyGL(totalCredit),
-		DifferenceStr:  formatCurrencyGL(diff),
+		TotalDebitStr:  cellTotalDebit.Currency + " " + cellTotalDebit.Value,
+		TotalCreditStr: cellTotalCredit.Currency + " " + cellTotalCredit.Value,
+		DifferenceStr:  cellDiff.Currency + " " + cellDiff.Value,
 	}
 }
 
@@ -247,22 +250,26 @@ func buildTBTable(groups []TBElementGroup, totals TBTotals, tableLabels types.Ta
 	for _, g := range groups {
 		rows := make([]types.TableRow, 0, len(g.Accounts)+1)
 
+		emptyCell := types.TableCell{Type: "text", Value: ""}
 		for _, acct := range g.Accounts {
-			debitVal := ""
-			creditVal := ""
+			var debitCell, creditCell types.TableCell
 			if acct.Debit > 0 {
-				debitVal = formatCurrencyGL(acct.Debit)
+				debitCell = types.MoneyCell(acct.Debit, "PHP", false)
+			} else {
+				debitCell = emptyCell
 			}
 			if acct.Credit > 0 {
-				creditVal = formatCurrencyGL(acct.Credit)
+				creditCell = types.MoneyCell(acct.Credit, "PHP", false)
+			} else {
+				creditCell = emptyCell
 			}
 			rows = append(rows, types.TableRow{
 				ID: acct.AccountID,
 				Cells: []types.TableCell{
 					{Type: "text", Value: acct.AccountCode},
 					{Type: "text", Value: acct.AccountName},
-					{Type: "text", Value: debitVal},
-					{Type: "text", Value: creditVal},
+					debitCell,
+					creditCell,
 				},
 				DataAttrs: map[string]string{
 					"element": acct.Element,
@@ -271,21 +278,24 @@ func buildTBTable(groups []TBElementGroup, totals TBTotals, tableLabels types.Ta
 		}
 
 		// Subtotal row for this element group
-		subtotalDebitStr := ""
-		subtotalCreditStr := ""
+		var subtotalDebitCell, subtotalCreditCell types.TableCell
 		if g.SubtotalDebit > 0 {
-			subtotalDebitStr = formatCurrencyGL(g.SubtotalDebit)
+			subtotalDebitCell = types.MoneyCell(g.SubtotalDebit, "PHP", false)
+		} else {
+			subtotalDebitCell = emptyCell
 		}
 		if g.SubtotalCredit > 0 {
-			subtotalCreditStr = formatCurrencyGL(g.SubtotalCredit)
+			subtotalCreditCell = types.MoneyCell(g.SubtotalCredit, "PHP", false)
+		} else {
+			subtotalCreditCell = emptyCell
 		}
 		rows = append(rows, types.TableRow{
 			ID: fmt.Sprintf("subtotal-%s", g.Element),
 			Cells: []types.TableCell{
-				{Type: "text", Value: ""},
+				emptyCell,
 				{Type: "text", Value: fmt.Sprintf("Subtotal: %s", g.Label)},
-				{Type: "text", Value: subtotalDebitStr},
-				{Type: "text", Value: subtotalCreditStr},
+				subtotalDebitCell,
+				subtotalCreditCell,
 			},
 			DataAttrs: map[string]string{
 				"row-type": "subtotal",
@@ -300,13 +310,14 @@ func buildTBTable(groups []TBElementGroup, totals TBTotals, tableLabels types.Ta
 	}
 
 	// Grand totals as a final plain row appended to a special group
-	totalDebitStr := formatCurrencyGL(totals.TotalDebit)
-	totalCreditStr := formatCurrencyGL(totals.TotalCredit)
+	totalDebitCell := types.MoneyCell(totals.TotalDebit, "PHP", false)
+	totalCreditCell := types.MoneyCell(totals.TotalCredit, "PHP", false)
+	diffCell := types.MoneyCell(totals.Difference, "PHP", false)
 	balanceLabel := "Unbalanced"
 	if totals.IsBalanced {
 		balanceLabel = "Balanced"
 	}
-	differenceStr := fmt.Sprintf("%s (%s)", formatCurrencyGL(totals.Difference), balanceLabel)
+	differenceStr := fmt.Sprintf("%s (%s)", diffCell.Currency+" "+diffCell.Value, balanceLabel)
 
 	totalsGroup := types.TableRowGroup{
 		ID:    "totals",
@@ -317,8 +328,8 @@ func buildTBTable(groups []TBElementGroup, totals TBTotals, tableLabels types.Ta
 				Cells: []types.TableCell{
 					{Type: "text", Value: ""},
 					{Type: "text", Value: "TOTAL"},
-					{Type: "text", Value: totalDebitStr},
-					{Type: "text", Value: totalCreditStr},
+					totalDebitCell,
+					totalCreditCell,
 				},
 				DataAttrs: map[string]string{"row-type": "grand-total"},
 			},

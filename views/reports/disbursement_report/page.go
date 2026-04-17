@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"net/url"
-	"strconv"
 	"time"
 
 	fycha "github.com/erniealice/fycha-golang"
@@ -267,16 +266,18 @@ func buildSummary(s *disbreportpb.DisbursementReportSummary, l fycha.Disbursemen
 	if s == nil {
 		s = &disbreportpb.DisbursementReportSummary{}
 	}
-	grandTotal := float64(s.GetGrandTotal()) / 100.0
+	grandTotalCents := s.GetGrandTotal()
 	txnCount := s.GetTotalTransactions()
-	avgTxn := 0.0
+	avgCents := 0.0
 	if txnCount > 0 {
-		avgTxn = grandTotal / float64(txnCount)
+		avgCents = float64(grandTotalCents) / float64(txnCount)
 	}
+	grandCell := types.MoneyCell(float64(grandTotalCents), "PHP", true)
+	avgCell := types.MoneyCell(avgCents, "PHP", true)
 	return []fycha.SummaryMetric{
-		{Label: l.SummaryGrandTotal, Value: formatCurrency(grandTotal), Highlight: true},
+		{Label: l.SummaryGrandTotal, Value: grandCell.Currency + " " + grandCell.Value, Highlight: true},
 		{Label: l.SummaryTransactions, Value: fmt.Sprintf("%d", txnCount)},
-		{Label: l.SummaryAverage, Value: formatCurrency(avgTxn)},
+		{Label: l.SummaryAverage, Value: avgCell.Currency + " " + avgCell.Value},
 	}
 }
 
@@ -330,11 +331,17 @@ func buildPivotTable(resp *disbreportpb.DisbursementReportResponse, l fycha.Disb
 		allColumns = append(allColumns, group.Columns...)
 	}
 
-	rows := make([]types.TableRow, 0, len(resp.GetRows()))
-	for _, row := range resp.GetRows() {
+	currency := "PHP"
+	tableRows := make([]types.TableRow, 0, len(resp.GetRows()))
+	for i, row := range resp.GetRows() {
 		cellMap := make(map[string]*disbreportpb.DisbursementReportCell, len(row.GetCells()))
 		for _, c := range row.GetCells() {
 			cellMap[c.GetColumnKey()] = c
+		}
+
+		rowCurrency := ""
+		if i == 0 {
+			rowCurrency = currency
 		}
 
 		cells := []types.TableCell{
@@ -347,21 +354,15 @@ func buildPivotTable(resp *disbreportpb.DisbursementReportResponse, l fycha.Disb
 			if c, ok := cellMap[ck]; ok {
 				val = c.GetTotalDisbursement()
 			}
-			cells = append(cells, types.TableCell{
-				Type:  "text",
-				Value: formatCurrency(float64(val) / 100.0),
-			})
-			dataAttrs[ck] = fmt.Sprintf("%.2f", float64(val)/100.0)
+			cells = append(cells, types.MoneyCell(float64(val), rowCurrency, true))
+			dataAttrs[ck] = fmt.Sprintf("%d", val)
 		}
 
 		// Total cell
-		cells = append(cells, types.TableCell{
-			Type:  "text",
-			Value: formatCurrency(float64(row.GetRowTotal()) / 100.0),
-		})
-		dataAttrs["total"] = fmt.Sprintf("%.2f", float64(row.GetRowTotal())/100.0)
+		cells = append(cells, types.MoneyCell(float64(row.GetRowTotal()), rowCurrency, true))
+		dataAttrs["total"] = fmt.Sprintf("%d", row.GetRowTotal())
 
-		rows = append(rows, types.TableRow{
+		tableRows = append(tableRows, types.TableRow{
 			ID:        row.GetRowKey(),
 			Cells:     cells,
 			DataAttrs: dataAttrs,
@@ -384,21 +385,15 @@ func buildPivotTable(resp *disbreportpb.DisbursementReportResponse, l fycha.Disb
 			if ct, ok := colTotalMap[ck]; ok {
 				val = ct.GetTotalDisbursement()
 			}
-			totalsCells = append(totalsCells, types.TableCell{
-				Type:  "text",
-				Value: formatCurrency(float64(val) / 100.0),
-			})
+			totalsCells = append(totalsCells, types.MoneyCell(float64(val), currency, true))
 		}
-		totalsCells = append(totalsCells, types.TableCell{
-			Type:  "text",
-			Value: formatCurrency(float64(summary.GetGrandTotal()) / 100.0),
-		})
+		totalsCells = append(totalsCells, types.MoneyCell(float64(summary.GetGrandTotal()), currency, true))
 
 		table.TotalsRow = totalsCells
 	}
 
-	table.Rows = rows
-	types.ApplyColumnStyles(allColumns, rows)
+	table.Rows = tableRows
+	types.ApplyColumnStyles(allColumns, tableRows)
 	types.ApplyTableSettings(table)
 
 	return table
@@ -431,34 +426,4 @@ func buildFilterSheetURL(base, primary, rows, period, start, end string) string 
 		params.Set("end", end)
 	}
 	return base + "?" + params.Encode()
-}
-
-func formatCurrency(amount float64) string {
-	negative := amount < 0
-	if negative {
-		amount = -amount
-	}
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := strconv.FormatInt(whole, 10)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-	if negative {
-		formatted = "(" + formatted + ")"
-	}
-	return formatted
 }

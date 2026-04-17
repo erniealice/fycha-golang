@@ -259,9 +259,9 @@ func buildTableRows(runs []PayrollRunRow, status string, l fycha.PayrollLabels, 
 				{Type: "text", Value: r.RunNumber},
 				{Type: "text", Value: payPeriod},
 				{Type: "text", Value: fmt.Sprintf("%d", r.EmployeeCount)},
-				{Type: "text", Value: formatCurrency(r.TotalGross)},
-				{Type: "text", Value: formatCurrency(r.TotalDeductions)},
-				{Type: "text", Value: formatCurrency(r.TotalNet)},
+				types.MoneyCell(r.TotalGross, "PHP", false),
+				types.MoneyCell(r.TotalDeductions, "PHP", false),
+				types.MoneyCell(r.TotalNet, "PHP", false),
 				{Type: "badge", Value: statusLabel(l, r.Status), Variant: runStatusVariant(r.Status)},
 			},
 			DataAttrs: map[string]string{
@@ -353,24 +353,3 @@ func runStatusVariant(status string) string {
 	}
 }
 
-func formatCurrency(amount float64) string {
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := fmt.Sprintf("%d", whole)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	return fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-}

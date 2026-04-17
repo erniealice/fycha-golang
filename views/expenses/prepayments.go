@@ -12,6 +12,7 @@ import (
 	fycha "github.com/erniealice/fycha-golang"
 )
 
+
 // MockPrepayment represents a prepayment record for mock data display.
 type MockPrepayment struct {
 	ID                 string
@@ -177,8 +178,8 @@ func buildPrepaymentRows(items []MockPrepayment, l fycha.PrepaymentLabels, route
 			Cells: []types.TableCell{
 				{Type: "text", Value: item.Description},
 				{Type: "text", Value: item.VendorName},
-				{Type: "text", Value: formatCurrency(item.TotalAmount)},
-				{Type: "text", Value: formatCurrency(item.RemainingAmount)},
+				types.MoneyCell(item.TotalAmount, "PHP", false),
+				types.MoneyCell(item.RemainingAmount, "PHP", false),
 				{Type: "text", Value: fmt.Sprintf("%d mo", item.AmortizationMonths)},
 				{Type: "text", Value: item.StartDateString},
 				{Type: "text", Value: item.EndDateString},
@@ -231,9 +232,9 @@ func buildAmortizationTableConfig(deps *PrepaymentDeps) *types.TableConfig {
 				{Type: "text", Value: r.Description},
 				{Type: "text", Value: r.Vendor},
 				{Type: "text", Value: r.Month},
-				{Type: "text", Value: formatCurrency(r.Opening)},
-				{Type: "text", Value: formatCurrency(r.Expense)},
-				{Type: "text", Value: formatCurrency(r.Closing)},
+				types.MoneyCell(r.Opening, "PHP", false),
+				types.MoneyCell(r.Expense, "PHP", false),
+				types.MoneyCell(r.Closing, "PHP", false),
 			},
 		})
 	}
@@ -288,24 +289,3 @@ func prepaymentStatusVariant(status string) string {
 	}
 }
 
-func formatCurrency(amount float64) string {
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := fmt.Sprintf("%d", whole)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	return fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-}

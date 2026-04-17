@@ -79,10 +79,12 @@ func NewView(deps *Deps) view.View {
 		if len(records) > 0 {
 			avgAmount = totalAmount / float64(len(records))
 		}
+		rs0 := types.MoneyCell(totalAmount, "PHP", true)
+		rs1 := types.MoneyCell(avgAmount, "PHP", true)
 		summary := []fycha.SummaryMetric{
-			{Label: l.SummaryTotal, Value: formatCurrency(totalAmount), Highlight: true},
+			{Label: l.SummaryTotal, Value: rs0.Currency + " " + rs0.Value, Highlight: true},
 			{Label: l.SummaryTransactions, Value: fmt.Sprintf("%d", len(records))},
-			{Label: l.SummaryAverage, Value: formatCurrency(avgAmount)},
+			{Label: l.SummaryAverage, Value: rs1.Currency + " " + rs1.Value},
 		}
 
 		columns := []types.TableColumn{
@@ -175,20 +177,21 @@ func buildRows(records []map[string]any) []types.TableRow {
 		customer := toString(r["customer_name"])
 		currency := toString(r["currency"])
 		status := toString(r["status"])
-		amount := currency + " " + formatAmount(r["total_amount"])
+		amountCell := types.MoneyCell(toFloat64(r["total_amount"]), currency, true)
+		amountStr := amountCell.Currency + " " + amountCell.Value
 
 		rows = append(rows, types.TableRow{
 			ID: id,
 			Cells: []types.TableCell{
 				{Type: "text", Value: ref},
 				{Type: "text", Value: customer},
-				{Type: "text", Value: amount},
+				amountCell,
 				{Type: "badge", Value: status, Variant: statusVariant(status)},
 			},
 			DataAttrs: map[string]string{
 				"reference": ref,
 				"customer":  customer,
-				"amount":    amount,
+				"amount":    amountStr,
 				"status":    status,
 			},
 		})
@@ -223,53 +226,6 @@ func toFloat64(v any) float64 {
 	default:
 		return 0
 	}
-}
-
-func formatAmount(v any) string {
-	switch n := v.(type) {
-	case float64:
-		return fmt.Sprintf("%.2f", n)
-	case float32:
-		return fmt.Sprintf("%.2f", n)
-	case int64:
-		return fmt.Sprintf("%d.00", n)
-	case int:
-		return fmt.Sprintf("%d.00", n)
-	case string:
-		return n
-	default:
-		return fmt.Sprintf("%v", v)
-	}
-}
-
-func formatCurrency(amount float64) string {
-	negative := amount < 0
-	if negative {
-		amount = -amount
-	}
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := fmt.Sprintf("%d", whole)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-	if negative {
-		formatted = "-" + formatted
-	}
-	return formatted
 }
 
 func statusVariant(status string) string {

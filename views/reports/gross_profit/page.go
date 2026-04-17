@@ -224,10 +224,13 @@ func buildSummary(s *reportpb.GrossProfitSummary, l fycha.GrossProfitLabels) []f
 	} else if s.GetOverallMargin() < 30 {
 		marginVariant = "warning"
 	}
+	netRevenueCell := types.MoneyCell(float64(s.GetNetRevenue()), "PHP", true)
+	cogsCell := types.MoneyCell(float64(s.GetTotalCogs()), "PHP", true)
+	grossProfitCell := types.MoneyCell(float64(s.GetTotalGrossProfit()), "PHP", true)
 	return []fycha.SummaryMetric{
-		{Label: l.SummaryNetRevenue, Value: formatCurrency(float64(s.GetNetRevenue()) / 100.0)},
-		{Label: l.SummaryCogs, Value: formatCurrency(float64(s.GetTotalCogs()) / 100.0)},
-		{Label: l.SummaryGrossProfit, Value: formatCurrency(float64(s.GetTotalGrossProfit()) / 100.0), Highlight: true},
+		{Label: l.SummaryNetRevenue, Value: netRevenueCell.Currency + " " + netRevenueCell.Value},
+		{Label: l.SummaryCogs, Value: cogsCell.Currency + " " + cogsCell.Value},
+		{Label: l.SummaryGrossProfit, Value: grossProfitCell.Currency + " " + grossProfitCell.Value, Highlight: true},
 		{Label: l.SummaryMargin, Value: fmt.Sprintf("%.1f%%", s.GetOverallMargin()), Variant: marginVariant},
 	}
 }
@@ -292,22 +295,22 @@ func buildTable(items []*reportpb.GrossProfitLineItem, summary *reportpb.GrossPr
 		row := types.TableRow{
 			ID: item.GetGroupKey(),
 			DataAttrs: map[string]string{
-				"totalRevenue":  fmt.Sprintf("%.2f", float64(item.GetTotalRevenue())/100.0),
-				"totalDiscount": fmt.Sprintf("%.2f", float64(item.GetTotalDiscount())/100.0),
-				"netRevenue":    fmt.Sprintf("%.2f", float64(item.GetNetRevenue())/100.0),
-				"cogs":          fmt.Sprintf("%.2f", float64(item.GetCostOfGoodsSold())/100.0),
-				"grossProfit":   fmt.Sprintf("%.2f", float64(item.GetGrossProfit())/100.0),
+				"totalRevenue":  fmt.Sprintf("%d", item.GetTotalRevenue()),
+				"totalDiscount": fmt.Sprintf("%d", item.GetTotalDiscount()),
+				"netRevenue":    fmt.Sprintf("%d", item.GetNetRevenue()),
+				"cogs":          fmt.Sprintf("%d", item.GetCostOfGoodsSold()),
+				"grossProfit":   fmt.Sprintf("%d", item.GetGrossProfit()),
 				"margin":        fmt.Sprintf("%.1f", item.GetGrossProfitMargin()),
 				"unitsSold":     strconv.FormatInt(item.GetUnitsSold(), 10),
 				"txnCount":      strconv.FormatInt(item.GetTransactionCount(), 10),
 			},
 			Cells: []types.TableCell{
 				{Type: "name", Value: item.GetGroupKey()},
-				{Type: "text", Value: formatCurrency(float64(item.GetTotalRevenue()) / 100.0)},
-				{Type: "text", Value: formatCurrency(float64(item.GetTotalDiscount()) / 100.0)},
-				{Type: "text", Value: formatCurrency(float64(item.GetNetRevenue()) / 100.0)},
-				{Type: "text", Value: formatCurrency(float64(item.GetCostOfGoodsSold()) / 100.0)},
-				{Type: "text", Value: formatCurrency(float64(item.GetGrossProfit()) / 100.0)},
+				types.MoneyCell(float64(item.GetTotalRevenue()), "PHP", true),
+				types.MoneyCell(float64(item.GetTotalDiscount()), "PHP", true),
+				types.MoneyCell(float64(item.GetNetRevenue()), "PHP", true),
+				types.MoneyCell(float64(item.GetCostOfGoodsSold()), "PHP", true),
+				types.MoneyCell(float64(item.GetGrossProfit()), "PHP", true),
 				{Type: "badge", Value: fmt.Sprintf("%.1f%%", item.GetGrossProfitMargin()), Variant: marginVariant},
 				{Type: "text", Value: strconv.FormatInt(item.GetUnitsSold(), 10)},
 				{Type: "text", Value: strconv.FormatInt(item.GetTransactionCount(), 10)},
@@ -326,11 +329,11 @@ func buildTable(items []*reportpb.GrossProfitLineItem, summary *reportpb.GrossPr
 		}
 		table.TotalsRow = []types.TableCell{
 			{Type: "name", Value: l.Totals},
-			{Type: "text", Value: formatCurrency(float64(summary.GetTotalRevenue()) / 100.0)},
-			{Type: "text", Value: formatCurrency(float64(summary.GetTotalDiscount()) / 100.0)},
-			{Type: "text", Value: formatCurrency(float64(summary.GetNetRevenue()) / 100.0)},
-			{Type: "text", Value: formatCurrency(float64(summary.GetTotalCogs()) / 100.0)},
-			{Type: "text", Value: formatCurrency(float64(summary.GetTotalGrossProfit()) / 100.0)},
+			types.MoneyCell(float64(summary.GetTotalRevenue()), "PHP", true),
+			types.MoneyCell(float64(summary.GetTotalDiscount()), "PHP", true),
+			types.MoneyCell(float64(summary.GetNetRevenue()), "PHP", true),
+			types.MoneyCell(float64(summary.GetTotalCogs()), "PHP", true),
+			types.MoneyCell(float64(summary.GetTotalGrossProfit()), "PHP", true),
 			{Type: "badge", Value: fmt.Sprintf("%.1f%%", summary.GetOverallMargin()), Variant: marginVariant},
 			{Type: "text", Value: strconv.FormatInt(summary.GetTotalUnitsSold(), 10)},
 			{Type: "text", Value: strconv.FormatInt(summary.GetTotalTransactions(), 10)},
@@ -342,34 +345,4 @@ func buildTable(items []*reportpb.GrossProfitLineItem, summary *reportpb.GrossPr
 	types.ApplyTableSettings(table)
 
 	return table
-}
-
-func formatCurrency(amount float64) string {
-	negative := amount < 0
-	if negative {
-		amount = -amount
-	}
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := strconv.FormatInt(whole, 10)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-	if negative {
-		formatted = "-" + formatted
-	}
-	return formatted
 }

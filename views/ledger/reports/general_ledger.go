@@ -166,10 +166,13 @@ func NewGeneralLedgerView(deps *GeneralLedgerDeps) view.View {
 // ---------------------------------------------------------------------------
 
 func buildGLSummary(s *GLAccountSection, labels fycha.AccountLabels) []fycha.SummaryMetric {
+	cellOpen := types.MoneyCell(s.OpeningBalance, "PHP", false)
+	cellDebits := types.MoneyCell(s.PeriodDebits, "PHP", false)
+	cellCredits := types.MoneyCell(s.PeriodCredits, "PHP", false)
 	return []fycha.SummaryMetric{
-		{Label: labels.GeneralLedger.OpeningBalance, Value: formatCurrencyGL(s.OpeningBalance)},
-		{Label: labels.GeneralLedger.PeriodDebits, Value: formatCurrencyGL(s.PeriodDebits), Highlight: true},
-		{Label: labels.GeneralLedger.PeriodCredits, Value: formatCurrencyGL(s.PeriodCredits)},
+		{Label: labels.GeneralLedger.OpeningBalance, Value: cellOpen.Currency + " " + cellOpen.Value},
+		{Label: labels.GeneralLedger.PeriodDebits, Value: cellDebits.Currency + " " + cellDebits.Value, Highlight: true},
+		{Label: labels.GeneralLedger.PeriodCredits, Value: cellCredits.Currency + " " + cellCredits.Value},
 	}
 }
 
@@ -187,30 +190,41 @@ func buildGLTable(s *GLAccountSection, tableLabels types.TableLabels, labels fyc
 		{Key: "balance", Label: labels.GeneralLedger.RunningBalance, Sortable: false, WidthClass: "col-3xl", Align: "right"},
 	}
 
+	emptyCell := types.TableCell{Type: "text", Value: ""}
 	rows := make([]types.TableRow, 0, len(s.Lines))
 	for i, line := range s.Lines {
-		debitVal := ""
-		creditVal := ""
-		balanceVal := ""
+		var debitCell, creditCell, balanceCell types.TableCell
 
 		if !line.IsSpecialRow || line.SpecialRowType == "opening" || line.SpecialRowType == "closing" {
 			if line.RunningBalance != 0 {
-				balanceVal = formatCurrencyGL(line.RunningBalance)
+				balanceCell = types.MoneyCell(line.RunningBalance, "PHP", false)
+			} else {
+				balanceCell = emptyCell
 			}
+		} else {
+			balanceCell = emptyCell
 		}
 		if line.SpecialRowType == "totals" {
 			if line.Debit != 0 {
-				debitVal = formatCurrencyGL(line.Debit)
+				debitCell = types.MoneyCell(line.Debit, "PHP", false)
+			} else {
+				debitCell = emptyCell
 			}
 			if line.Credit != 0 {
-				creditVal = formatCurrencyGL(line.Credit)
+				creditCell = types.MoneyCell(line.Credit, "PHP", false)
+			} else {
+				creditCell = emptyCell
 			}
 		} else {
 			if line.Debit > 0 {
-				debitVal = formatCurrencyGL(line.Debit)
+				debitCell = types.MoneyCell(line.Debit, "PHP", false)
+			} else {
+				debitCell = emptyCell
 			}
 			if line.Credit > 0 {
-				creditVal = formatCurrencyGL(line.Credit)
+				creditCell = types.MoneyCell(line.Credit, "PHP", false)
+			} else {
+				creditCell = emptyCell
 			}
 		}
 
@@ -219,20 +233,15 @@ func buildGLTable(s *GLAccountSection, tableLabels types.TableLabels, labels fyc
 			entryCell = types.TableCell{Type: "link", Value: line.EntryNumber, Href: line.EntryDetailURL}
 		}
 
-		descType := "text"
-		if line.IsSpecialRow {
-			descType = "text"
-		}
-
 		row := types.TableRow{
 			ID: fmt.Sprintf("gl-row-%d", i),
 			Cells: []types.TableCell{
 				{Type: "text", Value: line.Date},
 				entryCell,
-				{Type: descType, Value: line.Description},
-				{Type: "text", Value: debitVal},
-				{Type: "text", Value: creditVal},
-				{Type: "text", Value: balanceVal},
+				{Type: "text", Value: line.Description},
+				debitCell,
+				creditCell,
+				balanceCell,
 			},
 			DataAttrs: map[string]string{
 				"row-type": line.SpecialRowType,
@@ -348,36 +357,3 @@ func mockGLSection(accountID, startDate, endDate string) *GLAccountSection {
 	}
 }
 
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-func formatCurrencyGL(amount float64) string {
-	negative := amount < 0
-	if negative {
-		amount = -amount
-	}
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := fmt.Sprintf("%d", whole)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-	if negative {
-		formatted = "-" + formatted
-	}
-	return formatted
-}

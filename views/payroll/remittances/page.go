@@ -2,7 +2,6 @@ package remittances
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	payrollremittancepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/payroll/payroll_remittance"
@@ -224,7 +223,7 @@ func buildTableRows(remittances []RemittanceRow, status string, l fycha.PayrollL
 			ID: r.ID,
 			Cells: []types.TableCell{
 				{Type: "badge", Value: remittanceTypeLabel(l, r.RemittanceType), Variant: remittanceTypeVariant(r.RemittanceType)},
-				{Type: "text", Value: formatCurrency(r.Amount)},
+				types.MoneyCell(r.Amount, "PHP", false),
 				{Type: "text", Value: r.DueDate},
 				{Type: "badge", Value: remittanceStatusLabel(l, r.Status), Variant: remittanceStatusVariant(r.Status)},
 				{Type: "text", Value: r.FiledAt},
@@ -353,24 +352,3 @@ func remittanceStatusSubtitle(l fycha.PayrollLabels, status string) string {
 	}
 }
 
-func formatCurrency(amount float64) string {
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := fmt.Sprintf("%d", whole)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	return fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-}

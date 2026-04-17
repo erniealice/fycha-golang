@@ -50,12 +50,12 @@ func payablesAgingTotals(rows []types.TableRow) []types.TableCell {
 	}
 	return []types.TableCell{
 		{Value: "Total"},
-		{Value: reports.FormatCurrency(current), Align: "right"},
-		{Value: reports.FormatCurrency(d30), Align: "right"},
-		{Value: reports.FormatCurrency(d60), Align: "right"},
-		{Value: reports.FormatCurrency(d90), Align: "right"},
-		{Value: reports.FormatCurrency(over90), Align: "right"},
-		{Value: reports.FormatCurrency(total), Align: "right"},
+		types.MoneyCell(current, "PHP", false),
+		types.MoneyCell(d30, "PHP", false),
+		types.MoneyCell(d60, "PHP", false),
+		types.MoneyCell(d90, "PHP", false),
+		types.MoneyCell(over90, "PHP", false),
+		types.MoneyCell(total, "PHP", false),
 	}
 }
 
@@ -125,12 +125,12 @@ func fetchPayablesAging(ctx context.Context, db *sql.DB) ([]types.TableColumn, [
 			ID: fmt.Sprintf("pa-%d", idx),
 			Cells: []types.TableCell{
 				{Value: name},
-				{Value: reports.FormatCurrency(current / 100)},
-				{Value: reports.FormatCurrency(d30 / 100)},
-				{Value: reports.FormatCurrency(d60 / 100)},
-				{Value: reports.FormatCurrency(d90 / 100)},
-				{Value: reports.FormatCurrency(over90 / 100)},
-				{Value: reports.FormatCurrency(total / 100)},
+				types.MoneyCell(current, "PHP", true),
+				types.MoneyCell(d30, "PHP", true),
+				types.MoneyCell(d60, "PHP", true),
+				types.MoneyCell(d90, "PHP", true),
+				types.MoneyCell(over90, "PHP", true),
+				types.MoneyCell(total, "PHP", true),
 			},
 		})
 	}

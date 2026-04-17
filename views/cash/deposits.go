@@ -2,7 +2,6 @@ package cash
 
 import (
 	"context"
-	"fmt"
 
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
@@ -170,7 +169,7 @@ func buildDepositRows(items []MockDeposit, l fycha.DepositLabels, routes fycha.D
 			Cells: []types.TableCell{
 				{Type: "text", Value: item.CounterpartyName},
 				{Type: "badge", Value: depositDirectionLabel(l, item.Direction), Variant: depositDirectionVariant(item.Direction)},
-				{Type: "text", Value: formatDepositCurrency(item.Amount)},
+				types.MoneyCell(item.Amount, "PHP", false),
 				{Type: "text", Value: item.DepositDateString},
 				{Type: "badge", Value: depositStatusLabel(l, item.Status), Variant: depositStatusVariant(item.Status)},
 				{Type: "text", Value: item.Notes},
@@ -234,24 +233,3 @@ func depositStatusVariant(status string) string {
 	}
 }
 
-func formatDepositCurrency(amount float64) string {
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := fmt.Sprintf("%d", whole)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	return fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-}

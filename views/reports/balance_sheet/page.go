@@ -115,18 +115,30 @@ func NewBalanceSheetView(deps *BalanceSheetDeps) view.View {
 		}
 		isBalanced := diff < 0.01
 
+		cellAssets := types.MoneyCell(totalAssets, "PHP", false)
+		cellLiab := types.MoneyCell(totalLiab, "PHP", false)
+		cellEquity := types.MoneyCell(totalEquity, "PHP", false)
+		cellLandE := types.MoneyCell(totalLandE, "PHP", false)
+		cellDiff := types.MoneyCell(diff, "PHP", false)
+
+		assetsFmt := cellAssets.Currency + " " + cellAssets.Value
+		liabFmt := cellLiab.Currency + " " + cellLiab.Value
+		equityFmt := cellEquity.Currency + " " + cellEquity.Value
+		landEFmt := cellLandE.Currency + " " + cellLandE.Value
+		diffFmt := cellDiff.Currency + " " + cellDiff.Value
+
 		var equationMsg string
 		if isBalanced {
 			equationMsg = fmt.Sprintf("A = L + E verified: %s = %s + %s",
-				formatCurrencyFS(totalAssets),
-				formatCurrencyFS(totalLiab),
-				formatCurrencyFS(totalEquity),
+				assetsFmt,
+				liabFmt,
+				equityFmt,
 			)
 		} else {
 			equationMsg = fmt.Sprintf("Warning: Assets (%s) ≠ Liabilities + Equity (%s). Difference: %s",
-				formatCurrencyFS(totalAssets),
-				formatCurrencyFS(totalLandE),
-				formatCurrencyFS(diff),
+				assetsFmt,
+				landEFmt,
+				diffFmt,
 			)
 		}
 
@@ -144,10 +156,10 @@ func NewBalanceSheetView(deps *BalanceSheetDeps) view.View {
 			},
 			ContentTemplate:  "balance-sheet-content",
 			AsOfDate:         asOfDate,
-			TotalAssets:      formatCurrencyFS(totalAssets),
-			TotalLiabilities: formatCurrencyFS(totalLiab),
-			TotalEquity:      formatCurrencyFS(totalEquity),
-			TotalLandE:       formatCurrencyFS(totalLandE),
+			TotalAssets:      assetsFmt,
+			TotalLiabilities: liabFmt,
+			TotalEquity:      equityFmt,
+			TotalLandE:       landEFmt,
 			IsBalanced:       isBalanced,
 			EquationMessage:  equationMsg,
 			Sections:         sections,
@@ -191,38 +203,6 @@ func parseISAmount(s string) float64 {
 	}
 	fmt.Sscanf(clean, "%f", &result)
 	return result
-}
-
-// formatCurrencyFS formats a float64 as a Philippine peso currency string.
-// Copied from income_statement package to avoid cross-sibling dependency.
-func formatCurrencyFS(amount float64) string {
-	negative := amount < 0
-	if negative {
-		amount = -amount
-	}
-	whole := int64(amount)
-	frac := int64((amount-float64(whole))*100 + 0.5)
-	if frac >= 100 {
-		whole++
-		frac -= 100
-	}
-	wholeStr := fmt.Sprintf("%d", whole)
-	n := len(wholeStr)
-	if n > 3 {
-		var result []byte
-		for i, ch := range wholeStr {
-			if i > 0 && (n-i)%3 == 0 {
-				result = append(result, ',')
-			}
-			result = append(result, byte(ch))
-		}
-		wholeStr = string(result)
-	}
-	formatted := fmt.Sprintf("\u20b1%s.%02d", wholeStr, frac)
-	if negative {
-		formatted = "-" + formatted
-	}
-	return formatted
 }
 
 // ---------------------------------------------------------------------------
