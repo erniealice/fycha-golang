@@ -7,6 +7,7 @@ import (
 	"net/http"
 
 	accountpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/account"
+	pyeza "github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
 
 	fycha "github.com/erniealice/fycha-golang"
@@ -32,16 +33,9 @@ type FormData struct {
 	CommonLabels  any
 
 	// Option lists for select elements (value/label pairs)
-	ElementOptions  []SelectOption
-	ClassOptions    []SelectOption
-	CashFlowOptions []SelectOption
-}
-
-// SelectOption holds a select option value/label pair.
-type SelectOption struct {
-	Value    string
-	Label    string
-	Selected bool
+	ElementOptions  []pyeza.SelectOption
+	ClassOptions    []pyeza.SelectOption
+	CashFlowOptions []pyeza.SelectOption
 }
 
 // Deps holds dependencies for account action handlers.
@@ -421,8 +415,8 @@ func cashFlowStringFromProto(c accountpb.CashFlowActivity) string {
 // Option list helpers
 // ---------------------------------------------------------------------------
 
-func elementOptions(l fycha.AccountFormLabels) []SelectOption {
-	return []SelectOption{
+func elementOptions(l fycha.AccountFormLabels) []pyeza.SelectOption {
+	return []pyeza.SelectOption{
 		{Value: "asset", Label: l.ElementAsset},
 		{Value: "liability", Label: l.ElementLiability},
 		{Value: "equity", Label: l.ElementEquity},
@@ -431,35 +425,35 @@ func elementOptions(l fycha.AccountFormLabels) []SelectOption {
 	}
 }
 
-func classOptions(element string, l fycha.AccountFormLabels) []SelectOption {
+func classOptions(element string, l fycha.AccountFormLabels) []pyeza.SelectOption {
 	switch element {
 	case "asset":
-		return []SelectOption{
+		return []pyeza.SelectOption{
 			{Value: "current_asset", Label: l.ClassCurrentAsset},
 			{Value: "non_current_asset", Label: l.ClassNonCurrentAsset},
 		}
 	case "liability":
-		return []SelectOption{
+		return []pyeza.SelectOption{
 			{Value: "current_liability", Label: l.ClassCurrentLiability},
 			{Value: "non_current_liability", Label: l.ClassNonCurrentLiability},
 		}
 	case "equity":
-		return []SelectOption{
+		return []pyeza.SelectOption{
 			{Value: "equity", Label: l.ClassEquity},
 		}
 	case "revenue":
-		return []SelectOption{
+		return []pyeza.SelectOption{
 			{Value: "operating_revenue", Label: l.ClassOperatingRevenue},
 			{Value: "other_income", Label: l.ClassOtherIncome},
 		}
 	case "expense":
-		return []SelectOption{
+		return []pyeza.SelectOption{
 			{Value: "cost_of_sales", Label: l.ClassCostOfSales},
 			{Value: "operating_expense", Label: l.ClassOperatingExpense},
 		}
 	default:
 		// Return all classes when element is not yet selected
-		return []SelectOption{
+		return []pyeza.SelectOption{
 			{Value: "current_asset", Label: l.ClassCurrentAsset},
 			{Value: "non_current_asset", Label: l.ClassNonCurrentAsset},
 			{Value: "current_liability", Label: l.ClassCurrentLiability},
@@ -473,8 +467,8 @@ func classOptions(element string, l fycha.AccountFormLabels) []SelectOption {
 	}
 }
 
-func cashFlowOptions(l fycha.AccountFormLabels) []SelectOption {
-	return []SelectOption{
+func cashFlowOptions(l fycha.AccountFormLabels) []pyeza.SelectOption {
+	return []pyeza.SelectOption{
 		{Value: "", Label: l.CashFlowNone},
 		{Value: "operating", Label: l.CashFlowOperating},
 		{Value: "investing", Label: l.CashFlowInvesting},
