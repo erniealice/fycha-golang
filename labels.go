@@ -368,6 +368,12 @@ type AssetFormLabels struct {
 	DepMethodDecliningBalance  string `json:"depMethodDecliningBalance"`
 	DepMethodSumOfYears        string `json:"depMethodSumOfYears"`
 	DepMethodUnitsOfProduction string `json:"depMethodUnitsOfProduction"`
+	// Info popover text
+	AssetNumberInfo        string `json:"assetNumberInfo"`
+	AcquisitionCostInfo    string `json:"acquisitionCostInfo"`
+	SalvageValueInfo       string `json:"salvageValueInfo"`
+	UsefulLifeMonthsInfo   string `json:"usefulLifeMonthsInfo"`
+	DepreciationMethodInfo string `json:"depreciationMethodInfo"`
 }
 
 type AssetActionLabels struct {
@@ -517,6 +523,11 @@ func DefaultAssetLabels() AssetLabels {
 			DepMethodDecliningBalance:  "Declining Balance",
 			DepMethodSumOfYears:        "Sum of Years' Digits",
 			DepMethodUnitsOfProduction: "Units of Production",
+			AssetNumberInfo:            "Unique identifier for this asset in your register (e.g. FA-001).",
+			AcquisitionCostInfo:        "Total cost to acquire or construct the asset, including installation.",
+			SalvageValueInfo:           "Estimated residual value at the end of the asset's useful life.",
+			UsefulLifeMonthsInfo:       "Expected productive life of the asset in months, used to calculate depreciation.",
+			DepreciationMethodInfo:     "The accounting method used to allocate the asset's cost over its useful life.",
 		},
 		Actions: AssetActionLabels{
 			View:                  "View",
@@ -750,6 +761,10 @@ type AccountFormLabels struct {
 	// Normal balance value labels
 	NormalBalanceDebit  string `json:"normalBalanceDebit"`
 	NormalBalanceCredit string `json:"normalBalanceCredit"`
+	// Info popover text
+	ElementInfo            string `json:"elementInfo"`
+	ClassificationInfo     string `json:"classificationInfo"`
+	CashFlowClassInfo      string `json:"cashFlowClassInfo"`
 }
 
 type AccountActionLabels struct {
@@ -883,6 +898,9 @@ func DefaultAccountLabels() AccountLabels {
 			GroupExpenses:            "EXPENSES",
 			NormalBalanceDebit:       "Debit",
 			NormalBalanceCredit:      "Credit",
+			ElementInfo:              "The broad accounting category this account belongs to (Asset, Liability, Equity, Revenue, or Expense).",
+			ClassificationInfo:       "Sub-category within the element that determines where this account appears on financial statements.",
+			CashFlowClassInfo:        "Tags this account's movements for cash flow statement classification. Leave empty if not applicable.",
 		},
 		Actions: AccountActionLabels{
 			View:              "View",
@@ -1257,6 +1275,11 @@ type FiscalPeriodFormLabels struct {
 	StartDate    string `json:"start_date"`
 	EndDate      string `json:"end_date"`
 	Status       string `json:"status"`
+	// Info popover text
+	PeriodNumberInfo string `json:"periodNumberInfo"`
+	FiscalYearInfo   string `json:"fiscalYearInfo"`
+	StartDateInfo    string `json:"startDateInfo"`
+	EndDateInfo      string `json:"endDateInfo"`
 }
 
 type FiscalPeriodPageLabels struct {
@@ -1329,12 +1352,16 @@ func DefaultFiscalPeriodLabels() FiscalPeriodLabels {
 			ConfirmClose: "Are you sure you want to close %s? This will prevent new journal entries from being posted to this period.",
 		},
 		Form: FiscalPeriodFormLabels{
-			Name:         "Name",
-			PeriodNumber: "Period Number",
-			FiscalYear:   "Fiscal Year",
-			StartDate:    "Start Date",
-			EndDate:      "End Date",
-			Status:       "Status",
+			Name:             "Name",
+			PeriodNumber:     "Period Number",
+			FiscalYear:       "Fiscal Year",
+			StartDate:        "Start Date",
+			EndDate:          "End Date",
+			Status:           "Status",
+			PeriodNumberInfo: "Sequential number of this period within the fiscal year (e.g. 1 for January).",
+			FiscalYearInfo:   "The fiscal year this period belongs to (e.g. 2026).",
+			StartDateInfo:    "First day of this accounting period. Journal entries dated on or after this date fall within the period.",
+			EndDateInfo:      "Last day of this accounting period. Journal entries dated on or before this date fall within the period.",
 		},
 	}
 }

@@ -39,6 +39,7 @@ Data: .Code, .Name, .Element, .Class, .ParentCode, .Group,
         "Value" .Element
         "Required" true
         "Options" .ElementOptions
+        "Info" .Labels.ElementInfo
       )}}
       {{template "form-group" (dict
         "Type" "select"
@@ -47,6 +48,7 @@ Data: .Code, .Name, .Element, .Class, .ParentCode, .Group,
         "Value" .Class
         "Required" true
         "Options" .ClassOptions
+        "Info" .Labels.ClassificationInfo
       )}}
     </div>
 
@@ -70,8 +72,14 @@ Data: .Code, .Name, .Element, .Class, .ParentCode, .Group,
     </div>
 
     <div class="form-row">
-      {{template "toggle" (dict "Name" "is_group" "Label" .Labels.IsGroup "Checked" .IsGroup "Value" "true")}}
-      {{template "toggle" (dict "Name" "active" "Label" .Labels.Active "Checked" .Active "Value" "true")}}
+      <div class="form-group form-group-toggle">
+          <label class="form-label" for="is_group">{{.Labels.IsGroup}}</label>
+          {{template "toggle" (dict "Name" "is_group" "Checked" .IsGroup "Value" "true")}}
+      </div>
+      <div class="form-group form-group-toggle">
+          <label class="form-label" for="active">{{.Labels.Active}}</label>
+          {{template "toggle" (dict "Name" "active" "Checked" .Active "Value" "true")}}
+      </div>
     </div>
 
     <div class="form-row single">
@@ -93,6 +101,7 @@ Data: .Code, .Name, .Element, .Class, .ParentCode, .Group,
         "Label" .Labels.CashFlowClassification
         "Value" .CashFlowClass
         "Options" .CashFlowOptions
+        "Info" .Labels.CashFlowClassInfo
       )}}
     </div>
 

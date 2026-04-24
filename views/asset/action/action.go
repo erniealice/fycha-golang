@@ -57,6 +57,12 @@ type FormLabels struct {
 	DepMethodSumOfYears        string
 	DepMethodUnitsOfProduction string
 	Active                     string
+	// Info popover text
+	AssetNumberInfo        string
+	AcquisitionCostInfo    string
+	SalvageValueInfo       string
+	UsefulLifeMonthsInfo   string
+	DepreciationMethodInfo string
 }
 
 // FormData is the template data for the asset drawer form.
@@ -116,6 +122,11 @@ func formLabelsFromStruct(l fycha.AssetFormLabels) FormLabels {
 		DepMethodSumOfYears:        l.DepMethodSumOfYears,
 		DepMethodUnitsOfProduction: l.DepMethodUnitsOfProduction,
 		Active:                     l.Active,
+		AssetNumberInfo:            l.AssetNumberInfo,
+		AcquisitionCostInfo:        l.AcquisitionCostInfo,
+		SalvageValueInfo:           l.SalvageValueInfo,
+		UsefulLifeMonthsInfo:       l.UsefulLifeMonthsInfo,
+		DepreciationMethodInfo:     l.DepreciationMethodInfo,
 	}
 }
 

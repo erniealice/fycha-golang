@@ -24,6 +24,7 @@ Data: .FormAction, .Labels, .CommonLabels
         "Label" .Labels.PeriodNumber
         "Required" true
         "Placeholder" "1"
+        "Info" .Labels.PeriodNumberInfo
       )}}
       {{template "form-group" (dict
         "Type" "number"
@@ -31,6 +32,7 @@ Data: .FormAction, .Labels, .CommonLabels
         "Label" .Labels.FiscalYear
         "Required" true
         "Placeholder" "2026"
+        "Info" .Labels.FiscalYearInfo
       )}}
     </div>
 
@@ -40,12 +42,14 @@ Data: .FormAction, .Labels, .CommonLabels
         "Name" "start_date"
         "Label" .Labels.StartDate
         "Required" true
+        "Info" .Labels.StartDateInfo
       )}}
       {{template "form-group" (dict
         "Type" "date"
         "Name" "end_date"
         "Label" .Labels.EndDate
         "Required" true
+        "Info" .Labels.EndDateInfo
       )}}
     </div>
 

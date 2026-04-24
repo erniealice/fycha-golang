@@ -29,6 +29,7 @@ Data: .Name, .AssetNumber, .Description, .CategoryID, .LocationID,
                 "Value" .AssetNumber
                 "Required" true
                 "Placeholder" .Labels.AssetNumberPlaceholder
+                "Info" .Labels.AssetNumberInfo
             )}}
         </div>
 
@@ -67,6 +68,7 @@ Data: .Name, .AssetNumber, .Description, .CategoryID, .LocationID,
                 "Value" .AcquisitionCost
                 "Required" true
                 "Placeholder" .Labels.AcquisitionCostPlaceholder
+                "Info" .Labels.AcquisitionCostInfo
             )}}
             {{template "form-group" (dict
                 "Type" "number"
@@ -74,6 +76,7 @@ Data: .Name, .AssetNumber, .Description, .CategoryID, .LocationID,
                 "Label" .Labels.SalvageValue
                 "Value" .SalvageValue
                 "Placeholder" .Labels.SalvageValuePlaceholder
+                "Info" .Labels.SalvageValueInfo
             )}}
         </div>
 
@@ -85,6 +88,7 @@ Data: .Name, .AssetNumber, .Description, .CategoryID, .LocationID,
                 "Value" .UsefulLifeMonths
                 "Required" true
                 "Placeholder" .Labels.UsefulLifePlaceholder
+                "Info" .Labels.UsefulLifeMonthsInfo
             )}}
             {{template "form-group" (dict
                 "Type" "select"
@@ -97,16 +101,15 @@ Data: .Name, .AssetNumber, .Description, .CategoryID, .LocationID,
                     (dict "Value" "sum_of_years" "Label" .Labels.DepMethodSumOfYears)
                     (dict "Value" "units_of_production" "Label" .Labels.DepMethodUnitsOfProduction)
                 )
+                "Info" .Labels.DepreciationMethodInfo
             )}}
         </div>
 
         <div class="form-row single">
-            {{template "toggle" (dict
-                "Name" "active"
-                "Label" .Labels.Active
-                "Checked" .Active
-                "Value" "true"
-            )}}
+            <div class="form-group form-group-toggle">
+                <label class="form-label" for="active">{{.Labels.Active}}</label>
+                {{template "toggle" (dict "Name" "active" "Checked" .Active "Value" "true")}}
+            </div>
         </div>
     </div>
 
