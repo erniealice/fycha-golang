@@ -203,12 +203,12 @@ func buildTableConfig(deps *Deps, status string, remittances []RemittanceRow, pe
 func remittanceColumns(l fycha.PayrollLabels) []types.TableColumn {
 	c := l.Remittance.Columns
 	return []types.TableColumn{
-		{Key: "remittance_type", Label: c.RemittanceType, Sortable: true, WidthClass: "col-4xl"},
-		{Key: "amount", Label: c.Amount, Sortable: true, WidthClass: "col-3xl", Align: "right"},
-		{Key: "due_date", Label: c.DueDate, Sortable: true, WidthClass: "col-3xl"},
-		{Key: "status", Label: c.Status, Sortable: true, WidthClass: "col-xl"},
-		{Key: "filed_at", Label: c.FiledAt, Sortable: true, WidthClass: "col-3xl"},
-		{Key: "reference_number", Label: c.ReferenceNumber, Sortable: false},
+		{Key: "remittance_type", Label: c.RemittanceType, WidthClass: "col-4xl"},
+		{Key: "amount", Label: c.Amount, WidthClass: "col-3xl", Align: "right"},
+		{Key: "due_date", Label: c.DueDate, WidthClass: "col-3xl"},
+		{Key: "status", Label: c.Status, WidthClass: "col-xl"},
+		{Key: "filed_at", Label: c.FiledAt, WidthClass: "col-3xl"},
+		{Key: "reference_number", Label: c.ReferenceNumber, NoSort: true},
 	}
 }
 

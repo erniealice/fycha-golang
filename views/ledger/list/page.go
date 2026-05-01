@@ -203,11 +203,11 @@ func buildTableConfig(deps *ListViewDeps, element string, accounts []AccountRow,
 
 func accountColumns(l fycha.AccountLabels) []types.TableColumn {
 	return []types.TableColumn{
-		{Key: "code", Label: l.Columns.Code, Sortable: false, WidthClass: "col-lg"},
-		{Key: "name", Label: l.Columns.Name, Sortable: false},
-		{Key: "element", Label: l.Columns.Element, Sortable: false, WidthClass: "col-xl"},
-		{Key: "class", Label: l.Columns.Classification, Sortable: false, WidthClass: "col-2xl"},
-		{Key: "balance", Label: l.Columns.Balance, Sortable: false, WidthClass: "col-3xl", Align: "right"},
+		{Key: "code", Label: l.Columns.Code, NoSort: true, WidthClass: "col-lg"},
+		{Key: "name", Label: l.Columns.Name, NoSort: true},
+		{Key: "element", Label: l.Columns.Element, NoSort: true, WidthClass: "col-xl"},
+		{Key: "class", Label: l.Columns.Classification, NoSort: true, WidthClass: "col-2xl"},
+		{Key: "balance", Label: l.Columns.Balance, NoSort: true, WidthClass: "col-3xl", Align: "right"},
 	}
 }
 

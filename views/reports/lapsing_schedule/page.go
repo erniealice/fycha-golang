@@ -46,12 +46,12 @@ func NewLapsingScheduleView(commonLabels pyeza.CommonLabels, tableLabels types.T
 		TableLabels:  tableLabels,
 		BuildData: func(ctx context.Context) ([]types.TableColumn, []types.TableRow, error) {
 			columns := []types.TableColumn{
-				{Key: "asset", Label: "Asset", Sortable: true},
-				{Key: "cost", Label: "Cost", Sortable: true, Align: "right"},
-				{Key: "useful-life", Label: "Useful Life", Sortable: true, Align: "right"},
-				{Key: "monthly-depr", Label: "Monthly Depr.", Sortable: true, Align: "right"},
-				{Key: "accumulated", Label: "Accumulated", Sortable: true, Align: "right"},
-				{Key: "book-value", Label: "Book Value", Sortable: true, Align: "right"},
+				{Key: "asset", Label: "Asset"},
+				{Key: "cost", Label: "Cost", Align: "right"},
+				{Key: "useful-life", Label: "Useful Life", Align: "right"},
+				{Key: "monthly-depr", Label: "Monthly Depr.", Align: "right"},
+				{Key: "accumulated", Label: "Accumulated", Align: "right"},
+				{Key: "book-value", Label: "Book Value", Align: "right"},
 			}
 			assets := mockLapsingAssets()
 			rows := make([]types.TableRow, len(assets))

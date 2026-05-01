@@ -221,14 +221,14 @@ func buildTable(resp *payagingpb.PayablesAgingResponse, l fycha.PayablesAgingRep
 	// ApplyColumnStyles maps columns[i] to cells[i] correctly (cells[0] is the
 	// "name" type cell; columns[0] must correspond to it).
 	columns := []types.TableColumn{
-		{Key: "row_key", Label: rowDimensionLabel(l, rowDim), Sortable: true},
-		{Key: "current", Label: l.BucketCurrent, Sortable: true, Align: "right", MinWidth: "7.5rem"},
-		{Key: "days_1_30", Label: l.Bucket1To30, Sortable: true, Align: "right", MinWidth: "7.5rem"},
-		{Key: "days_31_60", Label: l.Bucket31To60, Sortable: true, Align: "right", MinWidth: "7.5rem"},
-		{Key: "days_61_90", Label: l.Bucket61To90, Sortable: true, Align: "right", MinWidth: "7.5rem"},
-		{Key: "days_over_90", Label: l.BucketOver90, Sortable: true, Align: "right", MinWidth: "7.5rem"},
-		{Key: "total", Label: l.TotalOutstanding, Sortable: true, Align: "right", MinWidth: "8.125rem"},
-		{Key: "invoice_count", Label: l.InvoiceCount, Sortable: true, Align: "right", MinWidth: "6rem"},
+		{Key: "row_key", Label: rowDimensionLabel(l, rowDim)},
+		{Key: "current", Label: l.BucketCurrent, Align: "right", MinWidth: "7.5rem"},
+		{Key: "days_1_30", Label: l.Bucket1To30, Align: "right", MinWidth: "7.5rem"},
+		{Key: "days_31_60", Label: l.Bucket31To60, Align: "right", MinWidth: "7.5rem"},
+		{Key: "days_61_90", Label: l.Bucket61To90, Align: "right", MinWidth: "7.5rem"},
+		{Key: "days_over_90", Label: l.BucketOver90, Align: "right", MinWidth: "7.5rem"},
+		{Key: "total", Label: l.TotalOutstanding, Align: "right", MinWidth: "8.125rem"},
+		{Key: "invoice_count", Label: l.InvoiceCount, Align: "right", MinWidth: "6rem"},
 	}
 
 	table := &types.TableConfig{

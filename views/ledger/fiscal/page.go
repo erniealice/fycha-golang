@@ -166,11 +166,11 @@ func buildTableConfig(deps *Deps, periods []FiscalPeriodRow, perms *types.UserPe
 
 func periodColumns(l fycha.FiscalPeriodLabels) []types.TableColumn {
 	return []types.TableColumn{
-		{Key: "period", Label: l.Columns.Period, Sortable: false},
-		{Key: "year", Label: l.Columns.Year, Sortable: false, WidthClass: "col-lg"},
-		{Key: "start_date", Label: l.Columns.StartDate, Sortable: false, WidthClass: "col-2xl"},
-		{Key: "end_date", Label: l.Columns.EndDate, Sortable: false, WidthClass: "col-2xl"},
-		{Key: "status", Label: l.Columns.Status, Sortable: false, WidthClass: "col-xl"},
+		{Key: "period", Label: l.Columns.Period, NoSort: true},
+		{Key: "year", Label: l.Columns.Year, NoSort: true, WidthClass: "col-lg"},
+		{Key: "start_date", Label: l.Columns.StartDate, NoSort: true, WidthClass: "col-2xl"},
+		{Key: "end_date", Label: l.Columns.EndDate, NoSort: true, WidthClass: "col-2xl"},
+		{Key: "status", Label: l.Columns.Status, NoSort: true, WidthClass: "col-xl"},
 	}
 }
 

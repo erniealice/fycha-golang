@@ -44,11 +44,11 @@ func NewDepreciationPoliciesView(commonLabels pyeza.CommonLabels, tableLabels ty
 		TableLabels:  tableLabels,
 		BuildData: func(ctx context.Context) ([]types.TableColumn, []types.TableRow, error) {
 			columns := []types.TableColumn{
-				{Key: "name", Label: "Policy Name", Sortable: true},
-				{Key: "method", Label: "Method", Sortable: true},
-				{Key: "useful-life", Label: "Default Useful Life", Sortable: true, Align: "right"},
-				{Key: "salvage", Label: "Salvage Rate", Sortable: true, Align: "right"},
-				{Key: "status", Label: "Status", Sortable: true, WidthClass: "col-2xl"},
+				{Key: "name", Label: "Policy Name"},
+				{Key: "method", Label: "Method"},
+				{Key: "useful-life", Label: "Default Useful Life", Align: "right"},
+				{Key: "salvage", Label: "Salvage Rate", Align: "right"},
+				{Key: "status", Label: "Status", WidthClass: "col-2xl"},
 			}
 			policies := mockDepreciationPolicies()
 			rows := make([]types.TableRow, len(policies))

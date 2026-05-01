@@ -286,7 +286,6 @@ func buildPivotTable(resp *revreportpb.RevenueReportResponse, l fycha.RevenueRep
 		dynamicColumns = append(dynamicColumns, types.TableColumn{
 			Key:      ck,
 			Label:    ck,
-			Sortable: true,
 			Align:    "right",
 			MinWidth: "7.5rem",
 		})
@@ -311,7 +310,7 @@ func buildPivotTable(resp *revreportpb.RevenueReportResponse, l fycha.RevenueRep
 			{
 				Label: "",
 				Columns: []types.TableColumn{
-					{Key: "total", Label: l.Total, Sortable: true, Align: "right", MinWidth: "8.125rem"},
+					{Key: "total", Label: l.Total, Align: "right", MinWidth: "8.125rem"},
 				},
 			},
 		},

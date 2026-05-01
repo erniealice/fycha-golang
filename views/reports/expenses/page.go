@@ -91,12 +91,12 @@ func NewView(deps *Deps) view.View {
 		}
 
 		columns := []types.TableColumn{
-			{Key: "reference", Label: l.Reference, Sortable: true},
-			{Key: "vendor", Label: l.Vendor, Sortable: true},
-			{Key: "category", Label: l.Category, Sortable: true},
-			{Key: "date", Label: l.Date, Sortable: true, WidthClass: "col-3xl"},
-			{Key: "amount", Label: l.Amount, Sortable: true, WidthClass: "col-3xl", Align: "right"},
-			{Key: "status", Label: l.Status, Sortable: true, WidthClass: "col-2xl"},
+			{Key: "reference", Label: l.Reference},
+			{Key: "vendor", Label: l.Vendor},
+			{Key: "category", Label: l.Category},
+			{Key: "date", Label: l.Date, WidthClass: "col-3xl"},
+			{Key: "amount", Label: l.Amount, WidthClass: "col-3xl", Align: "right"},
+			{Key: "status", Label: l.Status, WidthClass: "col-2xl"},
 		}
 
 		rows := buildRows(records)

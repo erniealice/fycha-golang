@@ -290,7 +290,6 @@ func buildPivotTable(resp *expreportpb.ExpenditureReportResponse, l fycha.Expend
 		dynamicColumns = append(dynamicColumns, types.TableColumn{
 			Key:      ck,
 			Label:    ck,
-			Sortable: true,
 			Align:    "right",
 			MinWidth: "7.5rem",
 		})
@@ -315,7 +314,7 @@ func buildPivotTable(resp *expreportpb.ExpenditureReportResponse, l fycha.Expend
 			{
 				Label: "",
 				Columns: []types.TableColumn{
-					{Key: "total", Label: l.Total, Sortable: true, Align: "right", MinWidth: "8.125rem"},
+					{Key: "total", Label: l.Total, Align: "right", MinWidth: "8.125rem"},
 				},
 			},
 		},

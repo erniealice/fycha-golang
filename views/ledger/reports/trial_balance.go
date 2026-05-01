@@ -240,10 +240,10 @@ func buildTBTable(groups []TBElementGroup, totals TBTotals, tableLabels types.Ta
 		totalsLabel = "TOTALS"
 	}
 	columns := []types.TableColumn{
-		{Key: "code", Label: "Code", Sortable: false, WidthClass: "col-lg"},
-		{Key: "name", Label: "Account Name", Sortable: false},
-		{Key: "debit", Label: "Debit Balance", Sortable: false, WidthClass: "col-4xl", Align: "right"},
-		{Key: "credit", Label: "Credit Balance", Sortable: false, WidthClass: "col-4xl", Align: "right"},
+		{Key: "code", Label: "Code", NoSort: true, WidthClass: "col-lg"},
+		{Key: "name", Label: "Account Name", NoSort: true},
+		{Key: "debit", Label: "Debit Balance", NoSort: true, WidthClass: "col-4xl", Align: "right"},
+		{Key: "credit", Label: "Credit Balance", NoSort: true, WidthClass: "col-4xl", Align: "right"},
 	}
 
 	rowGroups := make([]types.TableRowGroup, 0, len(groups))

@@ -290,7 +290,7 @@ func buildTabItems(id string, labels fycha.AssetLabels, routes fycha.AssetRoutes
 
 func buildDepreciationTable(schedule []DepreciationRow, labels fycha.AssetLabels, tableLabels types.TableLabels) *types.TableConfig {
 	columns := []types.TableColumn{
-		{Key: "period", Label: labels.Columns.Period, Sortable: true},
+		{Key: "period", Label: labels.Columns.Period},
 		{Key: "start_value", Label: labels.Columns.StartValue, Align: "right"},
 		{Key: "depreciation", Label: labels.Columns.Depreciation, Align: "right"},
 		{Key: "end_value", Label: labels.Columns.EndValue, Align: "right"},
@@ -330,8 +330,8 @@ func buildDepreciationTable(schedule []DepreciationRow, labels fycha.AssetLabels
 
 func buildMaintenanceTable(records []MaintenanceRow, labels fycha.AssetLabels, tableLabels types.TableLabels) *types.TableConfig {
 	columns := []types.TableColumn{
-		{Key: "date", Label: labels.Columns.Date, Sortable: true},
-		{Key: "type", Label: labels.Columns.Type, Sortable: true},
+		{Key: "date", Label: labels.Columns.Date},
+		{Key: "type", Label: labels.Columns.Type},
 		{Key: "description", Label: labels.Columns.Description},
 		{Key: "status", Label: labels.Columns.Status, WidthClass: "col-2xl"},
 		{Key: "cost", Label: labels.Columns.Cost, Align: "right"},
@@ -370,8 +370,8 @@ func buildMaintenanceTable(records []MaintenanceRow, labels fycha.AssetLabels, t
 
 func buildTransactionTable(history []TransactionRow, labels fycha.AssetLabels, tableLabels types.TableLabels) *types.TableConfig {
 	columns := []types.TableColumn{
-		{Key: "date", Label: labels.Columns.Date, Sortable: true},
-		{Key: "type", Label: labels.Columns.Type, Sortable: true},
+		{Key: "date", Label: labels.Columns.Date},
+		{Key: "type", Label: labels.Columns.Type},
 		{Key: "description", Label: labels.Columns.Description},
 		{Key: "amount", Label: labels.Columns.Amount, Align: "right"},
 		{Key: "reference", Label: labels.Columns.Reference},

@@ -183,12 +183,12 @@ func protoToRow(p *loanpaymentpb.LoanPayment) LoanPaymentRow {
 func buildTableConfig(deps *Deps, payments []LoanPaymentRow, perms *types.UserPermissions) *types.TableConfig {
 	l := deps.Labels
 	columns := []types.TableColumn{
-		{Key: "payment_number", Label: l.Columns.PaymentNumber, Sortable: false, WidthClass: "col-2xl"},
-		{Key: "date", Label: l.Columns.PaymentDate, Sortable: false, WidthClass: "col-2xl"},
-		{Key: "principal", Label: l.Columns.PrincipalAmount, Sortable: false, WidthClass: "col-3xl", Align: "right"},
-		{Key: "interest", Label: l.Columns.InterestAmount, Sortable: false, WidthClass: "col-3xl", Align: "right"},
-		{Key: "total", Label: l.Columns.TotalAmount, Sortable: false, WidthClass: "col-3xl", Align: "right"},
-		{Key: "balance", Label: l.Columns.RemainingBalance, Sortable: false, WidthClass: "col-3xl", Align: "right"},
+		{Key: "payment_number", Label: l.Columns.PaymentNumber, NoSort: true, WidthClass: "col-2xl"},
+		{Key: "date", Label: l.Columns.PaymentDate, NoSort: true, WidthClass: "col-2xl"},
+		{Key: "principal", Label: l.Columns.PrincipalAmount, NoSort: true, WidthClass: "col-3xl", Align: "right"},
+		{Key: "interest", Label: l.Columns.InterestAmount, NoSort: true, WidthClass: "col-3xl", Align: "right"},
+		{Key: "total", Label: l.Columns.TotalAmount, NoSort: true, WidthClass: "col-3xl", Align: "right"},
+		{Key: "balance", Label: l.Columns.RemainingBalance, NoSort: true, WidthClass: "col-3xl", Align: "right"},
 	}
 
 	rows := []types.TableRow{}

@@ -161,10 +161,10 @@ func protoToRow(a *equityaccountpb.EquityAccount) EquityAccountRow {
 func buildTableConfig(deps *Deps, accounts []EquityAccountRow, perms *types.UserPermissions) *types.TableConfig {
 	l := deps.Labels.Accounts
 	columns := []types.TableColumn{
-		{Key: "name", Label: l.Columns.Name, Sortable: false},
-		{Key: "owner", Label: l.Columns.OwnerName, Sortable: false},
-		{Key: "type", Label: l.Columns.AccountType, Sortable: false, WidthClass: "col-5xl"},
-		{Key: "balance", Label: l.Columns.Balance, Sortable: false, WidthClass: "col-3xl", Align: "right"},
+		{Key: "name", Label: l.Columns.Name, NoSort: true},
+		{Key: "owner", Label: l.Columns.OwnerName, NoSort: true},
+		{Key: "type", Label: l.Columns.AccountType, NoSort: true, WidthClass: "col-5xl"},
+		{Key: "balance", Label: l.Columns.Balance, NoSort: true, WidthClass: "col-3xl", Align: "right"},
 	}
 
 	rows := []types.TableRow{}

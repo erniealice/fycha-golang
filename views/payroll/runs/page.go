@@ -218,13 +218,13 @@ func buildTableConfig(deps *Deps, status string, runs []PayrollRunRow, perms *ty
 func payrollRunColumns(l fycha.PayrollLabels) []types.TableColumn {
 	c := l.Run.Columns
 	return []types.TableColumn{
-		{Key: "run_number", Label: c.RunNumber, Sortable: true, WidthClass: "col-3xl"},
-		{Key: "pay_period", Label: c.PayPeriod, Sortable: false},
-		{Key: "employees", Label: c.Employees, Sortable: true, WidthClass: "col-xl", Align: "right"},
-		{Key: "total_gross", Label: c.TotalGross, Sortable: true, WidthClass: "col-4xl", Align: "right"},
-		{Key: "total_deductions", Label: c.TotalDeductions, Sortable: true, WidthClass: "col-4xl", Align: "right"},
-		{Key: "total_net", Label: c.TotalNet, Sortable: true, WidthClass: "col-4xl", Align: "right"},
-		{Key: "status", Label: c.Status, Sortable: true, WidthClass: "col-2xl"},
+		{Key: "run_number", Label: c.RunNumber, WidthClass: "col-3xl"},
+		{Key: "pay_period", Label: c.PayPeriod, NoSort: true},
+		{Key: "employees", Label: c.Employees, WidthClass: "col-xl", Align: "right"},
+		{Key: "total_gross", Label: c.TotalGross, WidthClass: "col-4xl", Align: "right"},
+		{Key: "total_deductions", Label: c.TotalDeductions, WidthClass: "col-4xl", Align: "right"},
+		{Key: "total_net", Label: c.TotalNet, WidthClass: "col-4xl", Align: "right"},
+		{Key: "status", Label: c.Status, WidthClass: "col-2xl"},
 	}
 }
 

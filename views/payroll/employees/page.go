@@ -131,12 +131,12 @@ func buildTableConfig(deps *Deps, perms *types.UserPermissions) *types.TableConf
 func employeeColumns(l fycha.PayrollLabels) []types.TableColumn {
 	c := l.Employee.Columns
 	return []types.TableColumn{
-		{Key: "name", Label: c.Name, Sortable: true},
-		{Key: "position", Label: c.Position, Sortable: true},
-		{Key: "department", Label: c.Department, Sortable: true, WidthClass: "col-4xl"},
-		{Key: "basic_salary", Label: c.BasicSalary, Sortable: true, WidthClass: "col-4xl", Align: "right"},
-		{Key: "pay_frequency", Label: c.PayFrequency, Sortable: true, WidthClass: "col-3xl"},
-		{Key: "status", Label: c.Status, Sortable: true, WidthClass: "col-xl"},
+		{Key: "name", Label: c.Name},
+		{Key: "position", Label: c.Position},
+		{Key: "department", Label: c.Department, WidthClass: "col-4xl"},
+		{Key: "basic_salary", Label: c.BasicSalary, WidthClass: "col-4xl", Align: "right"},
+		{Key: "pay_frequency", Label: c.PayFrequency, WidthClass: "col-3xl"},
+		{Key: "status", Label: c.Status, WidthClass: "col-xl"},
 	}
 }
 

@@ -145,14 +145,14 @@ func buildPrepaymentTableConfig(deps *PrepaymentDeps, perms *types.UserPermissio
 
 func prepaymentColumns(l fycha.PrepaymentLabels) []types.TableColumn {
 	return []types.TableColumn{
-		{Key: "description", Label: l.Columns.Description, Sortable: true},
-		{Key: "vendor", Label: l.Columns.Vendor, Sortable: true},
-		{Key: "total_amount", Label: l.Columns.TotalAmount, Sortable: true, WidthClass: "col-4xl"},
-		{Key: "remaining_amount", Label: l.Columns.RemainingAmount, Sortable: true, WidthClass: "col-3xl"},
-		{Key: "amortization_months", Label: l.Columns.AmortizationMonths, Sortable: true, WidthClass: "col-lg"},
-		{Key: "start_date", Label: l.Columns.StartDate, Sortable: true, WidthClass: "col-2xl"},
-		{Key: "end_date", Label: l.Columns.EndDate, Sortable: true, WidthClass: "col-2xl"},
-		{Key: "status", Label: l.Columns.Status, Sortable: true, WidthClass: "col-3xl"},
+		{Key: "description", Label: l.Columns.Description},
+		{Key: "vendor", Label: l.Columns.Vendor},
+		{Key: "total_amount", Label: l.Columns.TotalAmount, WidthClass: "col-4xl"},
+		{Key: "remaining_amount", Label: l.Columns.RemainingAmount, WidthClass: "col-3xl"},
+		{Key: "amortization_months", Label: l.Columns.AmortizationMonths, WidthClass: "col-lg"},
+		{Key: "start_date", Label: l.Columns.StartDate, WidthClass: "col-2xl"},
+		{Key: "end_date", Label: l.Columns.EndDate, WidthClass: "col-2xl"},
+		{Key: "status", Label: l.Columns.Status, WidthClass: "col-3xl"},
 	}
 }
 
@@ -200,12 +200,12 @@ func buildPrepaymentRows(items []MockPrepayment, l fycha.PrepaymentLabels, route
 func buildAmortizationTableConfig(deps *PrepaymentDeps) *types.TableConfig {
 	l := deps.Labels
 	columns := []types.TableColumn{
-		{Key: "description", Label: l.Columns.Description, Sortable: true},
-		{Key: "vendor", Label: l.Columns.Vendor, Sortable: true},
-		{Key: "month", Label: l.Columns.Month, Sortable: true, WidthClass: "col-2xl"},
-		{Key: "opening", Label: l.Columns.Opening, Sortable: false, WidthClass: "col-3xl"},
-		{Key: "expense", Label: l.Columns.Expense, Sortable: false, WidthClass: "col-3xl"},
-		{Key: "closing", Label: l.Columns.Closing, Sortable: false, WidthClass: "col-3xl"},
+		{Key: "description", Label: l.Columns.Description},
+		{Key: "vendor", Label: l.Columns.Vendor},
+		{Key: "month", Label: l.Columns.Month, WidthClass: "col-2xl"},
+		{Key: "opening", Label: l.Columns.Opening, NoSort: true, WidthClass: "col-3xl"},
+		{Key: "expense", Label: l.Columns.Expense, NoSort: true, WidthClass: "col-3xl"},
+		{Key: "closing", Label: l.Columns.Closing, NoSort: true, WidthClass: "col-3xl"},
 	}
 
 	// Mock amortization schedule rows

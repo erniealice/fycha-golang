@@ -176,10 +176,10 @@ func protoToRow(t *equitytransactionpb.EquityTransaction) TransactionRow {
 func buildTableConfig(deps *Deps, txns []TransactionRow, perms *types.UserPermissions) *types.TableConfig {
 	l := deps.Labels.Transactions
 	columns := []types.TableColumn{
-		{Key: "date", Label: l.Columns.Date, Sortable: false, WidthClass: "col-2xl"},
-		{Key: "type", Label: l.Columns.TransactionType, Sortable: false, WidthClass: "col-5xl"},
-		{Key: "amount", Label: l.Columns.Amount, Sortable: false, WidthClass: "col-3xl", Align: "right"},
-		{Key: "description", Label: l.Columns.Description, Sortable: false},
+		{Key: "date", Label: l.Columns.Date, NoSort: true, WidthClass: "col-2xl"},
+		{Key: "type", Label: l.Columns.TransactionType, NoSort: true, WidthClass: "col-5xl"},
+		{Key: "amount", Label: l.Columns.Amount, NoSort: true, WidthClass: "col-3xl", Align: "right"},
+		{Key: "description", Label: l.Columns.Description, NoSort: true},
 	}
 
 	rows := []types.TableRow{}

@@ -30,11 +30,11 @@ func NewCashBookView(db *sql.DB, commonLabels pyeza.CommonLabels, tableLabels ty
 
 func fetchCashBook(ctx context.Context, db *sql.DB) ([]types.TableColumn, []types.TableRow, error) {
 	columns := []types.TableColumn{
-		{Key: "date", Label: "Date", Sortable: true},
-		{Key: "description", Label: "Description", Sortable: true},
-		{Key: "reference", Label: "Reference", Sortable: true},
-		{Key: "type", Label: "Type", Sortable: true, WidthClass: "col-2xl"},
-		{Key: "amount", Label: "Amount", Sortable: true, Align: "right"},
+		{Key: "date", Label: "Date"},
+		{Key: "description", Label: "Description"},
+		{Key: "reference", Label: "Reference"},
+		{Key: "type", Label: "Type", WidthClass: "col-2xl"},
+		{Key: "amount", Label: "Amount", Align: "right"},
 	}
 
 	// Combine revenue (receipts) and expenditure (payments) into a single ledger

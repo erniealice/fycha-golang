@@ -182,12 +182,12 @@ func buildGLSummary(s *GLAccountSection, labels fycha.AccountLabels) []fycha.Sum
 
 func buildGLTable(s *GLAccountSection, tableLabels types.TableLabels, labels fycha.AccountLabels) *types.TableConfig {
 	columns := []types.TableColumn{
-		{Key: "date", Label: labels.Columns.Date, Sortable: false, WidthClass: "col-lg"},
-		{Key: "entry", Label: labels.Columns.EntryNumber, Sortable: false, WidthClass: "col-xl"},
-		{Key: "description", Label: labels.Columns.Description, Sortable: false},
-		{Key: "debit", Label: labels.Columns.Debit, Sortable: false, WidthClass: "col-3xl", Align: "right"},
-		{Key: "credit", Label: labels.Columns.Credit, Sortable: false, WidthClass: "col-3xl", Align: "right"},
-		{Key: "balance", Label: labels.GeneralLedger.RunningBalance, Sortable: false, WidthClass: "col-3xl", Align: "right"},
+		{Key: "date", Label: labels.Columns.Date, NoSort: true, WidthClass: "col-lg"},
+		{Key: "entry", Label: labels.Columns.EntryNumber, NoSort: true, WidthClass: "col-xl"},
+		{Key: "description", Label: labels.Columns.Description, NoSort: true},
+		{Key: "debit", Label: labels.Columns.Debit, NoSort: true, WidthClass: "col-3xl", Align: "right"},
+		{Key: "credit", Label: labels.Columns.Credit, NoSort: true, WidthClass: "col-3xl", Align: "right"},
+		{Key: "balance", Label: labels.GeneralLedger.RunningBalance, NoSort: true, WidthClass: "col-3xl", Align: "right"},
 	}
 
 	emptyCell := types.TableCell{Type: "text", Value: ""}

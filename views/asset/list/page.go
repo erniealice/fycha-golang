@@ -158,13 +158,13 @@ func buildTableConfig(ctx context.Context, deps *ListViewDeps, status string, pe
 
 func assetColumns(l fycha.AssetLabels) []types.TableColumn {
 	return []types.TableColumn{
-		{Key: "asset_number", Label: l.Columns.AssetNumber, Sortable: true, WidthClass: "col-2xl"},
-		{Key: "name", Label: l.Columns.Name, Sortable: true},
-		{Key: "category", Label: l.Columns.Category, Sortable: true},
-		{Key: "location", Label: l.Columns.Location, Sortable: true},
-		{Key: "acquisition_cost", Label: l.Columns.AcquisitionCost, Sortable: true, WidthClass: "col-5xl"},
-		{Key: "book_value", Label: l.Columns.BookValue, Sortable: true, WidthClass: "col-3xl"},
-		{Key: "status", Label: l.Columns.Status, Sortable: true, WidthClass: "col-2xl"},
+		{Key: "asset_number", Label: l.Columns.AssetNumber, WidthClass: "col-2xl"},
+		{Key: "name", Label: l.Columns.Name},
+		{Key: "category", Label: l.Columns.Category},
+		{Key: "location", Label: l.Columns.Location},
+		{Key: "acquisition_cost", Label: l.Columns.AcquisitionCost, WidthClass: "col-5xl"},
+		{Key: "book_value", Label: l.Columns.BookValue, WidthClass: "col-3xl"},
+		{Key: "status", Label: l.Columns.Status, WidthClass: "col-2xl"},
 	}
 }
 

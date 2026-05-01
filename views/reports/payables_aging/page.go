@@ -61,13 +61,13 @@ func payablesAgingTotals(rows []types.TableRow) []types.TableCell {
 
 func fetchPayablesAging(ctx context.Context, db *sql.DB) ([]types.TableColumn, []types.TableRow, error) {
 	columns := []types.TableColumn{
-		{Key: "supplier", Label: "Supplier", Sortable: true},
-		{Key: "current", Label: "Current", Sortable: true, Align: "right"},
-		{Key: "days-30", Label: "1-30 Days", Sortable: true, Align: "right"},
-		{Key: "days-60", Label: "31-60 Days", Sortable: true, Align: "right"},
-		{Key: "days-90", Label: "61-90 Days", Sortable: true, Align: "right"},
-		{Key: "over-90", Label: "Over 90 Days", Sortable: true, Align: "right"},
-		{Key: "total", Label: "Total", Sortable: true, Align: "right"},
+		{Key: "supplier", Label: "Supplier"},
+		{Key: "current", Label: "Current", Align: "right"},
+		{Key: "days-30", Label: "1-30 Days", Align: "right"},
+		{Key: "days-60", Label: "31-60 Days", Align: "right"},
+		{Key: "days-90", Label: "61-90 Days", Align: "right"},
+		{Key: "over-90", Label: "Over 90 Days", Align: "right"},
+		{Key: "total", Label: "Total", Align: "right"},
 	}
 
 	// Compute outstanding = total_amount - paid disbursements per expenditure.
