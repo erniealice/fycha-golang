@@ -8,29 +8,29 @@ import (
 // MapTableLabels maps common labels into the flat types.TableLabels structure.
 func MapTableLabels(common pyeza.CommonLabels) types.TableLabels {
 	return types.TableLabels{
-		Search:             common.Table.Search,
-		SearchPlaceholder:  common.Table.SearchPlaceholder,
-		Filters:            common.Table.Filters,
-		FilterConditions:   common.Table.FilterConditions,
-		ClearAll:           common.Table.ClearAll,
-		AddCondition:       common.Table.AddCondition,
-		Clear:              common.Table.Clear,
-		ApplyFilters:       common.Table.ApplyFilters,
-		Sort:               common.Table.Sort,
-		Columns:            common.Table.Columns,
-		Export:             common.Table.Export,
-		DensityLabel:       common.Table.Density.Title,
-		DensityDense:       common.Table.Density.Dense,
-		DensityDefault:     common.Table.Density.Default,
-		DensityComfortable: common.Table.Density.Comfortable,
-		DensityCompact:     common.Table.Density.Compact,
-		EntriesPerPage:     common.Table.EntriesLabel,
-		Show:               common.Table.Show,
-		Entries:            common.Table.Entries,
-		Showing:            common.Table.Showing,
-		To:                 common.Table.To,
-		Of:                 common.Table.Of,
-		EntriesLabel:       common.Table.EntriesLabel,
+		Search:                   common.Table.Search,
+		SearchPlaceholder:        common.Table.SearchPlaceholder,
+		Filters:                  common.Table.Filters,
+		FilterConditions:         common.Table.FilterConditions,
+		ClearAll:                 common.Table.ClearAll,
+		AddCondition:             common.Table.AddCondition,
+		Clear:                    common.Table.Clear,
+		ApplyFilters:             common.Table.ApplyFilters,
+		Sort:                     common.Table.Sort,
+		Columns:                  common.Table.Columns,
+		Export:                   common.Table.Export,
+		DensityLabel:             common.Table.Density.Title,
+		DensityDense:             common.Table.Density.Dense,
+		DensityDefault:           common.Table.Density.Default,
+		DensityComfortable:       common.Table.Density.Comfortable,
+		DensityCompact:           common.Table.Density.Compact,
+		EntriesPerPage:           common.Table.EntriesLabel,
+		Show:                     common.Table.Show,
+		Entries:                  common.Table.Entries,
+		Showing:                  common.Table.Showing,
+		To:                       common.Table.To,
+		Of:                       common.Table.Of,
+		EntriesLabel:             common.Table.EntriesLabel,
 		SelectAll:                common.Table.SelectAll,
 		BulkSelectAllPage:        common.Table.BulkSelectAllPage,
 		BulkSelectAllAcrossPages: common.Table.BulkSelectAllAcrossPages,
@@ -44,6 +44,34 @@ func MapTableLabels(common pyeza.CommonLabels) types.TableLabels {
 		SortDescDate:             common.Table.SortDescDate,
 		SortAscEnum:              common.Table.SortAscEnum,
 		SortDescEnum:             common.Table.SortDescEnum,
+		FilterOpContains:         common.Table.FilterOpContains,
+		FilterOpEquals:           common.Table.FilterOpEquals,
+		FilterOpStartsWith:       common.Table.FilterOpStartsWith,
+		FilterOpEndsWith:         common.Table.FilterOpEndsWith,
+		FilterOpNotEquals:        common.Table.FilterOpNotEquals,
+		FilterOpBetween:          common.Table.FilterOpBetween,
+		FilterOpEq:               common.Table.FilterOpEq,
+		FilterOpNeq:              common.Table.FilterOpNeq,
+		FilterOpGt:               common.Table.FilterOpGt,
+		FilterOpGte:              common.Table.FilterOpGte,
+		FilterOpLt:               common.Table.FilterOpLt,
+		FilterOpLte:              common.Table.FilterOpLte,
+		FilterOpOn:               common.Table.FilterOpOn,
+		FilterOpBefore:           common.Table.FilterOpBefore,
+		FilterOpAfter:            common.Table.FilterOpAfter,
+		FilterOpIn:               common.Table.FilterOpIn,
+		FilterOpNotIn:            common.Table.FilterOpNotIn,
+		FilterPresetToday:        common.Table.FilterPresetToday,
+		FilterPreset7d:           common.Table.FilterPreset7d,
+		FilterPreset30d:          common.Table.FilterPreset30d,
+		FilterPresetMonth:        common.Table.FilterPresetMonth,
+		FilterPresetCustom:       common.Table.FilterPresetCustom,
+		FilterAny:                common.Table.FilterAny,
+		FilterYes:                common.Table.FilterYes,
+		FilterNo:                 common.Table.FilterNo,
+		FilterSearchPlaceholder:  common.Table.FilterSearchPlaceholder,
+		FilterMinPlaceholder:     common.Table.FilterMinPlaceholder,
+		FilterMaxPlaceholder:     common.Table.FilterMaxPlaceholder,
 		Actions:                  common.Table.Actions,
 		Prev:                     common.Pagination.Prev,
 		Next:                     common.Pagination.Next,
@@ -62,39 +90,39 @@ func MapBulkConfig(common pyeza.CommonLabels) types.BulkActionsConfig {
 
 // ReportsLabels holds all translatable strings for the reports module.
 type ReportsLabels struct {
-	GrossProfit     GrossProfitLabels     `json:"grossProfit"`
-	Revenue         RevenueLabels         `json:"revenue"`
-	RevenueReport   RevenueReportLabels   `json:"revenueReport"`
-	ExpenditureReport   ExpenditureReportLabels   `json:"expenditureReport"`
-	DisbursementReport  DisbursementReportLabels  `json:"disbursementReport"`
-	ReceivablesAging    ReceivablesAgingReportLabels    `json:"receivablesAging"`
-	PayablesAging       PayablesAgingReportLabels       `json:"payablesAging"`
-	CollectionSummary   CollectionSummaryReportLabels   `json:"collectionSummary"`
-	CostOfSales     CostOfSalesLabels     `json:"costOfSales"`
-	Expenses        ExpensesLabels        `json:"expenses"`
-	NetProfit       NetProfitLabels       `json:"netProfit"`
-	Dashboard       DashboardLabels       `json:"dashboard"`
-	Period          PeriodLabels          `json:"period"`
-	IncomeStatement IncomeStatementLabels `json:"incomeStatement"`
-	BalanceSheet    BalanceSheetLabels    `json:"balanceSheet"`
-	CashFlow        CashFlowLabels        `json:"cashFlow"`
-	EquityChanges   EquityChangesLabels   `json:"equityChanges"`
-	TrialBalance    TrialBalanceLabels    `json:"trialBalance"`
+	GrossProfit        GrossProfitLabels             `json:"grossProfit"`
+	Revenue            RevenueLabels                 `json:"revenue"`
+	RevenueReport      RevenueReportLabels           `json:"revenueReport"`
+	ExpenditureReport  ExpenditureReportLabels       `json:"expenditureReport"`
+	DisbursementReport DisbursementReportLabels      `json:"disbursementReport"`
+	ReceivablesAging   ReceivablesAgingReportLabels  `json:"receivablesAging"`
+	PayablesAging      PayablesAgingReportLabels     `json:"payablesAging"`
+	CollectionSummary  CollectionSummaryReportLabels `json:"collectionSummary"`
+	CostOfSales        CostOfSalesLabels             `json:"costOfSales"`
+	Expenses           ExpensesLabels                `json:"expenses"`
+	NetProfit          NetProfitLabels               `json:"netProfit"`
+	Dashboard          DashboardLabels               `json:"dashboard"`
+	Period             PeriodLabels                  `json:"period"`
+	IncomeStatement    IncomeStatementLabels         `json:"incomeStatement"`
+	BalanceSheet       BalanceSheetLabels            `json:"balanceSheet"`
+	CashFlow           CashFlowLabels                `json:"cashFlow"`
+	EquityChanges      EquityChangesLabels           `json:"equityChanges"`
+	TrialBalance       TrialBalanceLabels            `json:"trialBalance"`
 }
 
 // TrialBalanceLabels holds translatable strings for the Trial Balance report page.
 type TrialBalanceLabels struct {
-	Title         string `json:"title"`
-	Subtitle      string `json:"subtitle"`
-	Totals        string `json:"totals"`
-	EmptyTitle    string `json:"emptyTitle"`
-	EmptyMessage  string `json:"emptyMessage"`
+	Title        string `json:"title"`
+	Subtitle     string `json:"subtitle"`
+	Totals       string `json:"totals"`
+	EmptyTitle   string `json:"emptyTitle"`
+	EmptyMessage string `json:"emptyMessage"`
 }
 
 // IncomeStatementLabels holds translatable strings for the Income Statement page.
 type IncomeStatementLabels struct {
-	Title    string `json:"title"`
-	Subtitle string `json:"subtitle"`
+	Title    string                       `json:"title"`
+	Subtitle string                       `json:"subtitle"`
 	Sections IncomeStatementSectionLabels `json:"sections"`
 }
 
@@ -113,8 +141,8 @@ type IncomeStatementSectionLabels struct {
 
 // BalanceSheetLabels holds translatable strings for the Balance Sheet page.
 type BalanceSheetLabels struct {
-	Title    string `json:"title"`
-	Subtitle string `json:"subtitle"`
+	Title    string                    `json:"title"`
+	Subtitle string                    `json:"subtitle"`
 	Sections BalanceSheetSectionLabels `json:"sections"`
 }
 
@@ -131,19 +159,19 @@ type BalanceSheetSectionLabels struct {
 
 // CashFlowLabels holds translatable strings for the Cash Flow Statement page.
 type CashFlowLabels struct {
-	Title    string `json:"title"`
-	Subtitle string `json:"subtitle"`
+	Title    string                `json:"title"`
+	Subtitle string                `json:"subtitle"`
 	Sections CashFlowSectionLabels `json:"sections"`
 }
 
 // CashFlowSectionLabels holds the activity section titles for the cash flow statement.
 type CashFlowSectionLabels struct {
-	OperatingActivities  string `json:"operatingActivities"`
-	InvestingActivities  string `json:"investingActivities"`
-	FinancingActivities  string `json:"financingActivities"`
-	NetCashOperating     string `json:"netCashOperating"`
-	NetCashInvesting     string `json:"netCashInvesting"`
-	NetCashFinancing     string `json:"netCashFinancing"`
+	OperatingActivities string `json:"operatingActivities"`
+	InvestingActivities string `json:"investingActivities"`
+	FinancingActivities string `json:"financingActivities"`
+	NetCashOperating    string `json:"netCashOperating"`
+	NetCashInvesting    string `json:"netCashInvesting"`
+	NetCashFinancing    string `json:"netCashFinancing"`
 }
 
 // EquityChangesLabels holds translatable strings for the Statement of Changes in Equity page.
@@ -774,9 +802,9 @@ type AccountFormLabels struct {
 	NormalBalanceDebit  string `json:"normalBalanceDebit"`
 	NormalBalanceCredit string `json:"normalBalanceCredit"`
 	// Info popover text
-	ElementInfo            string `json:"elementInfo"`
-	ClassificationInfo     string `json:"classificationInfo"`
-	CashFlowClassInfo      string `json:"cashFlowClassInfo"`
+	ElementInfo        string `json:"elementInfo"`
+	ClassificationInfo string `json:"classificationInfo"`
+	CashFlowClassInfo  string `json:"cashFlowClassInfo"`
 }
 
 type AccountActionLabels struct {
@@ -2780,29 +2808,29 @@ type NetProfitLabels struct {
 
 // RevenueReportLabels holds translatable strings for the revenue pivot-table report.
 type RevenueReportLabels struct {
-	Title                 string `json:"title"`
-	Subtitle              string `json:"subtitle"`
-	ColumnDimension       string `json:"columnDimension"`
-	RowDimension          string `json:"rowDimension"`
-	DimensionMonthly      string `json:"dimensionMonthly"`
-	DimensionQuarterly    string `json:"dimensionQuarterly"`
-	DimensionYearly       string `json:"dimensionYearly"`
-	DimensionProduct      string `json:"dimensionProduct"`
-	DimensionProductLine  string `json:"dimensionProductLine"`
+	Title                   string `json:"title"`
+	Subtitle                string `json:"subtitle"`
+	ColumnDimension         string `json:"columnDimension"`
+	RowDimension            string `json:"rowDimension"`
+	DimensionMonthly        string `json:"dimensionMonthly"`
+	DimensionQuarterly      string `json:"dimensionQuarterly"`
+	DimensionYearly         string `json:"dimensionYearly"`
+	DimensionProduct        string `json:"dimensionProduct"`
+	DimensionProductLine    string `json:"dimensionProductLine"`
 	DimensionLocation       string `json:"dimensionLocation"`
 	DimensionLocationArea   string `json:"dimensionLocationArea"`
 	DimensionClient         string `json:"dimensionClient"`
 	DimensionClientCategory string `json:"dimensionClientCategory"`
 	SummaryGrandTotal       string `json:"summaryGrandTotal"`
-	SummaryTransactions   string `json:"summaryTransactions"`
-	SummaryAverage        string `json:"summaryAverage"`
-	Total                 string `json:"total"`
-	Totals                string `json:"totals"`
-	ExportCsv             string `json:"exportCsv"`
-	Apply                 string `json:"apply"`
-	Clear                 string `json:"clear"`
-	EmptyTitle            string `json:"emptyTitle"`
-	EmptyMessage          string `json:"emptyMessage"`
+	SummaryTransactions     string `json:"summaryTransactions"`
+	SummaryAverage          string `json:"summaryAverage"`
+	Total                   string `json:"total"`
+	Totals                  string `json:"totals"`
+	ExportCsv               string `json:"exportCsv"`
+	Apply                   string `json:"apply"`
+	Clear                   string `json:"clear"`
+	EmptyTitle              string `json:"emptyTitle"`
+	EmptyMessage            string `json:"emptyMessage"`
 }
 
 // PrimaryGroupLabel returns the display label for the given dimension string.
@@ -2936,30 +2964,30 @@ func (l ExpenditureReportLabels) DimensionOptions(active string) []FilterOption 
 
 // DisbursementReportLabels holds labels for the disbursement report pivot table view.
 type DisbursementReportLabels struct {
-	Title                      string `json:"title"`
-	Subtitle                   string `json:"subtitle"`
-	ColumnDimension            string `json:"columnDimension"`
-	RowDimension               string `json:"rowDimension"`
-	DimensionMonthly           string `json:"dimensionMonthly"`
-	DimensionQuarterly         string `json:"dimensionQuarterly"`
-	DimensionYearly            string `json:"dimensionYearly"`
-	DimensionSupplier          string `json:"dimensionSupplier"`
-	DimensionSupplierCategory  string `json:"dimensionSupplierCategory"`
-	DimensionLocation          string `json:"dimensionLocation"`
-	DimensionLocationArea      string `json:"dimensionLocationArea"`
+	Title                        string `json:"title"`
+	Subtitle                     string `json:"subtitle"`
+	ColumnDimension              string `json:"columnDimension"`
+	RowDimension                 string `json:"rowDimension"`
+	DimensionMonthly             string `json:"dimensionMonthly"`
+	DimensionQuarterly           string `json:"dimensionQuarterly"`
+	DimensionYearly              string `json:"dimensionYearly"`
+	DimensionSupplier            string `json:"dimensionSupplier"`
+	DimensionSupplierCategory    string `json:"dimensionSupplierCategory"`
+	DimensionLocation            string `json:"dimensionLocation"`
+	DimensionLocationArea        string `json:"dimensionLocationArea"`
 	DimensionExpenditureCategory string `json:"dimensionExpenditureCategory"`
-	DimensionDisbursementType  string `json:"dimensionDisbursementType"`
-	DimensionDisbursementMethod string `json:"dimensionDisbursementMethod"`
-	SummaryGrandTotal          string `json:"summaryGrandTotal"`
-	SummaryTransactions        string `json:"summaryTransactions"`
-	SummaryAverage             string `json:"summaryAverage"`
-	Total                      string `json:"total"`
-	Totals                     string `json:"totals"`
-	ExportCsv                  string `json:"exportCsv"`
-	Apply                      string `json:"apply"`
-	Clear                      string `json:"clear"`
-	EmptyTitle                 string `json:"emptyTitle"`
-	EmptyMessage               string `json:"emptyMessage"`
+	DimensionDisbursementType    string `json:"dimensionDisbursementType"`
+	DimensionDisbursementMethod  string `json:"dimensionDisbursementMethod"`
+	SummaryGrandTotal            string `json:"summaryGrandTotal"`
+	SummaryTransactions          string `json:"summaryTransactions"`
+	SummaryAverage               string `json:"summaryAverage"`
+	Total                        string `json:"total"`
+	Totals                       string `json:"totals"`
+	ExportCsv                    string `json:"exportCsv"`
+	Apply                        string `json:"apply"`
+	Clear                        string `json:"clear"`
+	EmptyTitle                   string `json:"emptyTitle"`
+	EmptyMessage                 string `json:"emptyMessage"`
 }
 
 // PrimaryGroupLabel returns the display label for the given dimension string.
@@ -3016,23 +3044,23 @@ func (l DisbursementReportLabels) DimensionOptions(active string) []FilterOption
 
 // ReceivablesAgingReportLabels holds translatable strings for the receivables aging report.
 type ReceivablesAgingReportLabels struct {
-	PageTitle        string `json:"page_title"`
-	PageDescription  string `json:"page_description"`
-	BucketCurrent    string `json:"bucket_current"`
-	Bucket1To30      string `json:"bucket_1_to_30"`
-	Bucket31To60     string `json:"bucket_31_to_60"`
-	Bucket61To90     string `json:"bucket_61_to_90"`
-	BucketOver90     string `json:"bucket_over_90"`
-	TotalOutstanding string `json:"total_outstanding"`
-	InvoiceCount     string `json:"invoice_count"`
-	SummaryGrandTotal    string `json:"summary_grand_total"`
-	SummaryInvoiceCount  string `json:"summary_invoice_count"`
-	SummaryOverdueAmount string `json:"summary_overdue_amount"`
-	EmptyTitle         string `json:"empty_title"`
-	EmptyMessage       string `json:"empty_message"`
-	ExportFilename     string `json:"export_filename"`
-	FilterAsOfDate     string `json:"filter_as_of_date"`
-	FilterRowDimension string `json:"filter_row_dimension"`
+	PageTitle               string `json:"page_title"`
+	PageDescription         string `json:"page_description"`
+	BucketCurrent           string `json:"bucket_current"`
+	Bucket1To30             string `json:"bucket_1_to_30"`
+	Bucket31To60            string `json:"bucket_31_to_60"`
+	Bucket61To90            string `json:"bucket_61_to_90"`
+	BucketOver90            string `json:"bucket_over_90"`
+	TotalOutstanding        string `json:"total_outstanding"`
+	InvoiceCount            string `json:"invoice_count"`
+	SummaryGrandTotal       string `json:"summary_grand_total"`
+	SummaryInvoiceCount     string `json:"summary_invoice_count"`
+	SummaryOverdueAmount    string `json:"summary_overdue_amount"`
+	EmptyTitle              string `json:"empty_title"`
+	EmptyMessage            string `json:"empty_message"`
+	ExportFilename          string `json:"export_filename"`
+	FilterAsOfDate          string `json:"filter_as_of_date"`
+	FilterRowDimension      string `json:"filter_row_dimension"`
 	DimensionClient         string `json:"dimension_client"`
 	DimensionClientCategory string `json:"dimension_client_category"`
 	DimensionLocation       string `json:"dimension_location"`
@@ -3057,28 +3085,28 @@ func (l ReceivablesAgingReportLabels) PrimaryGroupLabel(dim string) string {
 
 // PayablesAgingReportLabels holds translatable strings for the payables aging report.
 type PayablesAgingReportLabels struct {
-	PageTitle        string `json:"page_title"`
-	PageDescription  string `json:"page_description"`
-	BucketCurrent    string `json:"bucket_current"`
-	Bucket1To30      string `json:"bucket_1_to_30"`
-	Bucket31To60     string `json:"bucket_31_to_60"`
-	Bucket61To90     string `json:"bucket_61_to_90"`
-	BucketOver90     string `json:"bucket_over_90"`
-	TotalOutstanding string `json:"total_outstanding"`
-	InvoiceCount     string `json:"invoice_count"`
-	SummaryGrandTotal    string `json:"summary_grand_total"`
-	SummaryInvoiceCount  string `json:"summary_invoice_count"`
-	SummaryOverdueAmount string `json:"summary_overdue_amount"`
-	EmptyTitle         string `json:"empty_title"`
-	EmptyMessage       string `json:"empty_message"`
-	ExportFilename     string `json:"export_filename"`
-	FilterAsOfDate     string `json:"filter_as_of_date"`
-	FilterRowDimension string `json:"filter_row_dimension"`
-	DimensionSupplier             string `json:"dimension_supplier"`
-	DimensionSupplierCategory     string `json:"dimension_supplier_category"`
-	DimensionLocation             string `json:"dimension_location"`
-	DimensionLocationArea         string `json:"dimension_location_area"`
-	DimensionExpenditureCategory  string `json:"dimension_expenditure_category"`
+	PageTitle                    string `json:"page_title"`
+	PageDescription              string `json:"page_description"`
+	BucketCurrent                string `json:"bucket_current"`
+	Bucket1To30                  string `json:"bucket_1_to_30"`
+	Bucket31To60                 string `json:"bucket_31_to_60"`
+	Bucket61To90                 string `json:"bucket_61_to_90"`
+	BucketOver90                 string `json:"bucket_over_90"`
+	TotalOutstanding             string `json:"total_outstanding"`
+	InvoiceCount                 string `json:"invoice_count"`
+	SummaryGrandTotal            string `json:"summary_grand_total"`
+	SummaryInvoiceCount          string `json:"summary_invoice_count"`
+	SummaryOverdueAmount         string `json:"summary_overdue_amount"`
+	EmptyTitle                   string `json:"empty_title"`
+	EmptyMessage                 string `json:"empty_message"`
+	ExportFilename               string `json:"export_filename"`
+	FilterAsOfDate               string `json:"filter_as_of_date"`
+	FilterRowDimension           string `json:"filter_row_dimension"`
+	DimensionSupplier            string `json:"dimension_supplier"`
+	DimensionSupplierCategory    string `json:"dimension_supplier_category"`
+	DimensionLocation            string `json:"dimension_location"`
+	DimensionLocationArea        string `json:"dimension_location_area"`
+	DimensionExpenditureCategory string `json:"dimension_expenditure_category"`
 }
 
 // PrimaryGroupLabel returns the display label for the given dimension string.
@@ -3101,8 +3129,8 @@ func (l PayablesAgingReportLabels) PrimaryGroupLabel(dim string) string {
 
 // CollectionSummaryReportLabels holds translatable strings for the collection summary pivot-table report.
 type CollectionSummaryReportLabels struct {
-	PageTitle       string `json:"page_title"`
-	PageDescription string `json:"page_description"`
+	PageTitle                 string `json:"page_title"`
+	PageDescription           string `json:"page_description"`
 	DimensionMonthly          string `json:"dimensionMonthly"`
 	DimensionQuarterly        string `json:"dimensionQuarterly"`
 	DimensionYearly           string `json:"dimensionYearly"`
@@ -3112,16 +3140,16 @@ type CollectionSummaryReportLabels struct {
 	DimensionClientCategory   string `json:"dimensionClientCategory"`
 	DimensionCollectionMethod string `json:"dimensionCollectionMethod"`
 	DimensionCollectionType   string `json:"dimensionCollectionType"`
-	SummaryGrandTotal   string `json:"summaryGrandTotal"`
-	SummaryTransactions string `json:"summaryTransactions"`
-	SummaryAverage      string `json:"summaryAverage"`
-	Total     string `json:"total"`
-	Totals    string `json:"totals"`
-	ExportCsv string `json:"exportCsv"`
-	Apply     string `json:"apply"`
-	Clear     string `json:"clear"`
-	EmptyTitle string `json:"emptyTitle"`
-	EmptyMessage string `json:"emptyMessage"`
+	SummaryGrandTotal         string `json:"summaryGrandTotal"`
+	SummaryTransactions       string `json:"summaryTransactions"`
+	SummaryAverage            string `json:"summaryAverage"`
+	Total                     string `json:"total"`
+	Totals                    string `json:"totals"`
+	ExportCsv                 string `json:"exportCsv"`
+	Apply                     string `json:"apply"`
+	Clear                     string `json:"clear"`
+	EmptyTitle                string `json:"emptyTitle"`
+	EmptyMessage              string `json:"emptyMessage"`
 }
 
 // PrimaryGroupLabel returns the display label for the given dimension string.
