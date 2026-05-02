@@ -12,18 +12,8 @@ import (
 	"github.com/erniealice/pyeza-golang/view"
 
 	fycha "github.com/erniealice/fycha-golang"
+	"github.com/erniealice/fycha-golang/views/ledger/fiscal/form"
 )
-
-// ---------------------------------------------------------------------------
-// Action form data
-// ---------------------------------------------------------------------------
-
-// AddFormData is the template data for the fiscal period add drawer form.
-type AddFormData struct {
-	FormAction   string
-	Labels       fycha.FiscalPeriodFormLabels
-	CommonLabels any
-}
 
 // ---------------------------------------------------------------------------
 // Action deps
@@ -52,7 +42,7 @@ func NewAddAction(deps *ActionDeps) view.View {
 		}
 
 		if viewCtx.Request.Method == http.MethodGet {
-			return view.OK("fiscal-period-drawer-form", &AddFormData{
+			return view.OK("fiscal-period-drawer-form", &form.Data{
 				FormAction:   deps.Routes.AddURL,
 				Labels:       deps.Labels.Form,
 				CommonLabels: nil, // injected by ViewAdapter

@@ -15,47 +15,8 @@ import (
 	"github.com/erniealice/pyeza-golang/view"
 
 	fycha "github.com/erniealice/fycha-golang"
+	"github.com/erniealice/fycha-golang/views/ledger/journal_action/form"
 )
-
-// ---------------------------------------------------------------------------
-// Form data types
-// ---------------------------------------------------------------------------
-
-// FormData is the template data for the journal entry drawer form.
-type FormData struct {
-	FormAction   string
-	IsEdit       bool
-	ID           string
-	Date         string
-	Description  string
-	Notes        string
-	Lines        []FormLine
-	Labels       fycha.JournalFormLabels
-	CommonLabels any
-}
-
-// FormLine represents one editable journal line in the form.
-// The account selector submits account_id[N] (hidden) alongside debit[N], credit[N], memo[N].
-// Consumer apps wire account lookup to populate AccountCode and AccountName for display.
-type FormLine struct {
-	Index       int    // 1-based line number for display
-	AccountID   string // selected account ID (stored as hidden input)
-	AccountCode string // display code (e.g. "1110")
-	AccountName string // display name (e.g. "Cash on Hand")
-	Debit       string
-	Credit      string
-	Memo        string
-}
-
-// ParsedLine holds one parsed journal line from the form submission.
-// Consumer apps create JournalLine protos from these after creating the JournalEntry.
-type ParsedLine struct {
-	AccountID string
-	Debit     float64
-	Credit    float64
-	Memo      string
-	Order     int32
-}
 
 // ---------------------------------------------------------------------------
 // Deps
@@ -77,8 +38,8 @@ type Deps struct {
 
 	// Optional hook called after CreateJournalEntry to persist journal lines.
 	// Receives the new journal entry ID and the parsed lines from the form.
-	// Consumer apps wire this to CreateJournalLine for each ParsedLine.
-	CreateLines func(ctx context.Context, journalEntryID string, lines []ParsedLine) error
+	// Consumer apps wire this to CreateJournalLine for each form.ParsedLine.
+	CreateLines func(ctx context.Context, journalEntryID string, lines []form.ParsedLine) error
 }
 
 // ---------------------------------------------------------------------------
@@ -344,29 +305,29 @@ func NewDeleteAction(deps *Deps) view.View {
 // Form helpers
 // ---------------------------------------------------------------------------
 
-func newEmptyForm(deps *Deps) *FormData {
+func newEmptyForm(deps *Deps) *form.Data {
 	today := time.Now().Format("2006-01-02")
-	return &FormData{
+	return &form.Data{
 		FormAction:   deps.Routes.AddURL,
 		IsEdit:       false,
 		Date:         today,
 		Labels:       deps.Labels.Form,
 		CommonLabels: nil,
-		Lines: []FormLine{
+		Lines: []form.Line{
 			{Index: 1},
 			{Index: 2},
 		},
 	}
 }
 
-func loadEditFormData(ctx context.Context, deps *Deps, id string) *FormData {
-	base := &FormData{
+func loadEditFormData(ctx context.Context, deps *Deps, id string) *form.Data {
+	base := &form.Data{
 		FormAction:   deps.Routes.EditURL,
 		IsEdit:       true,
 		ID:           id,
 		Labels:       deps.Labels.Form,
 		CommonLabels: nil,
-		Lines:        []FormLine{{Index: 1}, {Index: 2}},
+		Lines:        []form.Line{{Index: 1}, {Index: 2}},
 	}
 
 	if deps.GetJournalEntryItemPageData == nil {
@@ -388,14 +349,14 @@ func loadEditFormData(ctx context.Context, deps *Deps, id string) *FormData {
 	dateStr := e.GetEntryDateString()
 	notes := e.GetNotes()
 
-	return &FormData{
+	return &form.Data{
 		FormAction:   deps.Routes.EditURL,
 		IsEdit:       true,
 		ID:           id,
 		Date:         dateStr,
 		Description:  e.GetDescription(),
 		Notes:        notes,
-		Lines:        []FormLine{{Index: 1}, {Index: 2}}, // lines loaded separately by consumer
+		Lines:        []form.Line{{Index: 1}, {Index: 2}}, // lines loaded separately by consumer
 		Labels:       deps.Labels.Form,
 		CommonLabels: nil,
 	}
@@ -406,8 +367,8 @@ func loadEditFormData(ctx context.Context, deps *Deps, id string) *FormData {
 // via their own JournalLine service.
 //
 // Line fields: account_id[N], debit[N], credit[N], memo[N] (N is 1-based).
-func ParseJournalFormLines(r *http.Request) []ParsedLine {
-	var lines []ParsedLine
+func ParseJournalFormLines(r *http.Request) []form.ParsedLine {
+	var lines []form.ParsedLine
 	order := int32(1)
 	for i := 1; i <= 50; i++ {
 		key := fmt.Sprintf("%d", i)
@@ -424,7 +385,7 @@ func ParseJournalFormLines(r *http.Request) []ParsedLine {
 			continue
 		}
 
-		lines = append(lines, ParsedLine{
+		lines = append(lines, form.ParsedLine{
 			AccountID: accountID,
 			Debit:     debit,
 			Credit:    credit,
@@ -437,7 +398,7 @@ func ParseJournalFormLines(r *http.Request) []ParsedLine {
 }
 
 // parseJournalForm parses the multipart form into a JournalEntry proto + parsed lines.
-func parseJournalForm(r *http.Request) (*jepb.JournalEntry, []ParsedLine, error) {
+func parseJournalForm(r *http.Request) (*jepb.JournalEntry, []form.ParsedLine, error) {
 	desc := r.FormValue("description")
 	if strings.TrimSpace(desc) == "" {
 		return nil, nil, fmt.Errorf("description is required")

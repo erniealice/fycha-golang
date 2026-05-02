@@ -3,12 +3,14 @@ package payroll
 import (
 	"context"
 
+	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
 
 	payrollremittancepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/payroll/payroll_remittance"
 	payrollrunpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/payroll/payroll_run"
 	fycha "github.com/erniealice/fycha-golang"
+	dashboardview "github.com/erniealice/fycha-golang/views/payroll/dashboard"
 )
 
 // ModuleDeps holds all dependencies for the payroll module.
@@ -23,11 +25,24 @@ type ModuleDeps struct {
 	// PayrollRemittance use cases
 	CreatePayrollRemittance func(ctx context.Context, req *payrollremittancepb.CreatePayrollRemittanceRequest) (*payrollremittancepb.CreatePayrollRemittanceResponse, error)
 	ListPayrollRemittances  func(ctx context.Context, req *payrollremittancepb.ListPayrollRemittancesRequest) (*payrollremittancepb.ListPayrollRemittancesResponse, error)
+
+	// Phase 2 — Pyeza dashboard block + per-app live dashboards plan.
+	Routes           fycha.PayrollRunRoutes
+	RemittanceRoutes fycha.PayrollRemittanceRoutes
+	SettingsRoutes   fycha.PayrollSettingsRoutes
+	Labels           fycha.PayrollLabels
+	CommonLabels     pyeza.CommonLabels
+
+	GetPayrollDashboardPageData func(ctx context.Context, req *dashboardview.Request) (*dashboardview.Response, error)
 }
 
 // Module holds all constructed payroll views.
 type Module struct {
 	deps *ModuleDeps
+
+	// Phase 2 — Pyeza dashboard block + per-app live dashboards plan.
+	Dashboard view.View
+	routes    fycha.PayrollRunRoutes
 }
 
 // NewModule creates a payroll module.
@@ -35,12 +50,29 @@ func NewModule(deps *ModuleDeps) *Module {
 	if deps == nil {
 		deps = &ModuleDeps{}
 	}
-	return &Module{deps: deps}
+
+	dashDeps := &dashboardview.Deps{
+		Routes:               deps.Routes,
+		RemittanceRoutes:     deps.RemittanceRoutes,
+		SettingsRoutes:       deps.SettingsRoutes,
+		Labels:               deps.Labels,
+		CommonLabels:         deps.CommonLabels,
+		GetDashboardPageData: deps.GetPayrollDashboardPageData,
+	}
+
+	return &Module{
+		deps:      deps,
+		Dashboard: dashboardview.NewView(dashDeps),
+		routes:    deps.Routes,
+	}
 }
 
 // RegisterRoutes registers all payroll routes with the given route registrar.
 // Routes render "Coming Soon" placeholders until view constructors are wired.
 func (m *Module) RegisterRoutes(r view.RouteRegistrar) {
+	if m.Dashboard != nil && m.routes.DashboardURL != "" {
+		r.GET(m.routes.DashboardURL, m.Dashboard)
+	}
 	r.GET(fycha.PayrollRunListURL, comingSoonView("Payroll Runs", "payroll", "payroll-runs"))
 	r.GET(fycha.PayrollRemittanceListURL, comingSoonView("Remittances", "payroll", "remittances"))
 	r.GET(fycha.PayrollEmployeeListURL, comingSoonView("Employees", "payroll", "employees"))

@@ -1,13 +1,13 @@
 {{/* Full page — for direct access / non-HTMX */}}
-{{define "reports-dashboard"}}
+{{define "loan-dashboard"}}
 {{template "app-shell" .}}
 {{end}}
 
 {{/* Content-only partial — for HTMX navigation */}}
-{{define "reports-dashboard-content"}}
+{{define "loan-dashboard-content"}}
 <div class="page-content"
-     data-page-css="/assets/css/fycha/fycha-report.css?v={{.CacheVersion}}"
-     data-testid="dashboard-report">
+     data-page-css="/assets/css/fycha/fycha-loan-dashboard.css?v={{.CacheVersion}}"
+     data-testid="dashboard-loan">
     {{template "dashboard" .Dashboard}}
 </div>
 {{end}}

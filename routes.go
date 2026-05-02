@@ -48,6 +48,7 @@ const (
 
 	// Ledger — Chart of Accounts
 	LedgerBaseURL       = "/app/ledger/"
+	LedgerDashboardURL  = "/app/ledger/dashboard"
 	AccountListURL      = "/app/ledger/accounts/list"
 	AccountDetailURL    = "/app/ledger/accounts/detail/{id}"
 	AccountTabActionURL = "/action/ledger/account/{id}/tab/{tab}"
@@ -89,6 +90,7 @@ const (
 	ReportsEquityChangesURL   = "/app/reports/equity-changes"
 
 	// Funding — Loans
+	LoanDashboardURL    = "/app/funding/loans/dashboard"
 	LoanListURL         = "/app/funding/loans/list/{status}"
 	LoanDetailURL       = "/app/funding/loans/detail/{id}"
 	LoanAddURL          = "/action/funding/loan/add"
@@ -97,12 +99,14 @@ const (
 	LoanPaymentListURL  = "/app/funding/loans/payments/{status}"
 
 	// Funding — Equity
+	EquityDashboardURL      = "/app/funding/equity/dashboard"
 	EquityAccountsURL       = "/app/funding/equity/accounts"
 	EquityAccountDetailURL  = "/app/funding/equity/accounts/detail/{id}"
 	EquityTransactionsURL   = "/app/funding/equity/transactions"
 	EquityTransactionAddURL = "/action/funding/equity/transaction/add"
 
 	// Payroll
+	PayrollDashboardURL      = "/app/payroll/dashboard"
 	PayrollRunListURL        = "/app/payroll/runs/{status}"
 	PayrollRunDetailURL      = "/app/payroll/runs/detail/{id}"
 	PayrollRemittanceListURL = "/app/payroll/remittances/{status}"

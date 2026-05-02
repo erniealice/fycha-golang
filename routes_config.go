@@ -186,6 +186,7 @@ func (r AssetRoutes) RouteMap() map[string]string {
 type AccountRoutes struct {
 	ActiveNav    string `json:"active_nav"`
 	ActiveSubNav string `json:"active_sub_nav"`
+	DashboardURL string `json:"dashboard_url"`
 	ListURL      string `json:"list_url"`
 	DetailURL    string `json:"detail_url"`
 	TabActionURL string `json:"tab_action_url"`
@@ -200,6 +201,7 @@ func DefaultAccountRoutes() AccountRoutes {
 	return AccountRoutes{
 		ActiveNav:    "ledger",
 		ActiveSubNav: "chart-of-accounts",
+		DashboardURL: LedgerDashboardURL,
 		ListURL:      AccountListURL,
 		DetailURL:    AccountDetailURL,
 		TabActionURL: AccountTabActionURL,
@@ -213,6 +215,7 @@ func DefaultAccountRoutes() AccountRoutes {
 
 func (r AccountRoutes) RouteMap() map[string]string {
 	return map[string]string{
+		"ledger.dashboard":         r.DashboardURL,
 		"ledger.account.list":      r.ListURL,
 		"ledger.account.detail":    r.DetailURL,
 		"ledger.account.tree":      r.TreeURL,
@@ -361,6 +364,7 @@ func (r LedgerSettingsRoutes) RouteMap() map[string]string {
 // LoanRoutes holds route paths for Loan views.
 type LoanRoutes struct {
 	ActiveNav       string `json:"active_nav"`
+	DashboardURL    string `json:"dashboard_url"`
 	ListURL         string `json:"list_url"`
 	DetailURL       string `json:"detail_url"`
 	AddURL          string `json:"add_url"`
@@ -370,6 +374,7 @@ type LoanRoutes struct {
 func DefaultLoanRoutes() LoanRoutes {
 	return LoanRoutes{
 		ActiveNav:       "loan",
+		DashboardURL:    LoanDashboardURL,
 		ListURL:         LoanListURL,
 		DetailURL:       LoanDetailURL,
 		AddURL:          LoanAddURL,
@@ -379,6 +384,7 @@ func DefaultLoanRoutes() LoanRoutes {
 
 func (r LoanRoutes) RouteMap() map[string]string {
 	return map[string]string{
+		"loan.dashboard":    r.DashboardURL,
 		"loan.list":         r.ListURL,
 		"loan.detail":       r.DetailURL,
 		"loan.add":          r.AddURL,
@@ -419,6 +425,7 @@ func (r LoanPaymentRoutes) RouteMap() map[string]string {
 // EquityRoutes holds route paths for Equity views.
 type EquityRoutes struct {
 	ActiveNav         string `json:"active_nav"`
+	DashboardURL      string `json:"dashboard_url"`
 	AccountsURL       string `json:"accounts_url"`
 	AccountDetailURL  string `json:"account_detail_url"`
 	TransactionsURL   string `json:"transactions_url"`
@@ -428,6 +435,7 @@ type EquityRoutes struct {
 func DefaultEquityRoutes() EquityRoutes {
 	return EquityRoutes{
 		ActiveNav:         "equity",
+		DashboardURL:      EquityDashboardURL,
 		AccountsURL:       EquityAccountsURL,
 		AccountDetailURL:  EquityAccountDetailURL,
 		TransactionsURL:   EquityTransactionsURL,
@@ -437,6 +445,7 @@ func DefaultEquityRoutes() EquityRoutes {
 
 func (r EquityRoutes) RouteMap() map[string]string {
 	return map[string]string{
+		"equity.dashboard":       r.DashboardURL,
 		"equity.accounts":        r.AccountsURL,
 		"equity.account_detail":  r.AccountDetailURL,
 		"equity.transactions":    r.TransactionsURL,
@@ -450,21 +459,24 @@ func (r EquityRoutes) RouteMap() map[string]string {
 
 // PayrollRunRoutes holds route paths for Payroll Run views.
 type PayrollRunRoutes struct {
-	ActiveNav string `json:"active_nav"`
-	ListURL   string `json:"list_url"`
-	DetailURL string `json:"detail_url"`
+	ActiveNav    string `json:"active_nav"`
+	DashboardURL string `json:"dashboard_url"`
+	ListURL      string `json:"list_url"`
+	DetailURL    string `json:"detail_url"`
 }
 
 func DefaultPayrollRunRoutes() PayrollRunRoutes {
 	return PayrollRunRoutes{
-		ActiveNav: "payroll",
-		ListURL:   PayrollRunListURL,
-		DetailURL: PayrollRunDetailURL,
+		ActiveNav:    "payroll",
+		DashboardURL: PayrollDashboardURL,
+		ListURL:      PayrollRunListURL,
+		DetailURL:    PayrollRunDetailURL,
 	}
 }
 
 func (r PayrollRunRoutes) RouteMap() map[string]string {
 	return map[string]string{
+		"payroll.dashboard":  r.DashboardURL,
 		"payroll.run.list":   r.ListURL,
 		"payroll.run.detail": r.DetailURL,
 	}

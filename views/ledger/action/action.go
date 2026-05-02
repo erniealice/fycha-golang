@@ -7,36 +7,12 @@ import (
 	"net/http"
 
 	accountpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/account"
-	pyeza "github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
 
 	fycha "github.com/erniealice/fycha-golang"
 	"github.com/erniealice/fycha-golang/seeder"
+	"github.com/erniealice/fycha-golang/views/ledger/form"
 )
-
-// FormData is the template data for the account drawer form.
-type FormData struct {
-	FormAction    string
-	IsEdit        bool
-	ID            string
-	Code          string
-	Name          string
-	Element       string
-	Class         string
-	ParentCode    string
-	Group         string
-	IsGroup       bool
-	Active        bool
-	Description   string
-	CashFlowClass string
-	Labels        fycha.AccountFormLabels
-	CommonLabels  any
-
-	// Option lists for select elements (value/label pairs)
-	ElementOptions  []pyeza.SelectOption
-	ClassOptions    []pyeza.SelectOption
-	CashFlowOptions []pyeza.SelectOption
-}
 
 // Deps holds dependencies for account action handlers.
 type Deps struct {
@@ -59,14 +35,14 @@ func NewAddAction(deps *Deps) view.View {
 		}
 
 		if viewCtx.Request.Method == http.MethodGet {
-			return view.OK("account-drawer-form", &FormData{
+			return view.OK("account-drawer-form", &form.Data{
 				FormAction:      deps.Routes.AddURL,
 				Active:          true,
 				Labels:          deps.Labels.Form,
 				CommonLabels:    nil, // injected by ViewAdapter
-				ElementOptions:  elementOptions(deps.Labels.Form),
-				ClassOptions:    classOptions("", deps.Labels.Form),
-				CashFlowOptions: cashFlowOptions(deps.Labels.Form),
+				ElementOptions:  form.ElementOptions(deps.Labels.Form),
+				ClassOptions:    form.ClassOptions("", deps.Labels.Form),
+				CashFlowOptions: form.CashFlowOptions(deps.Labels.Form),
 			})
 		}
 
@@ -80,10 +56,10 @@ func NewAddAction(deps *Deps) view.View {
 			return fycha.HTMXSuccess("accounts-tree-table")
 		}
 
-		element := parseElement(viewCtx.Request.FormValue("element"))
-		classification := parseClassification(viewCtx.Request.FormValue("class"))
-		cashFlow := parseCashFlow(viewCtx.Request.FormValue("cash_flow_class"))
-		normalBal := parseNormalBalance(element)
+		element := form.ParseElement(viewCtx.Request.FormValue("element"))
+		classification := form.ParseClassification(viewCtx.Request.FormValue("class"))
+		cashFlow := form.ParseCashFlow(viewCtx.Request.FormValue("cash_flow_class"))
+		normalBal := form.ParseNormalBalance(element)
 		desc := viewCtx.Request.FormValue("description")
 		active := viewCtx.Request.FormValue("active") == "true" || viewCtx.Request.FormValue("active") == "on"
 
@@ -145,10 +121,10 @@ func NewEditAction(deps *Deps) view.View {
 			return fycha.HTMXSuccess("accounts-tree-table")
 		}
 
-		element := parseElement(viewCtx.Request.FormValue("element"))
-		classification := parseClassification(viewCtx.Request.FormValue("class"))
-		cashFlow := parseCashFlow(viewCtx.Request.FormValue("cash_flow_class"))
-		normalBal := parseNormalBalance(element)
+		element := form.ParseElement(viewCtx.Request.FormValue("element"))
+		classification := form.ParseClassification(viewCtx.Request.FormValue("class"))
+		cashFlow := form.ParseCashFlow(viewCtx.Request.FormValue("cash_flow_class"))
+		normalBal := form.ParseNormalBalance(element)
 		desc := viewCtx.Request.FormValue("description")
 		active := viewCtx.Request.FormValue("active") == "true" || viewCtx.Request.FormValue("active") == "on"
 
@@ -226,19 +202,19 @@ func NewDeleteAction(deps *Deps) view.View {
 // Edit form loader
 // ---------------------------------------------------------------------------
 
-// loadEditFormData fetches the account by ID and populates FormData for edit.
+// loadEditFormData fetches the account by ID and populates form.Data for edit.
 // Falls back to empty form if ReadAccount is nil or fails.
-func loadEditFormData(ctx context.Context, deps *Deps, id string) *FormData {
-	base := &FormData{
+func loadEditFormData(ctx context.Context, deps *Deps, id string) *form.Data {
+	base := &form.Data{
 		FormAction:      deps.Routes.EditURL,
 		IsEdit:          true,
 		ID:              id,
 		Active:          true,
 		Labels:          deps.Labels.Form,
 		CommonLabels:    nil,
-		ElementOptions:  elementOptions(deps.Labels.Form),
-		ClassOptions:    classOptions("", deps.Labels.Form),
-		CashFlowOptions: cashFlowOptions(deps.Labels.Form),
+		ElementOptions:  form.ElementOptions(deps.Labels.Form),
+		ClassOptions:    form.ClassOptions("", deps.Labels.Form),
+		CashFlowOptions: form.CashFlowOptions(deps.Labels.Form),
 	}
 
 	if deps.ReadAccount == nil {
@@ -257,11 +233,11 @@ func loadEditFormData(ctx context.Context, deps *Deps, id string) *FormData {
 	}
 
 	a := resp.GetData()[0]
-	element := elementStringFromProto(a.GetElement())
-	class := classStringFromProto(a.GetClassification())
-	cashFlow := cashFlowStringFromProto(a.GetCashFlowActivity())
+	element := form.ElementStringFromProto(a.GetElement())
+	class := form.ClassStringFromProto(a.GetClassification())
+	cashFlow := form.CashFlowStringFromProto(a.GetCashFlowActivity())
 
-	return &FormData{
+	return &form.Data{
 		FormAction:      deps.Routes.EditURL,
 		IsEdit:          true,
 		ID:              id,
@@ -274,205 +250,9 @@ func loadEditFormData(ctx context.Context, deps *Deps, id string) *FormData {
 		Active:          a.GetActive(),
 		Labels:          deps.Labels.Form,
 		CommonLabels:    nil,
-		ElementOptions:  elementOptions(deps.Labels.Form),
-		ClassOptions:    classOptions(element, deps.Labels.Form),
-		CashFlowOptions: cashFlowOptions(deps.Labels.Form),
-	}
-}
-
-// ---------------------------------------------------------------------------
-// Proto ↔ form string converters
-// ---------------------------------------------------------------------------
-
-func parseElement(s string) accountpb.AccountElement {
-	switch s {
-	case "asset":
-		return accountpb.AccountElement_ACCOUNT_ELEMENT_ASSET
-	case "liability":
-		return accountpb.AccountElement_ACCOUNT_ELEMENT_LIABILITY
-	case "equity":
-		return accountpb.AccountElement_ACCOUNT_ELEMENT_EQUITY
-	case "revenue":
-		return accountpb.AccountElement_ACCOUNT_ELEMENT_REVENUE
-	case "expense":
-		return accountpb.AccountElement_ACCOUNT_ELEMENT_EXPENSE
-	default:
-		return accountpb.AccountElement_ACCOUNT_ELEMENT_UNSPECIFIED
-	}
-}
-
-func parseClassification(s string) accountpb.AccountClassification {
-	switch s {
-	case "current_asset":
-		return accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_CURRENT_ASSET
-	case "non_current_asset":
-		return accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_NON_CURRENT_ASSET
-	case "current_liability":
-		return accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_CURRENT_LIABILITY
-	case "non_current_liability":
-		return accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_NON_CURRENT_LIABILITY
-	case "equity":
-		return accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_EQUITY
-	case "operating_revenue":
-		return accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_OPERATING_REVENUE
-	case "other_income":
-		return accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_OTHER_INCOME
-	case "cost_of_sales":
-		return accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_COST_OF_SALES
-	case "operating_expense":
-		return accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_OPERATING_EXPENSE
-	default:
-		return accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_UNSPECIFIED
-	}
-}
-
-func parseCashFlow(s string) accountpb.CashFlowActivity {
-	switch s {
-	case "operating":
-		return accountpb.CashFlowActivity_CASH_FLOW_ACTIVITY_OPERATING
-	case "investing":
-		return accountpb.CashFlowActivity_CASH_FLOW_ACTIVITY_INVESTING
-	case "financing":
-		return accountpb.CashFlowActivity_CASH_FLOW_ACTIVITY_FINANCING
-	case "":
-		return accountpb.CashFlowActivity_CASH_FLOW_ACTIVITY_NONE
-	default:
-		return accountpb.CashFlowActivity_CASH_FLOW_ACTIVITY_UNSPECIFIED
-	}
-}
-
-// parseNormalBalance derives normal balance from the element (accounting rule).
-func parseNormalBalance(e accountpb.AccountElement) accountpb.NormalBalance {
-	switch e {
-	case accountpb.AccountElement_ACCOUNT_ELEMENT_ASSET,
-		accountpb.AccountElement_ACCOUNT_ELEMENT_EXPENSE:
-		return accountpb.NormalBalance_NORMAL_BALANCE_DEBIT
-	case accountpb.AccountElement_ACCOUNT_ELEMENT_LIABILITY,
-		accountpb.AccountElement_ACCOUNT_ELEMENT_EQUITY,
-		accountpb.AccountElement_ACCOUNT_ELEMENT_REVENUE:
-		return accountpb.NormalBalance_NORMAL_BALANCE_CREDIT
-	default:
-		return accountpb.NormalBalance_NORMAL_BALANCE_UNSPECIFIED
-	}
-}
-
-func elementStringFromProto(e accountpb.AccountElement) string {
-	switch e {
-	case accountpb.AccountElement_ACCOUNT_ELEMENT_ASSET:
-		return "asset"
-	case accountpb.AccountElement_ACCOUNT_ELEMENT_LIABILITY:
-		return "liability"
-	case accountpb.AccountElement_ACCOUNT_ELEMENT_EQUITY:
-		return "equity"
-	case accountpb.AccountElement_ACCOUNT_ELEMENT_REVENUE:
-		return "revenue"
-	case accountpb.AccountElement_ACCOUNT_ELEMENT_EXPENSE:
-		return "expense"
-	default:
-		return ""
-	}
-}
-
-func classStringFromProto(c accountpb.AccountClassification) string {
-	switch c {
-	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_CURRENT_ASSET:
-		return "current_asset"
-	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_NON_CURRENT_ASSET:
-		return "non_current_asset"
-	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_CURRENT_LIABILITY:
-		return "current_liability"
-	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_NON_CURRENT_LIABILITY:
-		return "non_current_liability"
-	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_EQUITY:
-		return "equity"
-	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_OPERATING_REVENUE:
-		return "operating_revenue"
-	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_OTHER_INCOME:
-		return "other_income"
-	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_COST_OF_SALES:
-		return "cost_of_sales"
-	case accountpb.AccountClassification_ACCOUNT_CLASSIFICATION_OPERATING_EXPENSE:
-		return "operating_expense"
-	default:
-		return ""
-	}
-}
-
-func cashFlowStringFromProto(c accountpb.CashFlowActivity) string {
-	switch c {
-	case accountpb.CashFlowActivity_CASH_FLOW_ACTIVITY_OPERATING:
-		return "operating"
-	case accountpb.CashFlowActivity_CASH_FLOW_ACTIVITY_INVESTING:
-		return "investing"
-	case accountpb.CashFlowActivity_CASH_FLOW_ACTIVITY_FINANCING:
-		return "financing"
-	default:
-		return ""
-	}
-}
-
-// ---------------------------------------------------------------------------
-// Option list helpers
-// ---------------------------------------------------------------------------
-
-func elementOptions(l fycha.AccountFormLabels) []pyeza.SelectOption {
-	return []pyeza.SelectOption{
-		{Value: "asset", Label: l.ElementAsset},
-		{Value: "liability", Label: l.ElementLiability},
-		{Value: "equity", Label: l.ElementEquity},
-		{Value: "revenue", Label: l.ElementRevenue},
-		{Value: "expense", Label: l.ElementExpense},
-	}
-}
-
-func classOptions(element string, l fycha.AccountFormLabels) []pyeza.SelectOption {
-	switch element {
-	case "asset":
-		return []pyeza.SelectOption{
-			{Value: "current_asset", Label: l.ClassCurrentAsset},
-			{Value: "non_current_asset", Label: l.ClassNonCurrentAsset},
-		}
-	case "liability":
-		return []pyeza.SelectOption{
-			{Value: "current_liability", Label: l.ClassCurrentLiability},
-			{Value: "non_current_liability", Label: l.ClassNonCurrentLiability},
-		}
-	case "equity":
-		return []pyeza.SelectOption{
-			{Value: "equity", Label: l.ClassEquity},
-		}
-	case "revenue":
-		return []pyeza.SelectOption{
-			{Value: "operating_revenue", Label: l.ClassOperatingRevenue},
-			{Value: "other_income", Label: l.ClassOtherIncome},
-		}
-	case "expense":
-		return []pyeza.SelectOption{
-			{Value: "cost_of_sales", Label: l.ClassCostOfSales},
-			{Value: "operating_expense", Label: l.ClassOperatingExpense},
-		}
-	default:
-		// Return all classes when element is not yet selected
-		return []pyeza.SelectOption{
-			{Value: "current_asset", Label: l.ClassCurrentAsset},
-			{Value: "non_current_asset", Label: l.ClassNonCurrentAsset},
-			{Value: "current_liability", Label: l.ClassCurrentLiability},
-			{Value: "non_current_liability", Label: l.ClassNonCurrentLiability},
-			{Value: "equity", Label: l.ClassEquity},
-			{Value: "operating_revenue", Label: l.ClassOperatingRevenue},
-			{Value: "other_income", Label: l.ClassOtherIncome},
-			{Value: "cost_of_sales", Label: l.ClassCostOfSales},
-			{Value: "operating_expense", Label: l.ClassOperatingExpense},
-		}
-	}
-}
-
-func cashFlowOptions(l fycha.AccountFormLabels) []pyeza.SelectOption {
-	return []pyeza.SelectOption{
-		{Value: "", Label: l.CashFlowNone},
-		{Value: "operating", Label: l.CashFlowOperating},
-		{Value: "investing", Label: l.CashFlowInvesting},
-		{Value: "financing", Label: l.CashFlowFinancing},
+		ElementOptions:  form.ElementOptions(deps.Labels.Form),
+		ClassOptions:    form.ClassOptions(element, deps.Labels.Form),
+		CashFlowOptions: form.CashFlowOptions(deps.Labels.Form),
 	}
 }
 

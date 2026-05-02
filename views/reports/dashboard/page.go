@@ -20,30 +20,25 @@ type Deps struct {
 	CommonLabels pyeza.CommonLabels
 }
 
-// ReportCard holds navigation card data for the dashboard.
-type ReportCard struct {
-	Title       string
-	Description string
-	Icon        string
-	URL         string
-}
-
 type PageData struct {
 	types.PageData
 	ContentTemplate string
-	Summary         []fycha.SummaryMetric
-	ReportCards     []ReportCard
-	Labels          fycha.DashboardLabels
+	Dashboard       types.DashboardData
 }
 
+// NewView creates the reports dashboard view.
+//
+// Phase 1c refactor (2026-05-02): wired onto the pyeza "dashboard" block.
+// Real data flow via GetGrossProfitReport and ListExpenses preserved — no
+// new aggregate methods.
 func NewView(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		l := deps.Labels.Dashboard
 
-		// Get this month's data for KPIs
+		// Get this month's data for KPIs.
 		start, end := fycha.ParsePeriodPreset("thisMonth")
 
-		// Get gross profit data (contains revenue + COGS)
+		// Get gross profit data (contains revenue + COGS).
 		req := &reportpb.GrossProfitReportRequest{}
 		startStr := start.Format("2006-01-02")
 		endStr := end.Format("2006-01-02")
@@ -62,7 +57,7 @@ func NewView(deps *Deps) view.View {
 			s = &reportpb.GrossProfitSummary{}
 		}
 
-		// Get expenses total
+		// Get expenses total.
 		expenseRecords, err := deps.DB.ListExpenses(ctx, &start, &end)
 		if err != nil {
 			log.Printf("Failed to list expenses for dashboard: %v", err)
@@ -72,38 +67,66 @@ func NewView(deps *Deps) view.View {
 			totalExpenses += toFloat64(r["total_amount"])
 		}
 
-		netProfit := float64(s.GetTotalGrossProfit())/100.0 - totalExpenses
+		// Compute KPIs.
+		netRevenue := float64(s.GetNetRevenue()) / 100.0
+		totalCOGS := float64(s.GetTotalCogs()) / 100.0
+		totalGrossProfit := float64(s.GetTotalGrossProfit()) / 100.0
+		netProfit := totalGrossProfit - totalExpenses
 		netMargin := 0.0
-		if s.GetNetRevenue() > 0 {
-			netMargin = (netProfit / (float64(s.GetNetRevenue()) / 100.0)) * 100
+		if netRevenue > 0 {
+			netMargin = (netProfit / netRevenue) * 100
 		}
 
-		// KPI summary
-		netVariant := "success"
+		// Stat-card colors track the existing summary-bar variant logic:
+		// terracotta for revenue, sage for cost, navy for profit, amber for margin.
+		netColor := "navy"
 		if netProfit < 0 {
-			netVariant = "danger"
-		} else if netMargin < 10 {
-			netVariant = "warning"
+			netColor = "terracotta"
+		}
+		marginColor := "amber"
+		if netProfit < 0 {
+			marginColor = "terracotta"
+		} else if netMargin >= 10 {
+			marginColor = "sage"
 		}
 
-		cd0 := types.MoneyCell(float64(s.GetNetRevenue())/100.0, "PHP", true)
-		cd1 := types.MoneyCell(totalExpenses, "PHP", true)
-		cd2 := types.MoneyCell(netProfit, "PHP", true)
-		summary := []fycha.SummaryMetric{
-			{Label: l.RevenueCard, Value: cd0.Currency + " " + cd0.Value},
-			{Label: l.ExpensesCard, Value: cd1.Currency + " " + cd1.Value},
-			{Label: l.NetProfitCard, Value: cd2.Currency + " " + cd2.Value, Highlight: true, Variant: netVariant},
-			{Label: l.NetMarginCard, Value: fmt.Sprintf("%.1f%%", netMargin), Variant: netVariant},
+		revenueCell := types.MoneyCell(netRevenue, "PHP", false)
+		cogsCell := types.MoneyCell(totalCOGS, "PHP", false)
+		profitCell := types.MoneyCell(netProfit, "PHP", false)
+
+		stats := []types.StatCardData{
+			{Icon: "icon-trending-up", Value: revenueCell.Currency + " " + revenueCell.Value, Label: l.RevenueCard, Color: "terracotta", TestID: "report-stat-revenue"},
+			{Icon: "icon-package", Value: cogsCell.Currency + " " + cogsCell.Value, Label: deps.Labels.CostOfSales.Title, Color: "sage", TestID: "report-stat-cogs"},
+			{Icon: "icon-dollar-sign", Value: profitCell.Currency + " " + profitCell.Value, Label: l.NetProfitCard, Color: netColor, TestID: "report-stat-profit"},
+			{Icon: "icon-percent", Value: fmt.Sprintf("%.1f%%", netMargin), Label: l.NetMarginCard, Color: marginColor, TestID: "report-stat-margin"},
 		}
 
-		// Navigation cards
+		// One widget per report type — Type=list with a single ActivityItem per
+		// report. The block dispatches into activity-list.html which renders each
+		// item as a clickable row.
 		r := deps.Routes
-		reportCards := []ReportCard{
-			{Title: deps.Labels.Revenue.Title, Description: l.RevenueDesc, Icon: "icon-trending-up", URL: r.RevenueURL},
-			{Title: deps.Labels.GrossProfit.Title, Description: l.GrossProfitDesc, Icon: "icon-bar-chart", URL: r.GrossProfitURL},
-			{Title: deps.Labels.CostOfSales.Title, Description: l.CostOfSalesDesc, Icon: "icon-package", URL: r.CostOfSalesURL},
-			{Title: deps.Labels.Expenses.Title, Description: l.ExpensesDesc, Icon: "icon-file-minus", URL: r.ExpensesURL},
-			{Title: deps.Labels.NetProfit.Title, Description: l.NetProfitDesc, Icon: "icon-dollar-sign", URL: r.NetProfitURL},
+		reportItems := []types.ActivityItem{
+			{IconName: "icon-trending-up", IconVariant: "client", Title: deps.Labels.Revenue.Title, Description: l.RevenueDesc, Href: r.RevenueURL, TestID: "report-link-revenue"},
+			{IconName: "icon-bar-chart", IconVariant: "quote", Title: deps.Labels.GrossProfit.Title, Description: l.GrossProfitDesc, Href: r.GrossProfitURL, TestID: "report-link-gross-profit"},
+			{IconName: "icon-package", IconVariant: "award", Title: deps.Labels.CostOfSales.Title, Description: l.CostOfSalesDesc, Href: r.CostOfSalesURL, TestID: "report-link-cost-of-sales"},
+			{IconName: "icon-file-minus", IconVariant: "integration", Title: deps.Labels.Expenses.Title, Description: l.ExpensesDesc, Href: r.ExpensesURL, TestID: "report-link-expenses"},
+			{IconName: "icon-dollar-sign", IconVariant: "client", Title: deps.Labels.NetProfit.Title, Description: l.NetProfitDesc, Href: r.NetProfitURL, TestID: "report-link-net-profit"},
+		}
+
+		dash := types.DashboardData{
+			QuickActions: []types.QuickAction{
+				{Icon: "icon-trending-up", Label: deps.Labels.Revenue.Title, Href: r.RevenueURL, Variant: "primary", TestID: "report-action-revenue"},
+				{Icon: "icon-clock", Label: deps.Labels.ReceivablesAging.PageTitle, Href: r.ReceivablesAgingReportURL, TestID: "report-action-receivables"},
+				{Icon: "icon-credit-card", Label: deps.Labels.CollectionSummary.PageTitle, Href: r.CollectionSummaryReportURL, TestID: "report-action-collections"},
+				{Icon: "icon-file-minus", Label: deps.Labels.Expenses.Title, Href: r.ExpenditureReportURL, TestID: "report-action-expenditure"},
+			},
+			Stats: stats,
+			Widgets: []types.DashboardWidget{
+				{
+					ID: "reports", Title: l.Subtitle, Type: "list", Span: 3,
+					ListItems: reportItems,
+				},
+			},
 		}
 
 		pageData := &PageData{
@@ -119,9 +142,7 @@ func NewView(deps *Deps) view.View {
 				CommonLabels:   deps.CommonLabels,
 			},
 			ContentTemplate: "reports-dashboard-content",
-			Summary:         summary,
-			ReportCards:     reportCards,
-			Labels:          l,
+			Dashboard:       dash,
 		}
 
 		// KB help content
@@ -155,4 +176,3 @@ func toFloat64(v any) float64 {
 		return 0
 	}
 }
-

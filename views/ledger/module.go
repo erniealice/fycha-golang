@@ -10,6 +10,7 @@ import (
 
 	fycha "github.com/erniealice/fycha-golang"
 	accountaction "github.com/erniealice/fycha-golang/views/ledger/action"
+	dashboardview "github.com/erniealice/fycha-golang/views/ledger/dashboard"
 	accountdetail "github.com/erniealice/fycha-golang/views/ledger/detail"
 	fiscalview "github.com/erniealice/fycha-golang/views/ledger/fiscal"
 	journalview "github.com/erniealice/fycha-golang/views/ledger/journal"
@@ -78,6 +79,11 @@ type ModuleDeps struct {
 	// Ledger settings routes + labels (Phase 4: RecurringTemplates + BadDebtPolicy)
 	LedgerSettingsRoutes    fycha.LedgerSettingsRoutes
 	RecurringTemplateLabels fycha.RecurringTemplateLabels
+
+	// Phase 2 — Pyeza dashboard block + per-app live dashboards plan.
+	// Function-pointer indirection so the orchestrator can wire the espyna
+	// GetLedgerDashboardPageDataUseCase without fycha importing espyna.
+	GetLedgerDashboardPageData func(ctx context.Context, req *dashboardview.Request) (*dashboardview.Response, error)
 }
 
 // Module holds all constructed ledger views.
@@ -124,6 +130,9 @@ type Module struct {
 	// Ledger settings views (Phase 4)
 	RecurringTemplates view.View
 	BadDebtPolicy      view.View
+
+	// Phase 2 — Pyeza dashboard block + per-app live dashboards plan.
+	Dashboard view.View
 }
 
 // NewModule creates a ledger module with Account views, GL/TB reports, Journal Entry,
@@ -271,6 +280,16 @@ func NewModule(deps *ModuleDeps) *Module {
 
 		RecurringTemplates: recurringview.NewView(recurringDeps),
 		BadDebtPolicy:      badDebtPolicyView(deps.CommonLabels, deps.Labels),
+
+		Dashboard: dashboardview.NewView(&dashboardview.Deps{
+			Routes:               deps.Routes,
+			JournalRoutes:        deps.JournalRoutes,
+			StatementRoutes:      statementRoutes,
+			FiscalRoutes:         deps.FiscalPeriodRoutes,
+			Labels:               deps.Labels,
+			CommonLabels:         deps.CommonLabels,
+			GetDashboardPageData: deps.GetLedgerDashboardPageData,
+		}),
 	}
 }
 
@@ -283,6 +302,11 @@ type routeRegistrarFull interface {
 
 // RegisterRoutes registers all ledger routes with the given route registrar.
 func (m *Module) RegisterRoutes(r view.RouteRegistrar) {
+	// Dashboard — Phase 2 (live dashboards)
+	if m.Dashboard != nil && m.routes.DashboardURL != "" {
+		r.GET(m.routes.DashboardURL, m.Dashboard)
+	}
+
 	// Accounts — Phase 2: real views
 	r.GET(m.routes.ListURL, m.AccountList)
 	r.GET(m.routes.DetailURL, m.AccountDetail)

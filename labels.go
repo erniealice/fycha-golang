@@ -491,6 +491,13 @@ type AssetDashboardLabels struct {
 	RecentActivity       string `json:"recentActivity"`
 	NoRecentActivity     string `json:"noRecentActivity"`
 	UnknownAsset         string `json:"unknownAsset"`
+	// Pyeza dashboard block — quick actions + chart widget title
+	AssetValueTrend           string `json:"assetValueTrend"`
+	ViewAll                   string `json:"viewAll"`
+	QuickNewAsset             string `json:"quickNewAsset"`
+	QuickViewAll              string `json:"quickViewAll"`
+	QuickDepreciationSchedule string `json:"quickDepreciationSchedule"`
+	QuickMaintenanceLog       string `json:"quickMaintenanceLog"`
 }
 
 // DefaultAssetLabels returns AssetLabels with hardcoded English defaults.
@@ -621,18 +628,24 @@ func DefaultAssetLabels() AssetLabels {
 			AttachmentUpload: "Upload Attachment",
 		},
 		Dashboard: AssetDashboardLabels{
-			Title:                "Assets Dashboard",
-			Subtitle:             "Overview of your fixed asset register",
-			TotalAssets:          "Total Assets",
-			TotalBookValue:       "Total Book Value",
-			FullyDepreciated:     "Fully Depreciated",
-			UnderMaintenance:     "Under Maintenance",
-			ActivityAcquired:     "New asset acquired",
-			ActivityMaintenance:  "Maintenance completed",
-			ActivityDepreciation: "Depreciation recorded",
-			RecentActivity:       "Recent Activity",
-			NoRecentActivity:     "No recent asset activity",
-			UnknownAsset:         "Unknown Asset",
+			Title:                     "Assets Dashboard",
+			Subtitle:                  "Overview of your fixed asset register",
+			TotalAssets:               "Total Assets",
+			TotalBookValue:            "Total Book Value",
+			FullyDepreciated:          "Fully Depreciated",
+			UnderMaintenance:          "Under Maintenance",
+			ActivityAcquired:          "New asset acquired",
+			ActivityMaintenance:       "Maintenance completed",
+			ActivityDepreciation:      "Depreciation recorded",
+			RecentActivity:            "Recent Activity",
+			NoRecentActivity:          "No recent asset activity",
+			UnknownAsset:              "Unknown Asset",
+			AssetValueTrend:           "Asset Value Trend",
+			ViewAll:                   "View All",
+			QuickNewAsset:             "New Asset",
+			QuickViewAll:              "View All Assets",
+			QuickDepreciationSchedule: "Depreciation Schedule",
+			QuickMaintenanceLog:       "Maintenance Log",
 		},
 	}
 }
@@ -654,6 +667,32 @@ type AccountLabels struct {
 	Templates     AccountTemplatesLabels     `json:"templates"`
 	GeneralLedger AccountGeneralLedgerLabels `json:"generalLedger"`
 	BadDebt       BadDebtLabels              `json:"badDebt"`
+	Dashboard     LedgerDashboardLabels      `json:"dashboard"`
+}
+
+// LedgerDashboardLabels holds translatable strings for the Ledger live dashboard
+// (Phase 2 — Pyeza dashboard block + per-app live dashboards plan).
+type LedgerDashboardLabels struct {
+	Title    string `json:"title"`
+	Subtitle string `json:"subtitle"`
+	// Stats
+	TotalAssets      string `json:"totalAssets"`
+	TotalLiabilities string `json:"totalLiabilities"`
+	TotalEquity      string `json:"totalEquity"`
+	NetIncomeMTD     string `json:"netIncomeMtd"`
+	// Widgets
+	BalanceByType    string `json:"balanceByType"`
+	UnpostedJournals string `json:"unpostedJournals"`
+	RecentJournals   string `json:"recentJournals"`
+	NoRecentJournals string `json:"noRecentJournals"`
+	// Quick actions
+	QuickNewJournal    string `json:"quickNewJournal"`
+	QuickTrialBalance  string `json:"quickTrialBalance"`
+	QuickClosePeriod   string `json:"quickClosePeriod"`
+	QuickAccountLookup string `json:"quickAccountLookup"`
+	// Common
+	ViewAll    string `json:"viewAll"`
+	AxisAmount string `json:"axisAmount"`
 }
 
 // BadDebtLabels holds translatable strings for the Bad Debt Policy settings page.
@@ -1027,6 +1066,24 @@ func DefaultAccountLabels() AccountLabels {
 			RunningBalance:        "Running Balance",
 			NoTransactionsTitle:   "No transactions",
 			NoTransactionsDetail:  "No journal entries found for this account in the selected date range.",
+		},
+		Dashboard: LedgerDashboardLabels{
+			Title:              "Ledger Dashboard",
+			Subtitle:           "Live position of your books — assets, liabilities, equity, and net income",
+			TotalAssets:        "Total Assets",
+			TotalLiabilities:   "Total Liabilities",
+			TotalEquity:        "Total Equity",
+			NetIncomeMTD:       "Net Income (MTD)",
+			BalanceByType:      "Account Balance by Type",
+			UnpostedJournals:   "Unposted Journals",
+			RecentJournals:     "Recent Journals",
+			NoRecentJournals:   "No recent journal entries",
+			QuickNewJournal:    "New Journal Entry",
+			QuickTrialBalance:  "Trial Balance",
+			QuickClosePeriod:   "Close Period",
+			QuickAccountLookup: "Account Lookup",
+			ViewAll:            "View All",
+			AxisAmount:         "Amount",
 		},
 	}
 }
@@ -1515,6 +1572,34 @@ type PayrollLabels struct {
 	Remittance PayrollRemittanceLabels `json:"remittance"`
 	Employee   PayrollEmployeeLabels   `json:"employee"`
 	Settings   PayrollSettingsLabels   `json:"settings"`
+	Dashboard  PayrollDashboardLabels  `json:"dashboard"`
+}
+
+// PayrollDashboardLabels holds translatable strings for the Payroll live dashboard
+// (Phase 2 — Pyeza dashboard block + per-app live dashboards plan).
+type PayrollDashboardLabels struct {
+	Title    string `json:"title"`
+	Subtitle string `json:"subtitle"`
+	// Stats
+	CurrentRunStatus    string `json:"currentRunStatus"`
+	EmployeesInCurrent  string `json:"employeesInCurrent"`
+	TotalGrossMTD       string `json:"totalGrossMtd"`
+	RemittancesDue      string `json:"remittancesDue"`
+	// Widgets
+	GrossPayByMonth     string `json:"grossPayByMonth"`
+	RecentRuns          string `json:"recentRuns"`
+	UpcomingRemittances string `json:"upcomingRemittances"`
+	NoRecentRuns        string `json:"noRecentRuns"`
+	NoUpcomingDeadlines string `json:"noUpcomingDeadlines"`
+	// Quick actions
+	QuickNewRun           string `json:"quickNewRun"`
+	QuickProcessRun       string `json:"quickProcessRun"`
+	QuickFileRemittance   string `json:"quickFileRemittance"`
+	QuickPayPeriodSettings string `json:"quickPayPeriodSettings"`
+	// Common
+	ViewAll    string `json:"viewAll"`
+	AxisGross  string `json:"axisGross"`
+	NoRunYet   string `json:"noRunYet"`
 }
 
 // PayrollRunLabels holds labels for the Payroll Run sub-module.
@@ -1810,6 +1895,26 @@ func DefaultPayrollLabels() PayrollLabels {
 					Caption: "Configure payroll cut-off dates and pay schedules",
 				},
 			},
+		},
+		Dashboard: PayrollDashboardLabels{
+			Title:                  "Payroll Dashboard",
+			Subtitle:               "Run status, monthly gross-pay trend, and upcoming government remittances",
+			CurrentRunStatus:       "Current Run Status",
+			EmployeesInCurrent:     "Employees in Current Run",
+			TotalGrossMTD:          "Total Gross (MTD)",
+			RemittancesDue:         "Remittances Due (30d)",
+			GrossPayByMonth:        "Gross Pay by Month",
+			RecentRuns:             "Recent Payroll Runs",
+			UpcomingRemittances:    "Upcoming Remittance Deadlines",
+			NoRecentRuns:           "No recent payroll runs",
+			NoUpcomingDeadlines:    "No upcoming remittance deadlines",
+			QuickNewRun:            "New Payroll Run",
+			QuickProcessRun:        "Process Run",
+			QuickFileRemittance:    "File Remittance",
+			QuickPayPeriodSettings: "Pay Period Settings",
+			ViewAll:                "View All",
+			AxisGross:              "Gross",
+			NoRunYet:               "No run yet",
 		},
 	}
 }
@@ -2345,6 +2450,32 @@ type EquityLabels struct {
 	Accounts     EquityAccountLabels     `json:"accounts"`
 	Transactions EquityTransactionLabels `json:"transactions"`
 	Sheet        EquitySheetLabels       `json:"sheet"`
+	Dashboard    EquityDashboardLabels   `json:"dashboard"`
+}
+
+// EquityDashboardLabels holds translatable strings for the Equity live dashboard
+// (Phase 2 — Pyeza dashboard block + per-app live dashboards plan).
+type EquityDashboardLabels struct {
+	Title    string `json:"title"`
+	Subtitle string `json:"subtitle"`
+	// Stats
+	TotalContributed   string `json:"totalContributed"`
+	ActiveOwners       string `json:"activeOwners"`
+	DistributionsYTD   string `json:"distributionsYtd"`
+	NetMovementYTD     string `json:"netMovementYtd"`
+	// Widgets
+	EquityByOwner     string `json:"equityByOwner"`
+	TopContributors   string `json:"topContributors"`
+	RecentTransactions string `json:"recentTransactions"`
+	NoRecentTxns      string `json:"noRecentTxns"`
+	// Quick actions
+	QuickRecordContribution string `json:"quickRecordContribution"`
+	QuickRecordDistribution string `json:"quickRecordDistribution"`
+	QuickOwnerStatement     string `json:"quickOwnerStatement"`
+	QuickEquityReport       string `json:"quickEquityReport"`
+	// Common
+	ViewAll    string `json:"viewAll"`
+	AxisAmount string `json:"axisAmount"`
 }
 
 // EquitySheetLabels holds sheet-form title and button labels for equity pages.
@@ -2514,6 +2645,24 @@ func DefaultEquityLabels() EquityLabels {
 			RecordEquityTransaction: "Record Equity Transaction",
 			PostTransaction:         "Post Transaction",
 		},
+		Dashboard: EquityDashboardLabels{
+			Title:                   "Equity Dashboard",
+			Subtitle:                "Owner contributions, distributions, and movements across capital accounts",
+			TotalContributed:        "Total Contributed",
+			ActiveOwners:            "Active Owners",
+			DistributionsYTD:        "Distributions YTD",
+			NetMovementYTD:          "Net Movement YTD",
+			EquityByOwner:           "Equity by Owner",
+			TopContributors:         "Top Contributors",
+			RecentTransactions:      "Recent Transactions",
+			NoRecentTxns:            "No recent equity transactions",
+			QuickRecordContribution: "Record Contribution",
+			QuickRecordDistribution: "Record Distribution",
+			QuickOwnerStatement:     "Owner Statement",
+			QuickEquityReport:       "Equity Report",
+			ViewAll:                 "View All",
+			AxisAmount:              "Amount",
+		},
 	}
 }
 
@@ -2523,16 +2672,42 @@ func DefaultEquityLabels() EquityLabels {
 
 // LoanLabels is the top-level label container for the Loans app.
 type LoanLabels struct {
-	Page    LoanPageLabels   `json:"page"`
-	Tabs    LoanTabLabels    `json:"tabs"`
-	Buttons LoanButtonLabels `json:"buttons"`
-	Columns LoanColumnLabels `json:"columns"`
-	Empty   LoanEmptyLabels  `json:"empty"`
-	Actions LoanActionLabels `json:"actions"`
-	Form    LoanFormLabels   `json:"form"`
-	Status  LoanStatusLabels `json:"status"`
-	Type    LoanTypeLabels   `json:"type"`
-	Sheet   LoanSheetLabels  `json:"sheet"`
+	Page      LoanPageLabels       `json:"page"`
+	Tabs      LoanTabLabels        `json:"tabs"`
+	Buttons   LoanButtonLabels     `json:"buttons"`
+	Columns   LoanColumnLabels     `json:"columns"`
+	Empty     LoanEmptyLabels      `json:"empty"`
+	Actions   LoanActionLabels     `json:"actions"`
+	Form      LoanFormLabels       `json:"form"`
+	Status    LoanStatusLabels     `json:"status"`
+	Type      LoanTypeLabels       `json:"type"`
+	Sheet     LoanSheetLabels      `json:"sheet"`
+	Dashboard LoanDashboardLabels  `json:"dashboard"`
+}
+
+// LoanDashboardLabels holds translatable strings for the Loan live dashboard
+// (Phase 2 — Pyeza dashboard block + per-app live dashboards plan).
+type LoanDashboardLabels struct {
+	Title    string `json:"title"`
+	Subtitle string `json:"subtitle"`
+	// Stats
+	TotalOutstanding string `json:"totalOutstanding"`
+	InterestYTD      string `json:"interestYtd"`
+	PaymentsDue30    string `json:"paymentsDue30"`
+	DefaultedCount   string `json:"defaultedCount"`
+	// Widgets
+	OutstandingTrend string `json:"outstandingTrend"`
+	TopLoans         string `json:"topLoans"`
+	RecentPayments   string `json:"recentPayments"`
+	NoRecentPayments string `json:"noRecentPayments"`
+	// Quick actions
+	QuickNewLoan      string `json:"quickNewLoan"`
+	QuickRecordPay    string `json:"quickRecordPay"`
+	QuickAmortization string `json:"quickAmortization"`
+	QuickLoanCalendar string `json:"quickLoanCalendar"`
+	// Common
+	ViewAll    string `json:"viewAll"`
+	AxisAmount string `json:"axisAmount"`
 }
 
 // LoanSheetLabels holds sheet-form title and button labels for loan list page.
@@ -2672,6 +2847,24 @@ func DefaultLoanLabels() LoanLabels {
 		Sheet: LoanSheetLabels{
 			AddLoan:  "Add Loan",
 			SaveLoan: "Save Loan",
+		},
+		Dashboard: LoanDashboardLabels{
+			Title:             "Loans Dashboard",
+			Subtitle:          "Outstanding balance, interest accrued, upcoming payments, and recent activity",
+			TotalOutstanding:  "Total Outstanding",
+			InterestYTD:       "Interest YTD",
+			PaymentsDue30:     "Payments Due (30d)",
+			DefaultedCount:    "Defaulted Loans",
+			OutstandingTrend:  "Outstanding Principal Trend",
+			TopLoans:          "Top Loans by Outstanding",
+			RecentPayments:    "Recent Payments",
+			NoRecentPayments:  "No recent payments",
+			QuickNewLoan:      "New Loan",
+			QuickRecordPay:    "Record Payment",
+			QuickAmortization: "Amortization Schedule",
+			QuickLoanCalendar: "Loan Calendar",
+			ViewAll:           "View All",
+			AxisAmount:        "Outstanding",
 		},
 	}
 }

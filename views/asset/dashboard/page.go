@@ -2,7 +2,7 @@ package dashboard
 
 import (
 	"context"
-	"html/template"
+	"fmt"
 
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
@@ -12,22 +12,6 @@ import (
 	fycha "github.com/erniealice/fycha-golang"
 )
 
-// DashboardStats holds count/value data for stat cards.
-type DashboardStats struct {
-	TotalAssets      int
-	TotalBookValue   types.TableCell
-	FullyDepreciated int
-	UnderMaintenance int
-}
-
-// ActivityItem represents a single entry in the recent activity feed.
-type ActivityItem struct {
-	IconHTML    template.HTML
-	Title       string
-	Description string
-	TimeAgo     string
-}
-
 // Deps holds view dependencies.
 type Deps struct {
 	Routes       fycha.AssetRoutes
@@ -35,47 +19,94 @@ type Deps struct {
 	CommonLabels pyeza.CommonLabels
 }
 
-// PageData holds the data for the asset dashboard page.
+// PageData is what the asset dashboard template receives.
 type PageData struct {
 	types.PageData
 	ContentTemplate string
-	Stats           DashboardStats
-	RecentActivity  []ActivityItem
-	Labels          fycha.AssetDashboardLabels
+	Dashboard       types.DashboardData
 }
 
 // NewView creates the asset dashboard view.
+//
+// Phase 1c refactor (2026-05-02): wired onto the pyeza "dashboard" block.
+// Stats remain placeholder/mock until a future phase wires real
+// fixed-asset aggregate methods (count by status, sum book value, etc.).
 func NewView(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		l := deps.Labels.Dashboard
 
-		// Mock statistics
-		stats := DashboardStats{
-			TotalAssets:      24,
-			TotalBookValue:   types.MoneyCell(1_245_750_00, "PHP", true),
-			FullyDepreciated: 3,
-			UnderMaintenance: 2,
-		}
+		// Mock stats — preserved from pre-refactor implementation.
+		totalAssets := 24
+		fullyDepreciated := 3
+		underMaintenance := 2
+		// MoneyCell formats centavos -> "12,457,500.00" with currency "PHP".
+		bookValueCell := types.MoneyCell(1_245_750_00, "PHP", true)
+		bookValueDisplay := bookValueCell.Currency + " " + bookValueCell.Value
 
-		// Mock recent activity
-		recentActivity := []ActivityItem{
+		// Synthetic 12-month asset value trend (placeholder until aggregate wires up).
+		trend := &types.ChartData{
+			Labels: []string{"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"},
+			Series: []types.ChartSeries{{
+				Name:   l.TotalBookValue,
+				Values: []float64{1_280_000, 1_268_000, 1_256_000, 1_244_000, 1_252_000, 1_245_750, 1_240_000, 1_230_000, 1_220_000, 1_215_000, 1_210_000, 1_205_000},
+				Color:  "navy",
+			}},
+		}
+		trend.AutoScale()
+
+		// Activity items — preserved from pre-refactor implementation.
+		recent := []types.ActivityItem{
 			{
-				IconHTML:    template.HTML(`<svg class="icon"><use href="#icon-box"></use></svg>`),
+				IconName:    "icon-box",
+				IconVariant: "client",
 				Title:       l.ActivityAcquired,
 				Description: "Office Laptop (Dell XPS 15) added to register",
-				TimeAgo:     "2 hours ago",
+				Time:        "2h ago",
+				TestID:      "asset-activity-acquired",
 			},
 			{
-				IconHTML:    template.HTML(`<svg class="icon"><use href="#icon-tool"></use></svg>`),
+				IconName:    "icon-tool",
+				IconVariant: "award",
 				Title:       l.ActivityMaintenance,
-				Description: "Air Conditioning Unit - Annual servicing",
-				TimeAgo:     "1 day ago",
+				Description: "Air Conditioning Unit — Annual servicing",
+				Time:        "1d ago",
+				TestID:      "asset-activity-maintenance",
 			},
 			{
-				IconHTML:    template.HTML(`<svg class="icon"><use href="#icon-trending-down"></use></svg>`),
+				IconName:    "icon-trending-down",
+				IconVariant: "integration",
 				Title:       l.ActivityDepreciation,
 				Description: "Monthly depreciation for 24 assets processed",
-				TimeAgo:     "3 days ago",
+				Time:        "3d ago",
+				TestID:      "asset-activity-depreciation",
+			},
+		}
+
+		dash := types.DashboardData{
+			QuickActions: []types.QuickAction{
+				{Icon: "icon-plus", Label: l.QuickNewAsset, Href: deps.Routes.AddURL, Variant: "primary", TestID: "asset-action-new"},
+				{Icon: "icon-list", Label: l.QuickViewAll, Href: deps.Routes.ListURL, TestID: "asset-action-list"},
+				{Icon: "icon-trending-down", Label: l.QuickDepreciationSchedule, Href: deps.Routes.LapsingScheduleURL, TestID: "asset-action-lapsing"},
+				{Icon: "icon-tool", Label: l.QuickMaintenanceLog, Href: deps.Routes.DepreciationPoliciesURL, TestID: "asset-action-policies"},
+			},
+			Stats: []types.StatCardData{
+				{Icon: "icon-box", Value: fmt.Sprintf("%d", totalAssets), Label: l.TotalAssets, Color: "terracotta", TestID: "asset-stat-total"},
+				{Icon: "icon-dollar-sign", Value: bookValueDisplay, Label: l.TotalBookValue, Color: "sage", TestID: "asset-stat-book-value"},
+				{Icon: "icon-trending-down", Value: fmt.Sprintf("%d", fullyDepreciated), Label: l.FullyDepreciated, Color: "navy", TestID: "asset-stat-depreciated"},
+				{Icon: "icon-tool", Value: fmt.Sprintf("%d", underMaintenance), Label: l.UnderMaintenance, Color: "amber", TestID: "asset-stat-maintenance"},
+			},
+			Widgets: []types.DashboardWidget{
+				{
+					ID: "trend", Title: l.AssetValueTrend, Type: "chart", ChartKind: "line",
+					ChartData: trend, Span: 2,
+				},
+				{
+					ID: "recent", Title: l.RecentActivity, Type: "list", Span: 1,
+					HeaderActions: []types.QuickAction{
+						{Label: l.ViewAll, Href: deps.Routes.ListURL},
+					},
+					ListItems: recent,
+				},
 			},
 		}
 
@@ -92,9 +123,7 @@ func NewView(deps *Deps) view.View {
 				CommonLabels:   deps.CommonLabels,
 			},
 			ContentTemplate: "asset-dashboard-content",
-			Stats:           stats,
-			RecentActivity:  recentActivity,
-			Labels:          l,
+			Dashboard:       dash,
 		}
 
 		// KB help content
@@ -110,4 +139,3 @@ func NewView(deps *Deps) view.View {
 		return view.OK("asset-dashboard", pageData)
 	})
 }
-

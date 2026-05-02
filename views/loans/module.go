@@ -8,6 +8,7 @@ import (
 	"github.com/erniealice/pyeza-golang/view"
 
 	fycha "github.com/erniealice/fycha-golang"
+	dashboardview "github.com/erniealice/fycha-golang/views/loans/dashboard"
 	loanlist "github.com/erniealice/fycha-golang/views/loans/loanlist"
 	loanpayments "github.com/erniealice/fycha-golang/views/loans/loanpayments"
 
@@ -36,12 +37,19 @@ type ModuleDeps struct {
 	// LoanPayment use cases
 	CreateLoanPayment func(ctx context.Context, req *loanpaymentpb.CreateLoanPaymentRequest) (*loanpaymentpb.CreateLoanPaymentResponse, error)
 	ListLoanPayments  func(ctx context.Context, req *loanpaymentpb.ListLoanPaymentsRequest) (*loanpaymentpb.ListLoanPaymentsResponse, error)
+
+	// Phase 2 — Pyeza dashboard block + per-app live dashboards plan.
+	GetLoanDashboardPageData func(ctx context.Context, req *dashboardview.Request) (*dashboardview.Response, error)
 }
 
 // Module holds all constructed loans views.
 type Module struct {
 	LoanList     view.View
 	LoanPayments view.View
+
+	// Phase 2 — Pyeza dashboard block + per-app live dashboards plan.
+	Dashboard view.View
+	routes    fycha.LoanRoutes
 }
 
 // NewModule creates a loans module with LoanList and LoanPayments views wired.
@@ -68,14 +76,27 @@ func NewModule(deps *ModuleDeps) *Module {
 		ListLoanPayments: deps.ListLoanPayments,
 	}
 
+	dashDeps := &dashboardview.Deps{
+		Routes:               deps.Routes,
+		PaymentRoutes:        deps.PaymentRoutes,
+		Labels:               deps.Labels,
+		CommonLabels:         deps.CommonLabels,
+		GetDashboardPageData: deps.GetLoanDashboardPageData,
+	}
+
 	return &Module{
 		LoanList:     loanlist.NewView(listDeps),
 		LoanPayments: loanpayments.NewView(paymentDeps),
+		Dashboard:    dashboardview.NewView(dashDeps),
+		routes:       deps.Routes,
 	}
 }
 
 // RegisterRoutes registers all loans routes with the given route registrar.
 func (m *Module) RegisterRoutes(r view.RouteRegistrar) {
+	if m.Dashboard != nil && m.routes.DashboardURL != "" {
+		r.GET(m.routes.DashboardURL, m.Dashboard)
+	}
 	r.GET(fycha.LoanListURL, m.LoanList)
 	r.GET(fycha.LoanPaymentListURL, m.LoanPayments)
 	r.GET(fycha.LoanAmortizationURL, comingSoonView("Amortization Schedules", "loans", "amortization"))
