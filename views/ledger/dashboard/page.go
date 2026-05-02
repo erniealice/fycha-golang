@@ -71,7 +71,7 @@ func NewView(deps *Deps) view.View {
 		}
 
 		// Bar chart: balance by element. Force a stable ordering.
-		barLabels := []string{"Assets", "Liabilities", "Equity", "Revenue", "Expense"}
+		barLabels := []string{l.AccountTypeAssets, l.AccountTypeLiabilities, l.AccountTypeEquity, l.AccountTypeRevenue, l.AccountTypeExpense}
 		barValues := []float64{
 			float64(resp.BalanceByType["asset"]),
 			float64(resp.BalanceByType["liability"]),
@@ -163,7 +163,7 @@ func buildRecentJournalActivity(entries []*journalentrypb.JournalEntry, l fycha.
 	for i, e := range entries {
 		title := e.GetEntryNumber()
 		if title == "" {
-			title = "Journal"
+			title = l.JournalEntryFallback
 		}
 		desc := e.GetDescription()
 		variant := "client"

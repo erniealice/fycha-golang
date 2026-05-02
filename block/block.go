@@ -326,6 +326,8 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 					ledgerDeps.CloseFiscalPeriod = ufp.CloseFiscalPeriod.Execute
 				}
 			}
+			// Wire ledger dashboard use case.
+			wireLedgerDashboard(ledgerDeps, useCases)
 			ledgermod.NewModule(ledgerDeps).RegisterRoutes(ctx.Routes)
 		}
 
@@ -334,15 +336,17 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		// =====================================================================
 
 		if cfg.wantLoans() {
-			loansmod.NewModule(&loansmod.ModuleDeps{
+			loansDeps := &loansmod.ModuleDeps{
 				Routes:        loanRoutes,
 				PaymentRoutes: loanPaymentRoutes,
 				Labels:        loanLabels,
 				PaymentLabels: loanPaymentLabels,
 				CommonLabels:  ctx.Common,
 				TableLabels:   fychaTableLabels,
-				// TODO: wire when useCases.Treasury.Loan is available
-			}).RegisterRoutes(ctx.Routes)
+			}
+			// Wire loan dashboard use case.
+			wireLoansDashboard(loansDeps, useCases)
+			loansmod.NewModule(loansDeps).RegisterRoutes(ctx.Routes)
 		}
 
 		// =====================================================================
@@ -350,13 +354,15 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		// =====================================================================
 
 		if cfg.wantEquity() {
-			equitymod.NewModule(&equitymod.ModuleDeps{
+			equityDeps := &equitymod.ModuleDeps{
 				Routes:       equityRoutes,
 				Labels:       fycha.DefaultEquityLabels(),
 				CommonLabels: ctx.Common,
 				TableLabels:  fychaTableLabels,
-				// TODO: wire when useCases.Ledger.EquityAccount / EquityTransaction are available
-			}).RegisterRoutes(ctx.Routes)
+			}
+			// Wire equity dashboard use case.
+			wireEquityDashboard(equityDeps, useCases)
+			equitymod.NewModule(equityDeps).RegisterRoutes(ctx.Routes)
 		}
 
 		// =====================================================================
@@ -364,9 +370,10 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		// =====================================================================
 
 		if cfg.wantPayroll() {
-			payrollmod.NewModule(&payrollmod.ModuleDeps{
-				// TODO: wire when useCases.Payroll.PayrollRun / PayrollRemittance are available
-			}).RegisterRoutes(ctx.Routes)
+			payrollDeps := &payrollmod.ModuleDeps{}
+			// Wire payroll dashboard use case.
+			wirePayrollDashboard(payrollDeps, useCases)
+			payrollmod.NewModule(payrollDeps).RegisterRoutes(ctx.Routes)
 		}
 
 		// =====================================================================

@@ -690,6 +690,14 @@ type LedgerDashboardLabels struct {
 	QuickTrialBalance  string `json:"quickTrialBalance"`
 	QuickClosePeriod   string `json:"quickClosePeriod"`
 	QuickAccountLookup string `json:"quickAccountLookup"`
+	// Account type labels — used as bar-chart axis labels
+	AccountTypeAssets      string `json:"accountTypeAssets"`
+	AccountTypeLiabilities string `json:"accountTypeLiabilities"`
+	AccountTypeEquity      string `json:"accountTypeEquity"`
+	AccountTypeRevenue     string `json:"accountTypeRevenue"`
+	AccountTypeExpense     string `json:"accountTypeExpense"`
+	// Fallback label for journal entries with no entry number
+	JournalEntryFallback string `json:"journalEntryFallback"`
 	// Common
 	ViewAll    string `json:"viewAll"`
 	AxisAmount string `json:"axisAmount"`
@@ -1078,12 +1086,18 @@ func DefaultAccountLabels() AccountLabels {
 			UnpostedJournals:   "Unposted Journals",
 			RecentJournals:     "Recent Journals",
 			NoRecentJournals:   "No recent journal entries",
-			QuickNewJournal:    "New Journal Entry",
-			QuickTrialBalance:  "Trial Balance",
-			QuickClosePeriod:   "Close Period",
-			QuickAccountLookup: "Account Lookup",
-			ViewAll:            "View All",
-			AxisAmount:         "Amount",
+			QuickNewJournal:        "New Journal Entry",
+			QuickTrialBalance:      "Trial Balance",
+			QuickClosePeriod:       "Close Period",
+			QuickAccountLookup:     "Account Lookup",
+			AccountTypeAssets:      "Assets",
+			AccountTypeLiabilities: "Liabilities",
+			AccountTypeEquity:      "Equity",
+			AccountTypeRevenue:     "Revenue",
+			AccountTypeExpense:     "Expense",
+			JournalEntryFallback:   "Journal",
+			ViewAll:                "View All",
+			AxisAmount:             "Amount",
 		},
 	}
 }
