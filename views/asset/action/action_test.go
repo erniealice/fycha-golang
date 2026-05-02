@@ -13,6 +13,7 @@ import (
 	"github.com/erniealice/pyeza-golang/view"
 
 	fycha "github.com/erniealice/fycha-golang"
+	assetform "github.com/erniealice/fycha-golang/views/asset/form"
 )
 
 // testDeps returns a Deps with all labels populated and mock CRUD functions.
@@ -35,11 +36,11 @@ func testDeps() *Deps {
 				InvalidTargetStatus: "Invalid target status",
 			},
 		},
-		CreateAsset: func(ctx context.Context, asset *AssetRecord) error {
+		CreateAsset: func(ctx context.Context, asset *assetform.Record) error {
 			return nil
 		},
-		ReadAsset: func(ctx context.Context, id string) (*AssetRecord, error) {
-			return &AssetRecord{
+		ReadAsset: func(ctx context.Context, id string) (*assetform.Record, error) {
+			return &assetform.Record{
 				ID:               id,
 				Name:             "Test Asset",
 				AssetNumber:      "FA-001",
@@ -48,7 +49,7 @@ func testDeps() *Deps {
 				UsefulLifeMonths: 60,
 			}, nil
 		},
-		UpdateAsset: func(ctx context.Context, asset *AssetRecord) error {
+		UpdateAsset: func(ctx context.Context, asset *assetform.Record) error {
 			return nil
 		},
 		DeleteAsset: func(ctx context.Context, id string) error {
@@ -204,8 +205,8 @@ func TestNewAddAction_InvalidNumericFields(t *testing.T) {
 			t.Parallel()
 
 			deps := testDeps()
-			var createdRecord *AssetRecord
-			deps.CreateAsset = func(ctx context.Context, asset *AssetRecord) error {
+			var createdRecord *assetform.Record
+			deps.CreateAsset = func(ctx context.Context, asset *assetform.Record) error {
 				createdRecord = asset
 				return nil
 			}
@@ -242,7 +243,7 @@ func TestNewAddAction_CreateAssetError(t *testing.T) {
 	t.Parallel()
 
 	deps := testDeps()
-	deps.CreateAsset = func(ctx context.Context, asset *AssetRecord) error {
+	deps.CreateAsset = func(ctx context.Context, asset *assetform.Record) error {
 		return errors.New("database connection refused")
 	}
 
@@ -330,7 +331,7 @@ func TestNewEditAction_ReadAssetError(t *testing.T) {
 	t.Parallel()
 
 	deps := testDeps()
-	deps.ReadAsset = func(ctx context.Context, id string) (*AssetRecord, error) {
+	deps.ReadAsset = func(ctx context.Context, id string) (*assetform.Record, error) {
 		return nil, errors.New("asset not found")
 	}
 
@@ -355,7 +356,7 @@ func TestNewEditAction_UpdateAssetError(t *testing.T) {
 	t.Parallel()
 
 	deps := testDeps()
-	deps.UpdateAsset = func(ctx context.Context, asset *AssetRecord) error {
+	deps.UpdateAsset = func(ctx context.Context, asset *assetform.Record) error {
 		return errors.New("update failed")
 	}
 

@@ -13,6 +13,7 @@ import (
 	assetaction "github.com/erniealice/fycha-golang/views/asset/action"
 	assetdashboard "github.com/erniealice/fycha-golang/views/asset/dashboard"
 	assetdetail "github.com/erniealice/fycha-golang/views/asset/detail"
+	assetform "github.com/erniealice/fycha-golang/views/asset/form"
 	assetlist "github.com/erniealice/fycha-golang/views/asset/list"
 )
 
@@ -24,9 +25,9 @@ type ModuleDeps struct {
 	TableLabels  types.TableLabels
 
 	// CRUD operations (wired from block.go via raw SQL)
-	CreateAsset func(ctx context.Context, asset *assetaction.AssetRecord) error
-	ReadAsset   func(ctx context.Context, id string) (*assetaction.AssetRecord, error)
-	UpdateAsset func(ctx context.Context, asset *assetaction.AssetRecord) error
+	CreateAsset func(ctx context.Context, asset *assetform.Record) error
+	ReadAsset   func(ctx context.Context, id string) (*assetform.Record, error)
+	UpdateAsset func(ctx context.Context, asset *assetform.Record) error
 	DeleteAsset func(ctx context.Context, id string) error
 	SetActive   func(ctx context.Context, id string, active bool) error
 	ListAssets  func(ctx context.Context, status string) ([]assetlist.AssetRow, error)

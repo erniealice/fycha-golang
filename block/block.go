@@ -33,7 +33,7 @@ import (
 
 	fycha "github.com/erniealice/fycha-golang"
 	assetmod "github.com/erniealice/fycha-golang/views/asset"
-	assetaction "github.com/erniealice/fycha-golang/views/asset/action"
+	assetform "github.com/erniealice/fycha-golang/views/asset/form"
 	assetlist "github.com/erniealice/fycha-golang/views/asset/list"
 	cashmod "github.com/erniealice/fycha-golang/views/cash"
 	equitymod "github.com/erniealice/fycha-golang/views/equity"
@@ -413,8 +413,8 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 // Asset CRUD — raw SQL implementations
 // ---------------------------------------------------------------------------
 
-func makeCreateAsset(db *sql.DB) func(context.Context, *assetaction.AssetRecord) error {
-	return func(ctx context.Context, a *assetaction.AssetRecord) error {
+func makeCreateAsset(db *sql.DB) func(context.Context, *assetform.Record) error {
+	return func(ctx context.Context, a *assetform.Record) error {
 		// Default asset_category_id to first available if empty (FK requires valid ref)
 		if a.AssetCategoryID == "" {
 			_ = db.QueryRowContext(ctx, `SELECT id FROM asset_category ORDER BY name LIMIT 1`).Scan(&a.AssetCategoryID)
@@ -435,9 +435,9 @@ func makeCreateAsset(db *sql.DB) func(context.Context, *assetaction.AssetRecord)
 	}
 }
 
-func makeReadAsset(db *sql.DB) func(context.Context, string) (*assetaction.AssetRecord, error) {
-	return func(ctx context.Context, id string) (*assetaction.AssetRecord, error) {
-		a := &assetaction.AssetRecord{}
+func makeReadAsset(db *sql.DB) func(context.Context, string) (*assetform.Record, error) {
+	return func(ctx context.Context, id string) (*assetform.Record, error) {
+		a := &assetform.Record{}
 		var locationID sql.NullString
 		err := db.QueryRowContext(ctx, `
 			SELECT id, asset_number, name, COALESCE(description,''), asset_type,
@@ -459,8 +459,8 @@ func makeReadAsset(db *sql.DB) func(context.Context, string) (*assetaction.Asset
 	}
 }
 
-func makeUpdateAsset(db *sql.DB) func(context.Context, *assetaction.AssetRecord) error {
-	return func(ctx context.Context, a *assetaction.AssetRecord) error {
+func makeUpdateAsset(db *sql.DB) func(context.Context, *assetform.Record) error {
+	return func(ctx context.Context, a *assetform.Record) error {
 		_, err := db.ExecContext(ctx, `
 			UPDATE asset SET
 				name = $2, description = $3,
