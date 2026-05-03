@@ -18,17 +18,20 @@ package block
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"log"
+	"math"
 	"net/http"
+	"strings"
 
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 
 	consumer "github.com/erniealice/espyna-golang/consumer"
 
+	assetpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset"
 	attachmentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/document/attachment"
+	commonpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/common"
 	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
 
 	fycha "github.com/erniealice/fycha-golang"
@@ -246,22 +249,68 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 				DeleteAttachment: deleteAttachment,
 			}
 
-			// Wire asset CRUD via raw SQL if DB is available
-			if ctx.SqlDB != nil {
+			// Typed asset stack (asset-stack buildout, 2026-05-03). Falls back to
+			// nothing-wired if the asset use cases are unavailable (mock build, etc.) —
+			// same graceful-degradation semantics as ledger/treasury.
+			if useCases != nil && useCases.Asset != nil && useCases.Asset.Asset != nil {
+				ua := useCases.Asset.Asset
 				assetDeps.NewID = func() string {
 					if newAttachmentID != nil {
 						return newAttachmentID()
 					}
-					var id string
-					_ = ctx.SqlDB.QueryRow("SELECT gen_random_uuid()::text").Scan(&id)
-					return id
+					return "" // CreateAsset use case generates IDs internally via IDService
 				}
-				assetDeps.CreateAsset = makeCreateAsset(ctx.SqlDB)
-				assetDeps.ReadAsset = makeReadAsset(ctx.SqlDB)
-				assetDeps.UpdateAsset = makeUpdateAsset(ctx.SqlDB)
-				assetDeps.DeleteAsset = makeDeleteAsset(ctx.SqlDB)
-				assetDeps.SetActive = makeSetActive(ctx.SqlDB)
-				assetDeps.ListAssets = makeListAssets(ctx.SqlDB)
+				assetDeps.CreateAsset = func(fctx context.Context, a *assetform.Record) error {
+					_, err := ua.CreateAsset.Execute(fctx, &assetpb.CreateAssetRequest{Data: recordToAsset(a)})
+					return err
+				}
+				assetDeps.ReadAsset = func(fctx context.Context, id string) (*assetform.Record, error) {
+					resp, err := ua.ReadAsset.Execute(fctx, &assetpb.ReadAssetRequest{Data: &assetpb.Asset{Id: id}})
+					if err != nil {
+						return nil, err
+					}
+					if resp == nil || len(resp.Data) == 0 {
+						return nil, fmt.Errorf("asset %s not found", id)
+					}
+					return assetToRecord(resp.Data[0]), nil
+				}
+				assetDeps.UpdateAsset = func(fctx context.Context, a *assetform.Record) error {
+					_, err := ua.UpdateAsset.Execute(fctx, &assetpb.UpdateAssetRequest{Data: recordToAsset(a)})
+					return err
+				}
+				// DeleteAsset preserves the legacy soft-delete (active=false) semantic via
+				// SetAssetActive — routes the change through audit/auth instead of bypass.
+				assetDeps.DeleteAsset = func(fctx context.Context, id string) error {
+					_, err := ua.SetAssetActive.Execute(fctx, &assetpb.SetAssetActiveRequest{AssetId: id, Active: false})
+					return err
+				}
+				assetDeps.SetActive = func(fctx context.Context, id string, active bool) error {
+					_, err := ua.SetAssetActive.Execute(fctx, &assetpb.SetAssetActiveRequest{AssetId: id, Active: active})
+					return err
+				}
+				assetDeps.ListAssets = func(fctx context.Context, status string) ([]assetlist.AssetRow, error) {
+					active := status == "active"
+					resp, err := ua.GetAssetListPageData.Execute(fctx, &assetpb.GetAssetListPageDataRequest{
+						Filters: &commonpb.FilterRequest{
+							Filters: []*commonpb.TypedFilter{
+								{
+									Field: "active",
+									FilterType: &commonpb.TypedFilter_BooleanFilter{
+										BooleanFilter: &commonpb.BooleanFilter{Value: active},
+									},
+								},
+							},
+						},
+					})
+					if err != nil {
+						return nil, err
+					}
+					rows := make([]assetlist.AssetRow, 0, len(resp.GetAssetList()))
+					for _, a := range resp.GetAssetList() {
+						rows = append(rows, assetToRow(a))
+					}
+					return rows, nil
+				}
 			}
 
 			assetmod.NewModule(assetDeps).RegisterRoutes(ctx.Routes)
@@ -398,7 +447,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 			}).RegisterRoutes(ctx.Routes)
 
 			// Cash → Reports → Cash Book
-			ctx.Routes.GET(fycha.CashBookURL, cashbookview.NewCashBookView(ctx.SqlDB, ctx.Common, ctx.Table))
+			ctx.Routes.GET(fycha.CashBookURL, cashbookview.NewCashBookView(ledgerReportingSvc, ctx.Common, ctx.Table))
 		}
 
 		// =====================================================================
@@ -417,124 +466,81 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 }
 
 // ---------------------------------------------------------------------------
-// Asset CRUD — raw SQL implementations
+// Asset type-translation helpers (asset-stack buildout, 2026-05-03)
 // ---------------------------------------------------------------------------
 
-func makeCreateAsset(db *sql.DB) func(context.Context, *assetform.Record) error {
-	return func(ctx context.Context, a *assetform.Record) error {
-		// Default asset_category_id to first available if empty (FK requires valid ref)
-		if a.AssetCategoryID == "" {
-			_ = db.QueryRowContext(ctx, `SELECT id FROM asset_category ORDER BY name LIMIT 1`).Scan(&a.AssetCategoryID)
-		}
-		_, err := db.ExecContext(ctx, `
-			INSERT INTO asset (
-				id, asset_number, name, description, asset_type,
-				asset_category_id, location_id, acquisition_cost, currency,
-				salvage_value, book_value, useful_life_months,
-				depreciation_method, status, active
-			) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)`,
-			a.ID, a.AssetNumber, a.Name, a.Description, a.AssetType,
-			a.AssetCategoryID, nullIfEmpty(a.LocationID), a.AcquisitionCost, a.Currency,
-			a.SalvageValue, a.BookValue, a.UsefulLifeMonths,
-			a.DepreciationMethod, a.Status, a.Active,
-		)
-		return err
+// recordToAsset converts a view-layer assetform.Record to the proto Asset type.
+// Money fields are translated from float64 pesos → int64 centavos.
+// Enum fields are translated from string → proto enum using the generated _value maps.
+// Unknown enum strings map to 0 (*_UNSPECIFIED), preserving current behaviour.
+func recordToAsset(r *assetform.Record) *assetpb.Asset {
+	a := &assetpb.Asset{
+		Id:                 r.ID,
+		AssetNumber:        r.AssetNumber,
+		Name:               r.Name,
+		AssetType:          assetpb.AssetType(assetpb.AssetType_value[r.AssetType]),
+		AssetCategoryId:    r.AssetCategoryID,
+		AcquisitionCost:    int64(math.Round(r.AcquisitionCost * 100)),
+		Currency:           r.Currency,
+		SalvageValue:       int64(math.Round(r.SalvageValue * 100)),
+		BookValue:          int64(math.Round(r.BookValue * 100)),
+		UsefulLifeMonths:   int32(r.UsefulLifeMonths),
+		DepreciationMethod: assetpb.DepreciationMethod(assetpb.DepreciationMethod_value[r.DepreciationMethod]),
+		Status:             assetpb.AssetStatus(assetpb.AssetStatus_value[r.Status]),
+		Active:             r.Active,
 	}
+	if r.Description != "" {
+		a.Description = &r.Description
+	}
+	if r.LocationID != "" {
+		a.LocationId = &r.LocationID
+	}
+	return a
 }
 
-func makeReadAsset(db *sql.DB) func(context.Context, string) (*assetform.Record, error) {
-	return func(ctx context.Context, id string) (*assetform.Record, error) {
-		a := &assetform.Record{}
-		var locationID sql.NullString
-		err := db.QueryRowContext(ctx, `
-			SELECT id, asset_number, name, COALESCE(description,''), asset_type,
-				   COALESCE(asset_category_id,''), location_id,
-				   acquisition_cost, currency, salvage_value, book_value,
-				   useful_life_months, depreciation_method, status, active
-			FROM asset WHERE id = $1`, id,
-		).Scan(
-			&a.ID, &a.AssetNumber, &a.Name, &a.Description, &a.AssetType,
-			&a.AssetCategoryID, &locationID,
-			&a.AcquisitionCost, &a.Currency, &a.SalvageValue, &a.BookValue,
-			&a.UsefulLifeMonths, &a.DepreciationMethod, &a.Status, &a.Active,
-		)
-		if err != nil {
-			return nil, err
-		}
-		a.LocationID = locationID.String
-		return a, nil
+// assetToRecord converts a proto Asset back to the view-layer assetform.Record.
+// Money fields are translated from int64 centavos → float64 pesos.
+// Enum strings are lowercased and stripped of their proto prefix so they round-trip
+// to the form values the view layer expects (e.g. "DEPRECIATION_METHOD_STRAIGHT_LINE"
+// → "straight_line").
+func assetToRecord(a *assetpb.Asset) *assetform.Record {
+	r := &assetform.Record{
+		ID:                 a.GetId(),
+		AssetNumber:        a.GetAssetNumber(),
+		Name:               a.GetName(),
+		AssetType:          strings.ToLower(strings.TrimPrefix(a.GetAssetType().String(), "ASSET_TYPE_")),
+		AssetCategoryID:    a.GetAssetCategoryId(),
+		LocationID:         a.GetLocationId(),
+		AcquisitionCost:    float64(a.GetAcquisitionCost()) / 100,
+		Currency:           a.GetCurrency(),
+		SalvageValue:       float64(a.GetSalvageValue()) / 100,
+		BookValue:          float64(a.GetBookValue()) / 100,
+		UsefulLifeMonths:   int(a.GetUsefulLifeMonths()),
+		DepreciationMethod: strings.ToLower(strings.TrimPrefix(a.GetDepreciationMethod().String(), "DEPRECIATION_METHOD_")),
+		Status:             strings.ToLower(strings.TrimPrefix(a.GetStatus().String(), "ASSET_STATUS_")),
+		Active:             a.GetActive(),
 	}
+	if a.Description != nil {
+		r.Description = *a.Description
+	}
+	return r
 }
 
-func makeUpdateAsset(db *sql.DB) func(context.Context, *assetform.Record) error {
-	return func(ctx context.Context, a *assetform.Record) error {
-		_, err := db.ExecContext(ctx, `
-			UPDATE asset SET
-				name = $2, description = $3,
-				asset_number = $4, asset_category_id = $5, location_id = $6,
-				acquisition_cost = $7, salvage_value = $8, book_value = $9,
-				useful_life_months = $10, depreciation_method = $11,
-				currency = $12, date_modified = NOW()
-			WHERE id = $1`,
-			a.ID, a.Name, a.Description,
-			a.AssetNumber, a.AssetCategoryID, nullIfEmpty(a.LocationID),
-			a.AcquisitionCost, a.SalvageValue, a.BookValue,
-			a.UsefulLifeMonths, a.DepreciationMethod,
-			a.Currency,
-		)
-		return err
+// assetToRow converts a proto Asset to the flat assetlist.AssetRow used by the list view.
+func assetToRow(a *assetpb.Asset) assetlist.AssetRow {
+	row := assetlist.AssetRow{
+		ID:              a.GetId(),
+		AssetNumber:     a.GetAssetNumber(),
+		Name:            a.GetName(),
+		AcquisitionCost: float64(a.GetAcquisitionCost()) / 100,
+		BookValue:       float64(a.GetBookValue()) / 100,
+		Active:          a.GetActive(),
 	}
-}
-
-func makeDeleteAsset(db *sql.DB) func(context.Context, string) error {
-	return func(ctx context.Context, id string) error {
-		_, err := db.ExecContext(ctx, `UPDATE asset SET active = false, date_modified = NOW() WHERE id = $1`, id)
-		return err
+	if a.AssetCategory != nil {
+		row.CategoryName = a.AssetCategory.GetName()
 	}
-}
-
-func makeSetActive(db *sql.DB) func(context.Context, string, bool) error {
-	return func(ctx context.Context, id string, active bool) error {
-		_, err := db.ExecContext(ctx, `UPDATE asset SET active = $2, date_modified = NOW() WHERE id = $1`, id, active)
-		return err
+	if a.Location != nil {
+		row.LocationName = a.Location.GetName()
 	}
-}
-
-func makeListAssets(db *sql.DB) func(context.Context, string) ([]assetlist.AssetRow, error) {
-	return func(ctx context.Context, status string) ([]assetlist.AssetRow, error) {
-		active := status == "active"
-		rows, err := db.QueryContext(ctx, `
-			SELECT a.id, a.asset_number, a.name,
-				   COALESCE(c.name, '') AS category_name,
-				   COALESCE(l.name, '') AS location_name,
-				   a.acquisition_cost, a.book_value, a.active
-			FROM asset a
-			LEFT JOIN asset_category c ON c.id = a.asset_category_id
-			LEFT JOIN location l ON l.id = a.location_id
-			WHERE a.active = $1
-			ORDER BY a.asset_number ASC`, active)
-		if err != nil {
-			return nil, err
-		}
-		defer rows.Close()
-
-		var result []assetlist.AssetRow
-		for rows.Next() {
-			var r assetlist.AssetRow
-			if err := rows.Scan(&r.ID, &r.AssetNumber, &r.Name,
-				&r.CategoryName, &r.LocationName,
-				&r.AcquisitionCost, &r.BookValue, &r.Active); err != nil {
-				return nil, err
-			}
-			result = append(result, r)
-		}
-		return result, rows.Err()
-	}
-}
-
-func nullIfEmpty(s string) any {
-	if s == "" {
-		return nil
-	}
-	return s
+	return row
 }

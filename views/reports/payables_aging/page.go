@@ -2,17 +2,18 @@ package payables_aging
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
+	fycha "github.com/erniealice/fycha-golang"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
+	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
 	reports "github.com/erniealice/fycha-golang/views/reports"
 )
 
-// NewPayablesAgingView creates the payables aging report with DB data.
-func NewPayablesAgingView(db *sql.DB, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
+// NewPayablesAgingView creates the payables aging report with typed service data.
+func NewPayablesAgingView(db fycha.DataSource, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
 	return reports.NewReportView(reports.ReportConfig{
 		ActiveNav:    "supplier",
 		ActiveSubNav: "payables-aging",
@@ -59,7 +60,7 @@ func payablesAgingTotals(rows []types.TableRow) []types.TableCell {
 	}
 }
 
-func fetchPayablesAging(ctx context.Context, db *sql.DB) ([]types.TableColumn, []types.TableRow, error) {
+func fetchPayablesAging(ctx context.Context, db fycha.DataSource) ([]types.TableColumn, []types.TableRow, error) {
 	columns := []types.TableColumn{
 		{Key: "supplier", Label: "Supplier"},
 		{Key: "current", Label: "Current", Align: "right"},
@@ -70,67 +71,30 @@ func fetchPayablesAging(ctx context.Context, db *sql.DB) ([]types.TableColumn, [
 		{Key: "total", Label: "Total", Align: "right"},
 	}
 
-	// Compute outstanding = total_amount - paid disbursements per expenditure.
-	// Use COALESCE(supplier_id, vendor_id) to support both old and new P2P schema.
-	// Include both 'purchase' and 'expense' types that create payables.
-	query := `
-		WITH outstanding AS (
-			SELECT
-				e.id,
-				COALESCE(NULLIF(TRIM(s.company_name), ''), NULLIF(TRIM(e.name), ''), 'Unknown') AS supplier_name,
-				e.total_amount - COALESCE(paid.total_paid, 0) AS outstanding_amount,
-				CURRENT_DATE - COALESCE(e.due_date, e.expenditure_date)::date AS days_overdue
-			FROM expenditure e
-			LEFT JOIN supplier s ON s.id = e.supplier_id
-			LEFT JOIN (
-				SELECT d.expenditure_id, SUM(d.amount) AS total_paid
-				FROM treasury_disbursement d
-				WHERE d.active = true AND d.status IN ('paid', 'completed')
-				GROUP BY d.expenditure_id
-			) paid ON paid.expenditure_id = e.id
-			WHERE e.active = true
-			  AND e.expenditure_type IN ('purchase', 'expense')
-			  AND e.status NOT IN ('paid', 'cancelled')
-			  AND e.total_amount - COALESCE(paid.total_paid, 0) > 0
-		)
-		SELECT
-			supplier_name,
-			COALESCE(SUM(CASE WHEN days_overdue <= 0 THEN outstanding_amount ELSE 0 END), 0) AS current_amt,
-			COALESCE(SUM(CASE WHEN days_overdue BETWEEN 1 AND 30 THEN outstanding_amount ELSE 0 END), 0) AS days_30,
-			COALESCE(SUM(CASE WHEN days_overdue BETWEEN 31 AND 60 THEN outstanding_amount ELSE 0 END), 0) AS days_60,
-			COALESCE(SUM(CASE WHEN days_overdue BETWEEN 61 AND 90 THEN outstanding_amount ELSE 0 END), 0) AS days_90,
-			COALESCE(SUM(CASE WHEN days_overdue > 90 THEN outstanding_amount ELSE 0 END), 0) AS over_90,
-			COALESCE(SUM(outstanding_amount), 0) AS total
-		FROM outstanding
-		GROUP BY supplier_name
-		ORDER BY total DESC
-	`
+	if db == nil {
+		return columns, nil, nil
+	}
 
-	dbRows, err := db.QueryContext(ctx, query)
+	resp, err := db.GetSimplePayablesAgingReport(ctx, &reportpb.PayablesAgingReportRequest{})
 	if err != nil {
 		return columns, nil, fmt.Errorf("payables aging query: %w", err)
 	}
-	defer dbRows.Close()
+	if resp == nil {
+		return columns, nil, nil
+	}
 
 	var rows []types.TableRow
-	idx := 0
-	for dbRows.Next() {
-		var name string
-		var current, d30, d60, d90, over90, total float64
-		if err := dbRows.Scan(&name, &current, &d30, &d60, &d90, &over90, &total); err != nil {
-			return columns, nil, fmt.Errorf("payables aging scan: %w", err)
-		}
-		idx++
+	for idx, row := range resp.Data {
 		rows = append(rows, types.TableRow{
-			ID: fmt.Sprintf("pa-%d", idx),
+			ID: fmt.Sprintf("pa-%d", idx+1),
 			Cells: []types.TableCell{
-				{Value: name},
-				types.MoneyCell(current, "PHP", true),
-				types.MoneyCell(d30, "PHP", true),
-				types.MoneyCell(d60, "PHP", true),
-				types.MoneyCell(d90, "PHP", true),
-				types.MoneyCell(over90, "PHP", true),
-				types.MoneyCell(total, "PHP", true),
+				{Value: row.SupplierName},
+				types.MoneyCell(float64(row.Current)/100, "PHP", true),
+				types.MoneyCell(float64(row.Days_30)/100, "PHP", true),
+				types.MoneyCell(float64(row.Days_60)/100, "PHP", true),
+				types.MoneyCell(float64(row.Days_90)/100, "PHP", true),
+				types.MoneyCell(float64(row.Over_90)/100, "PHP", true),
+				types.MoneyCell(float64(row.Total)/100, "PHP", true),
 			},
 		})
 	}

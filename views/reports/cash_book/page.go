@@ -2,17 +2,18 @@ package cash_book
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 
+	fycha "github.com/erniealice/fycha-golang"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
+	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
 	reports "github.com/erniealice/fycha-golang/views/reports"
 )
 
-// NewCashBookView creates the cash book report with DB data.
-func NewCashBookView(db *sql.DB, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
+// NewCashBookView creates the cash book report with typed service data.
+func NewCashBookView(db fycha.DataSource, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
 	return reports.NewReportView(reports.ReportConfig{
 		ActiveNav:    "cash",
 		ActiveSubNav: "cash-book",
@@ -28,7 +29,7 @@ func NewCashBookView(db *sql.DB, commonLabels pyeza.CommonLabels, tableLabels ty
 	})
 }
 
-func fetchCashBook(ctx context.Context, db *sql.DB) ([]types.TableColumn, []types.TableRow, error) {
+func fetchCashBook(ctx context.Context, db fycha.DataSource) ([]types.TableColumn, []types.TableRow, error) {
 	columns := []types.TableColumn{
 		{Key: "date", Label: "Date"},
 		{Key: "description", Label: "Description"},
@@ -37,65 +38,32 @@ func fetchCashBook(ctx context.Context, db *sql.DB) ([]types.TableColumn, []type
 		{Key: "amount", Label: "Amount", Align: "right"},
 	}
 
-	// Combine revenue (receipts) and expenditure (payments) into a single ledger
-	query := `
-		SELECT tx_date, description, reference, tx_type, amount
-		FROM (
-			SELECT
-				TO_CHAR(date_created, 'YYYY-MM-DD') AS tx_date,
-				COALESCE(NULLIF(TRIM(name), ''), 'Collection') AS description,
-				COALESCE(NULLIF(reference_number, ''), '-') AS reference,
-				'Receipt' AS tx_type,
-				total_amount AS amount
-			FROM revenue
-			WHERE status NOT IN ('cancelled', 'draft')
-
-			UNION ALL
-
-			SELECT
-				TO_CHAR(expenditure_date, 'YYYY-MM-DD') AS tx_date,
-				COALESCE(NULLIF(name, ''), 'Payment') AS description,
-				COALESCE(NULLIF(reference_number, ''), '-') AS reference,
-				CASE WHEN expenditure_type = 'purchase' THEN 'Purchase' ELSE 'Expense' END AS tx_type,
-				total_amount AS amount
-			FROM expenditure
-			WHERE status NOT IN ('cancelled', 'draft')
-		) combined
-		ORDER BY tx_date DESC, reference
-		LIMIT 200
-	`
-
-	dbRows, err := db.QueryContext(ctx, query)
-	if err != nil {
+	if db == nil {
 		return columns, nil, nil
 	}
-	defer dbRows.Close()
+
+	resp, err := db.GetCashBookReport(ctx, &reportpb.CashBookReportRequest{})
+	if err != nil || resp == nil {
+		return columns, nil, nil
+	}
 
 	var rows []types.TableRow
-	idx := 0
-	for dbRows.Next() {
-		var date, desc, ref, txType string
-		var amount float64
-		if err := dbRows.Scan(&date, &desc, &ref, &txType, &amount); err != nil {
-			continue
-		}
-		idx++
-
+	for idx, row := range resp.Data {
 		variant := "info"
-		if txType == "Receipt" {
+		if row.TxType == "Receipt" {
 			variant = "success"
-		} else if txType == "Expense" {
+		} else if row.TxType == "Expense" {
 			variant = "warning"
 		}
 
 		rows = append(rows, types.TableRow{
-			ID: fmt.Sprintf("cb-%d", idx),
+			ID: fmt.Sprintf("cb-%d", idx+1),
 			Cells: []types.TableCell{
-				{Value: date},
-				{Value: desc},
-				{Value: ref},
-				{Type: "badge", Value: txType, Variant: variant},
-				types.MoneyCell(amount, "PHP", true),
+				{Value: row.TxDate},
+				{Value: row.Description},
+				{Value: row.Reference},
+				{Type: "badge", Value: row.TxType, Variant: variant},
+				types.MoneyCell(float64(row.Amount)/100, "PHP", true),
 			},
 		})
 	}
