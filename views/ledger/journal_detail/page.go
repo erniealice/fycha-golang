@@ -5,8 +5,10 @@ import (
 	"fmt"
 	"log"
 
+	attachmentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/document/attachment"
 	jepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_entry"
 	jlpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_line"
+	"github.com/erniealice/hybra-golang/views/attachment"
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/route"
@@ -29,6 +31,13 @@ type Deps struct {
 
 	// Journal use cases
 	GetJournalEntryItemPageData func(ctx context.Context, req *jepb.GetJournalEntryItemPageDataRequest) (*jepb.GetJournalEntryItemPageDataResponse, error)
+
+	// Attachment operations
+	NewAttachmentID  func() string
+	UploadFile       func(ctx context.Context, bucket, key string, content []byte, contentType string) error
+	ListAttachments  func(ctx context.Context, moduleKey, foreignKey string) (*attachmentpb.ListAttachmentsResponse, error)
+	CreateAttachment func(ctx context.Context, req *attachmentpb.CreateAttachmentRequest) (*attachmentpb.CreateAttachmentResponse, error)
+	DeleteAttachment func(ctx context.Context, req *attachmentpb.DeleteAttachmentRequest) (*attachmentpb.DeleteAttachmentResponse, error)
 }
 
 // PageData holds the data for the journal detail page.
@@ -36,6 +45,8 @@ type PageData struct {
 	types.PageData
 	ContentTemplate string
 	Labels          fycha.JournalLabels
+	ActiveTab       string
+	TabItems        []pyeza.TabItem
 	// Identity
 	ID            string
 	EntryNumber   string
@@ -65,6 +76,8 @@ type PageData struct {
 	IsBalanced  bool
 	// Lines table
 	LinesTable *types.TableConfig
+	// Attachments tab
+	AttachmentTable *types.TableConfig
 	// Action URLs + permissions
 	EditURL    string
 	PostURL    string
@@ -95,8 +108,14 @@ type LineRow struct {
 func NewView(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		id := viewCtx.Request.PathValue("id")
+
+		activeTab := viewCtx.Request.URL.Query().Get("tab")
+		if activeTab == "" {
+			activeTab = "lines"
+		}
+
 		perms := view.GetUserPermissions(ctx)
-		pageData := buildPageData(ctx, deps, id, viewCtx, perms)
+		pageData := buildPageData(ctx, deps, id, activeTab, viewCtx, perms)
 
 		// KB help content
 		if viewCtx.Translations != nil {
@@ -112,11 +131,31 @@ func NewView(deps *Deps) view.View {
 	})
 }
 
+// NewTabAction creates the tab action view (partial — returns only the tab content).
+func NewTabAction(deps *Deps) view.View {
+	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		id := viewCtx.Request.PathValue("id")
+		tab := viewCtx.Request.PathValue("tab")
+		if tab == "" {
+			tab = "lines"
+		}
+
+		perms := view.GetUserPermissions(ctx)
+		pageData := buildPageData(ctx, deps, id, tab, viewCtx, perms)
+
+		templateName := "journal-tab-" + tab
+		if tab == "attachments" {
+			templateName = "attachment-tab"
+		}
+		return view.OK(templateName, pageData)
+	})
+}
+
 // ---------------------------------------------------------------------------
 // Page data builder
 // ---------------------------------------------------------------------------
 
-func buildPageData(ctx context.Context, deps *Deps, id string, viewCtx *view.ViewContext, perms *types.UserPermissions) *PageData {
+func buildPageData(ctx context.Context, deps *Deps, id, activeTab string, viewCtx *view.ViewContext, perms *types.UserPermissions) *PageData {
 	vm := fetchEntry(ctx, deps, id)
 
 	linesTable := buildLinesTable(vm.Lines, deps.Labels, deps.TableLabels)
@@ -125,7 +164,9 @@ func buildPageData(ctx context.Context, deps *Deps, id string, viewCtx *view.Vie
 	reverseURL := route.ResolveURL(deps.Routes.ReverseURL, "id", id)
 	editURL := route.ResolveURL(deps.Routes.EditURL, "id", id)
 
-	return &PageData{
+	tabItems := buildTabItems(id, deps.Labels, deps.Routes)
+
+	pageData := &PageData{
 		PageData: types.PageData{
 			CacheVersion:   viewCtx.CacheVersion,
 			Title:          fmt.Sprintf("Journal Entry %s", vm.EntryNumber),
@@ -139,6 +180,8 @@ func buildPageData(ctx context.Context, deps *Deps, id string, viewCtx *view.Vie
 		},
 		ContentTemplate: "journal-detail-content",
 		Labels:          deps.Labels,
+		ActiveTab:       activeTab,
+		TabItems:        tabItems,
 		ID:              id,
 		EntryNumber:     vm.EntryNumber,
 		Description:     vm.Description,
@@ -170,6 +213,32 @@ func buildPageData(ctx context.Context, deps *Deps, id string, viewCtx *view.Vie
 		CanPost:         perms.Can("journal", "post_manual") && vm.Status == "draft",
 		CanReverse:      perms.Can("journal", "post_manual") && vm.Status == "posted",
 		CanDelete:       perms.Can("journal", "delete") && vm.Status == "draft",
+	}
+
+	if activeTab == "attachments" {
+		if deps.ListAttachments != nil {
+			cfg := attachmentConfig(deps)
+			resp, err := deps.ListAttachments(viewCtx.Request.Context(), cfg.EntityType, id)
+			if err != nil {
+				log.Printf("Failed to list attachments: %v", err)
+			}
+			var items []*attachmentpb.Attachment
+			if resp != nil {
+				items = resp.GetData()
+			}
+			pageData.AttachmentTable = attachment.BuildTable(items, cfg, id)
+		}
+	}
+
+	return pageData
+}
+
+func buildTabItems(id string, labels fycha.JournalLabels, routes fycha.JournalRoutes) []pyeza.TabItem {
+	base := route.ResolveURL(routes.DetailURL, "id", id)
+	action := route.ResolveURL(routes.TabActionURL, "id", id, "tab", "")
+	return []pyeza.TabItem{
+		{Key: "lines", Label: labels.Detail.TabLines, Href: base + "?tab=lines", HxGet: action + "lines", Icon: "icon-list", Count: 0, Disabled: false},
+		{Key: "attachments", Label: labels.Detail.TabAttachments, Href: base + "?tab=attachments", HxGet: action + "attachments", Icon: "icon-paperclip", Count: 0, Disabled: false},
 	}
 }
 

@@ -4,6 +4,10 @@ import (
 	"context"
 	"net/http"
 
+	attachmentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/document/attachment"
+	accountpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/account"
+	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
+	journalentrypb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_entry"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -20,10 +24,6 @@ import (
 	recurringview "github.com/erniealice/fycha-golang/views/ledger/recurring"
 	ledgerreports "github.com/erniealice/fycha-golang/views/ledger/reports"
 	ledgersettings "github.com/erniealice/fycha-golang/views/ledger/settings"
-
-	accountpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/account"
-	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
-	journalentrypb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_entry"
 )
 
 // ModuleDeps holds all dependencies for the ledger module.
@@ -84,6 +84,13 @@ type ModuleDeps struct {
 	// Function-pointer indirection so the orchestrator can wire the espyna
 	// GetLedgerDashboardPageDataUseCase without fycha importing espyna.
 	GetLedgerDashboardPageData func(ctx context.Context, req *dashboardview.Request) (*dashboardview.Response, error)
+
+	// Journal entry attachment operations (optional — nil disables attachment routes)
+	NewAttachmentID  func() string
+	UploadFile       func(ctx context.Context, bucket, key string, content []byte, contentType string) error
+	ListAttachments  func(ctx context.Context, moduleKey, foreignKey string) (*attachmentpb.ListAttachmentsResponse, error)
+	CreateAttachment func(ctx context.Context, req *attachmentpb.CreateAttachmentRequest) (*attachmentpb.CreateAttachmentResponse, error)
+	DeleteAttachment func(ctx context.Context, req *attachmentpb.DeleteAttachmentRequest) (*attachmentpb.DeleteAttachmentResponse, error)
 }
 
 // Module holds all constructed ledger views.
@@ -114,13 +121,16 @@ type Module struct {
 	TrialBalance  view.View
 
 	// Journal Entry views (Phase 3)
-	JournalList    view.View
-	JournalDetail  view.View
-	JournalAdd     view.View
-	JournalEdit    view.View
-	JournalPost    view.View
-	JournalReverse view.View
-	JournalDelete  view.View
+	JournalList              view.View
+	JournalDetail            view.View
+	JournalTabAction         view.View
+	JournalAdd               view.View
+	JournalEdit              view.View
+	JournalPost              view.View
+	JournalReverse           view.View
+	JournalDelete            view.View
+	JournalAttachmentUpload  view.View
+	JournalAttachmentDelete  view.View
 
 	// FiscalPeriod views (Phase 3)
 	FiscalPeriodList  view.View
@@ -201,6 +211,11 @@ func NewModule(deps *ModuleDeps) *Module {
 		CommonLabels:                deps.CommonLabels,
 		TableLabels:                 deps.TableLabels,
 		GetJournalEntryItemPageData: deps.GetJournalEntryItemPageData,
+		NewAttachmentID:             deps.NewAttachmentID,
+		UploadFile:                  deps.UploadFile,
+		ListAttachments:             deps.ListAttachments,
+		CreateAttachment:            deps.CreateAttachment,
+		DeleteAttachment:            deps.DeleteAttachment,
 	}
 	journalActionDeps := &journalactionview.Deps{
 		Routes:                      deps.JournalRoutes,
@@ -266,13 +281,16 @@ func NewModule(deps *ModuleDeps) *Module {
 		GeneralLedger:           ledgerreports.NewGeneralLedgerView(glDeps),
 		TrialBalance:            ledgerreports.NewTrialBalanceView(tbDeps),
 
-		JournalList:    journalview.NewView(journalListDeps),
-		JournalDetail:  journaldetailview.NewView(journalDetailDeps),
-		JournalAdd:     journalactionview.NewAddAction(journalActionDeps),
-		JournalEdit:    journalactionview.NewEditAction(journalActionDeps),
-		JournalPost:    journalactionview.NewPostAction(journalActionDeps),
-		JournalReverse: journalactionview.NewReverseAction(journalActionDeps),
-		JournalDelete:  journalactionview.NewDeleteAction(journalActionDeps),
+		JournalList:             journalview.NewView(journalListDeps),
+		JournalDetail:           journaldetailview.NewView(journalDetailDeps),
+		JournalTabAction:        journaldetailview.NewTabAction(journalDetailDeps),
+		JournalAdd:              journalactionview.NewAddAction(journalActionDeps),
+		JournalEdit:             journalactionview.NewEditAction(journalActionDeps),
+		JournalPost:             journalactionview.NewPostAction(journalActionDeps),
+		JournalReverse:          journalactionview.NewReverseAction(journalActionDeps),
+		JournalDelete:           journalactionview.NewDeleteAction(journalActionDeps),
+		JournalAttachmentUpload: journaldetailview.NewAttachmentUploadAction(journalDetailDeps),
+		JournalAttachmentDelete: journaldetailview.NewAttachmentDeleteAction(journalDetailDeps),
 
 		FiscalPeriodList:  fiscalview.NewView(fiscalDeps),
 		FiscalPeriodAdd:   fiscalview.NewAddAction(fiscalActionDeps),
@@ -328,6 +346,7 @@ func (m *Module) RegisterRoutes(r view.RouteRegistrar) {
 	// Journals — Phase 3: real views
 	r.GET(m.journalRoutes.ListURL, m.JournalList)
 	r.GET(m.journalRoutes.DetailURL, m.JournalDetail)
+	r.GET(m.journalRoutes.TabActionURL, m.JournalTabAction)
 	// Journal actions — Phase 3: add / edit / post / reverse / delete
 	r.GET(m.journalRoutes.AddURL, m.JournalAdd)
 	r.POST(m.journalRoutes.AddURL, m.JournalAdd)
@@ -336,6 +355,12 @@ func (m *Module) RegisterRoutes(r view.RouteRegistrar) {
 	r.POST(m.journalRoutes.PostURL, m.JournalPost)
 	r.POST(m.journalRoutes.ReverseURL, m.JournalReverse)
 	r.POST(m.journalRoutes.DeleteURL, m.JournalDelete)
+	// Journal attachments
+	if m.JournalAttachmentUpload != nil {
+		r.GET(m.journalRoutes.AttachmentUploadURL, m.JournalAttachmentUpload)
+		r.POST(m.journalRoutes.AttachmentUploadURL, m.JournalAttachmentUpload)
+		r.POST(m.journalRoutes.AttachmentDeleteURL, m.JournalAttachmentDelete)
+	}
 
 	// Reports — Phase 3: real views with mock data
 	r.GET(m.statementRoutes.GeneralLedgerURL, m.GeneralLedger)

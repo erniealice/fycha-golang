@@ -113,9 +113,8 @@ type PageData struct {
 	CanEdit               bool
 	DepreciationTable     *types.TableConfig
 	MaintenanceTable      *types.TableConfig
-	TransactionTable      *types.TableConfig
-	AttachmentTable       *types.TableConfig
-	AttachmentUploadURL   string
+	TransactionTable *types.TableConfig
+	AttachmentTable  *types.TableConfig
 	// Audit history tab
 	AuditEntries    []auditlog.AuditEntryView
 	AuditHasNext    bool
@@ -244,7 +243,6 @@ func buildPageData(deps *DetailViewDeps, id, activeTab string, viewCtx *view.Vie
 			}
 			pageData.AttachmentTable = attachment.BuildTable(items, cfg, id)
 		}
-		pageData.AttachmentUploadURL = route.ResolveURL(deps.Routes.AttachmentUploadURL, "id", id)
 	}
 
 	if activeTab == "audit-history" {

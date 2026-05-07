@@ -236,11 +236,16 @@ type JournalRoutes struct {
 	ActiveSubNav string `json:"active_sub_nav"`
 	ListURL      string `json:"list_url"`
 	DetailURL    string `json:"detail_url"`
+	TabActionURL string `json:"tab_action_url"`
 	AddURL       string `json:"add_url"`
 	EditURL      string `json:"edit_url"`
 	PostURL      string `json:"post_url"`
 	ReverseURL   string `json:"reverse_url"`
 	DeleteURL    string `json:"delete_url"`
+
+	// Attachment routes
+	AttachmentUploadURL string `json:"attachment_upload_url"`
+	AttachmentDeleteURL string `json:"attachment_delete_url"`
 }
 
 func DefaultJournalRoutes() JournalRoutes {
@@ -249,11 +254,15 @@ func DefaultJournalRoutes() JournalRoutes {
 		ActiveSubNav: "journals-draft",
 		ListURL:      JournalListURL,
 		DetailURL:    JournalDetailURL,
+		TabActionURL: JournalTabActionURL,
 		AddURL:       JournalAddURL,
 		EditURL:      JournalEditURL,
 		PostURL:      JournalPostURL,
 		ReverseURL:   JournalReverseURL,
 		DeleteURL:    JournalDeleteURL,
+
+		AttachmentUploadURL: JournalAttachmentUploadURL,
+		AttachmentDeleteURL: JournalAttachmentDeleteURL,
 	}
 }
 
@@ -266,6 +275,9 @@ func (r JournalRoutes) RouteMap() map[string]string {
 		"ledger.journal.post":    r.PostURL,
 		"ledger.journal.reverse": r.ReverseURL,
 		"ledger.journal.delete":  r.DeleteURL,
+
+		"ledger.journal.attachment.upload": r.AttachmentUploadURL,
+		"ledger.journal.attachment.delete": r.AttachmentDeleteURL,
 	}
 }
 

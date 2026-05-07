@@ -59,13 +59,16 @@ const (
 	AccountDeleteURL    = "/action/ledger/account/delete"
 
 	// Ledger — Journal Entries
-	JournalListURL    = "/app/ledger/journals/list/{status}"
-	JournalDetailURL  = "/app/ledger/journals/detail/{id}"
-	JournalAddURL     = "/action/ledger/journal/add"
-	JournalEditURL    = "/action/ledger/journal/edit/{id}"
-	JournalPostURL    = "/action/ledger/journal/post/{id}"
-	JournalReverseURL = "/action/ledger/journal/reverse/{id}"
-	JournalDeleteURL  = "/action/ledger/journal/delete"
+	JournalListURL                    = "/app/ledger/journals/list/{status}"
+	JournalDetailURL                  = "/app/ledger/journals/detail/{id}"
+	JournalTabActionURL               = "/action/ledger/journal/{id}/tab/{tab}"
+	JournalAttachmentUploadURL        = "/action/ledger/journal/{id}/attachments/upload"
+	JournalAttachmentDeleteURL        = "/action/ledger/journal/{id}/attachments/delete"
+	JournalAddURL                     = "/action/ledger/journal/add"
+	JournalEditURL                    = "/action/ledger/journal/edit/{id}"
+	JournalPostURL                    = "/action/ledger/journal/post/{id}"
+	JournalReverseURL                 = "/action/ledger/journal/reverse/{id}"
+	JournalDeleteURL                  = "/action/ledger/journal/delete"
 
 	// Ledger — Accounting Statements (internal tools)
 	LedgerGeneralLedgerURL = "/app/ledger/reports/general-ledger"

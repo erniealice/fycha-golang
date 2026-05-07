@@ -338,6 +338,12 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 				FiscalPeriodLabels:      fiscalPeriodLabels,
 				RecurringTemplateLabels: recurringTemplateLabels,
 				TableLabels:             fychaTableLabels,
+				// Attachments
+				NewAttachmentID:  newAttachmentID,
+				UploadFile:       uploadFile,
+				ListAttachments:  listAttachments,
+				CreateAttachment: createAttachment,
+				DeleteAttachment: deleteAttachment,
 			}
 			if useCases != nil && useCases.Ledger != nil && useCases.Ledger.Account != nil {
 				ledgerDeps.GetAccountListPageData = useCases.Ledger.Account.GetAccountListPageData.Execute

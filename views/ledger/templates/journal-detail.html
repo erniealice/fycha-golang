@@ -126,27 +126,16 @@
     </div>
   </div>
 
-  {{/* ---- journal lines table ---- */}}
-  <div class="detail-body">
-    {{template "table-card" .LinesTable}}
-
-    {{/* ---- totals footer ---- */}}
-    <div class="journal-totals">
-      <div class="journal-totals__row journal-totals__row--total">
-        <span class="journal-totals__label">{{.Labels.Detail.Totals}}</span>
-        <span class="journal-totals__debit">{{.TotalDebit}}</span>
-        <span class="journal-totals__credit">{{.TotalCredit}}</span>
-      </div>
-      <div class="journal-totals__row journal-totals__row--diff">
-        <span class="journal-totals__label">{{.Labels.Detail.Difference}}</span>
-        <span class="journal-totals__diff">{{.Difference}}</span>
-        {{if .IsBalanced}}
-          {{template "badge" (dict "Variant" "success" "Value" .Labels.Detail.Balanced)}}
-        {{else}}
-          {{template "badge" (dict "Variant" "danger" "Value" .Labels.Detail.Unbalanced)}}
-        {{end}}
-      </div>
-    </div>
+  {{/* ---- tabs ---- */}}
+  <div class="detail-tabs">
+    {{template "tabs" (dict "Items" .TabItems "ActiveTab" .ActiveTab "Variant" "default" "ID" "journal-detail-tabs")}}
+  </div>
+  <div id="tabContent" class="detail-body" role="tabpanel" aria-labelledby="tab-{{.ActiveTab}}">
+    {{if eq .ActiveTab "lines"}}
+      {{template "journal-tab-lines" .}}
+    {{else if eq .ActiveTab "attachments"}}
+      {{template "attachment-tab" .}}
+    {{end}}
   </div>
 
   {{/* ---- action buttons ---- */}}
@@ -179,5 +168,32 @@
   </div>
   {{end}}
 
+</div>
+{{end}}
+
+{{/* =============================================
+     TAB PARTIAL: Lines (journal lines table)
+     ============================================= */}}
+{{define "journal-tab-lines"}}
+<div class="tab-scroll">
+  {{template "table-card" .LinesTable}}
+
+  {{/* ---- totals footer ---- */}}
+  <div class="journal-totals">
+    <div class="journal-totals__row journal-totals__row--total">
+      <span class="journal-totals__label">{{.Labels.Detail.Totals}}</span>
+      <span class="journal-totals__debit">{{.TotalDebit}}</span>
+      <span class="journal-totals__credit">{{.TotalCredit}}</span>
+    </div>
+    <div class="journal-totals__row journal-totals__row--diff">
+      <span class="journal-totals__label">{{.Labels.Detail.Difference}}</span>
+      <span class="journal-totals__diff">{{.Difference}}</span>
+      {{if .IsBalanced}}
+        {{template "badge" (dict "Variant" "success" "Value" .Labels.Detail.Balanced)}}
+      {{else}}
+        {{template "badge" (dict "Variant" "danger" "Value" .Labels.Detail.Unbalanced)}}
+      {{end}}
+    </div>
+  </div>
 </div>
 {{end}}

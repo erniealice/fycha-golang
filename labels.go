@@ -1138,6 +1138,9 @@ type JournalDetailLabels struct {
 	Unbalanced string `json:"unbalanced"`
 	Totals     string `json:"totals"`
 	Difference string `json:"difference"`
+	// Tab labels
+	TabLines       string `json:"tabLines"`
+	TabAttachments string `json:"tabAttachments"`
 }
 
 type JournalDetailStatLabels struct {
@@ -1348,12 +1351,14 @@ func DefaultJournalLabels() JournalLabels {
 				Created:       "Created",
 				LastModified:  "Last Modified",
 			},
-			SourceLabel: "Source",
-			ViewSource:  "View Source \u2192",
-			Balanced:    "Balanced",
-			Unbalanced:  "Unbalanced",
-			Totals:      "TOTALS",
-			Difference:  "DIFFERENCE",
+			SourceLabel:    "Source",
+			ViewSource:     "View Source \u2192",
+			Balanced:       "Balanced",
+			Unbalanced:     "Unbalanced",
+			Totals:         "TOTALS",
+			Difference:     "DIFFERENCE",
+			TabLines:       "Journal Lines",
+			TabAttachments: "Attachments",
 		},
 		Confirm: JournalConfirmLabels{
 			Post:    "Are you sure you want to post this journal entry? This action cannot be undone.",
