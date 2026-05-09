@@ -1,0 +1,52 @@
+{{/*
+depreciation-policy-preview — Surface F read-only preview drawer.
+
+URL: GET /action/asset-policy/depreciation-preview/{category_id}
+Data: action.DepreciationPreviewPageData
+Labels: all text via .Labels.* — no English literals.
+Selectors per flow.md:
+  data-testid="depreciation-policy-preview-form"
+*/}}
+
+{{define "depreciation-policy-preview"}}
+<div class="sheet-body" data-testid="depreciation-policy-preview-form">
+    {{if not .Rows}}
+        {{template "empty-state" (dict
+            "Icon"  "icon-trending-down"
+            "Title" .Labels.RunForm.EmptyTitle
+            "Desc"  .Labels.RunForm.EmptyMessage
+        )}}
+    {{else}}
+        <table class="data-table data-table--compact">
+            <thead>
+                <tr>
+                    <th>{{.Labels.CategoryRunForm.ColAsset}}</th>
+                    <th class="cell-right">{{.Labels.CategoryRunForm.ColPending}}</th>
+                    <th class="cell-right">{{.Labels.CategoryRunForm.ColAmount}}</th>
+                    <th>{{.Labels.CategoryRunForm.ColBlockers}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Rows}}
+                <tr>
+                    <td>{{.AssetName}}</td>
+                    <td class="cell-right">{{.PendingCount}}</td>
+                    <td class="cell-right">
+                        {{if gt .NextAmount 0}}
+                            {{formatCentavos .NextAmount .Currency}}
+                        {{else}}
+                            —
+                        {{end}}
+                    </td>
+                    <td>
+                        {{range .Blockers}}
+                            <span class="chip chip--warning">{{.}}</span>
+                        {{end}}
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    {{end}}
+</div>
+{{end}}

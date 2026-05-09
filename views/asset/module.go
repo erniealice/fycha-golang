@@ -15,6 +15,7 @@ import (
 	assetdetail "github.com/erniealice/fycha-golang/views/asset/detail"
 	assetform "github.com/erniealice/fycha-golang/views/asset/form"
 	assetlist "github.com/erniealice/fycha-golang/views/asset/list"
+
 )
 
 // ModuleDeps holds all dependencies for the asset module.
@@ -23,6 +24,10 @@ type ModuleDeps struct {
 	CommonLabels pyeza.CommonLabels
 	Labels       fycha.AssetLabels
 	TableLabels  types.TableLabels
+
+	// Depreciation Run + Revaluation labels (Surface A / E)
+	DepreciationRunLabels  fycha.DepreciationRunLabels
+	AssetRevaluationLabels fycha.AssetRevaluationLabels
 
 	// CRUD operations (wired from block.go via raw SQL)
 	CreateAsset func(ctx context.Context, asset *assetform.Record) error
@@ -33,6 +38,22 @@ type ModuleDeps struct {
 	ListAssets  func(ctx context.Context, status string) ([]assetlist.AssetRow, error)
 	NewID       func() string
 
+	// Depreciation-fields lock check (wired when espyna use cases are available)
+	DepreciationFieldsLockedFn func(ctx context.Context, assetID string) (bool, error)
+
+	// Depreciation run use-case wrappers (Surface A)
+	ListDepreciationCandidates func(ctx context.Context, assetID, asOfDate string) ([]assetaction.DepreciationCandidate, error)
+	GenerateDepreciationRun    func(ctx context.Context, req assetaction.DepreciationRunRequest) (*assetaction.DepreciationRunResult, error)
+	// AssetDepreciationRunURL is the run-detail URL for toast link plumbing.
+	// Injected by block.go via WithAssetDepreciationRunURL.
+	AssetDepreciationRunURL string
+	// DepreciationRunRoutes for resolving run-detail links
+	DepreciationRunRoutes fycha.DepreciationRunRoutes
+
+	// Revaluation use-case wrappers (Surface E)
+	RevalueAsset       func(ctx context.Context, req assetaction.RevaluationRequest) (*assetaction.RevaluationResult, error)
+	PreviewRevaluation func(ctx context.Context, assetID string, newFairValue int64) (*assetaction.RevaluationPreview, error)
+
 	// Attachment operations
 	UploadFile       func(ctx context.Context, bucket, key string, content []byte, contentType string) error
 	ListAttachments  func(ctx context.Context, moduleKey, foreignKey string) (*attachmentpb.ListAttachmentsResponse, error)
@@ -42,20 +63,25 @@ type ModuleDeps struct {
 
 // Module holds all constructed asset views.
 type Module struct {
-	routes           fycha.AssetRoutes
-	Dashboard        view.View
-	List             view.View
-	Table            view.View
-	Detail           view.View
-	TabAction        view.View
-	Add              view.View
-	Edit             view.View
-	Delete           view.View
-	BulkDelete       view.View
-	SetStatus        view.View
-	BulkSetStatus    view.View
-	AttachmentUpload view.View
-	AttachmentDelete view.View
+	routes               fycha.AssetRoutes
+	Dashboard            view.View
+	List                 view.View
+	Table                view.View
+	Detail               view.View
+	TabAction            view.View
+	Add                  view.View
+	Edit                 view.View
+	Delete               view.View
+	BulkDelete           view.View
+	SetStatus            view.View
+	BulkSetStatus        view.View
+	AttachmentUpload     view.View
+	AttachmentDelete     view.View
+	// Surface A — per-asset depreciation-run drawer
+	DepreciationRun      view.View
+	// Surface E — per-asset revaluation drawer + preview endpoint
+	Revaluation         view.View
+	RevaluationPreview  view.View
 }
 
 // NewModule creates an asset module with all views wired.
@@ -68,14 +94,15 @@ func NewModule(deps *ModuleDeps) *Module {
 		ListAssets:   deps.ListAssets,
 	}
 	actionDeps := &assetaction.Deps{
-		Routes:      deps.Routes,
-		Labels:      deps.Labels,
-		CreateAsset: deps.CreateAsset,
-		ReadAsset:   deps.ReadAsset,
-		UpdateAsset: deps.UpdateAsset,
-		DeleteAsset: deps.DeleteAsset,
-		SetActive:   deps.SetActive,
-		NewID:       deps.NewID,
+		Routes:                     deps.Routes,
+		Labels:                     deps.Labels,
+		CreateAsset:                deps.CreateAsset,
+		ReadAsset:                  deps.ReadAsset,
+		UpdateAsset:                deps.UpdateAsset,
+		DeleteAsset:                deps.DeleteAsset,
+		SetActive:                  deps.SetActive,
+		NewID:                      deps.NewID,
+		DepreciationFieldsLockedFn: deps.DepreciationFieldsLockedFn,
 	}
 	detailDeps := &assetdetail.DetailViewDeps{
 		AttachmentOps: attachment.AttachmentOps{
@@ -85,10 +112,12 @@ func NewModule(deps *ModuleDeps) *Module {
 			DeleteAttachment: deps.DeleteAttachment,
 			NewAttachmentID:  deps.NewID,
 		},
-		Routes:       deps.Routes,
-		Labels:       deps.Labels,
-		CommonLabels: deps.CommonLabels,
-		TableLabels:  deps.TableLabels,
+		Routes:                 deps.Routes,
+		Labels:                 deps.Labels,
+		CommonLabels:           deps.CommonLabels,
+		TableLabels:            deps.TableLabels,
+		DepreciationRunLabels:  deps.DepreciationRunLabels,
+		AssetRevaluationLabels: deps.AssetRevaluationLabels,
 	}
 	dashboardDeps := &assetdashboard.Deps{
 		Routes:       deps.Routes,
@@ -96,21 +125,40 @@ func NewModule(deps *ModuleDeps) *Module {
 		CommonLabels: deps.CommonLabels,
 	}
 
+	depRunDeps := &assetaction.DepreciationRunDeps{
+		Routes:                     deps.Routes,
+		DepreciationRunRoutes:      deps.DepreciationRunRoutes,
+		Labels:                     deps.DepreciationRunLabels,
+		ListDepreciationCandidates: deps.ListDepreciationCandidates,
+		GenerateDepreciationRun:    deps.GenerateDepreciationRun,
+		AssetDepreciationRunURL:    deps.AssetDepreciationRunURL,
+	}
+
+	revalDeps := &assetaction.RevaluationDeps{
+		Routes:             deps.Routes,
+		Labels:             deps.AssetRevaluationLabels,
+		RevalueAsset:       deps.RevalueAsset,
+		PreviewRevaluation: deps.PreviewRevaluation,
+	}
+
 	return &Module{
-		routes:           deps.Routes,
-		Dashboard:        assetdashboard.NewView(dashboardDeps),
-		List:             assetlist.NewView(listDeps),
-		Table:            assetlist.NewTableView(listDeps),
-		Detail:           assetdetail.NewView(detailDeps),
-		TabAction:        assetdetail.NewTabAction(detailDeps),
-		Add:              assetaction.NewAddAction(actionDeps),
-		Edit:             assetaction.NewEditAction(actionDeps),
-		Delete:           assetaction.NewDeleteAction(actionDeps),
-		BulkDelete:       assetaction.NewBulkDeleteAction(actionDeps),
-		SetStatus:        assetaction.NewSetStatusAction(actionDeps),
-		BulkSetStatus:    assetaction.NewBulkSetStatusAction(actionDeps),
-		AttachmentUpload: assetdetail.NewAttachmentUploadAction(detailDeps),
-		AttachmentDelete: assetdetail.NewAttachmentDeleteAction(detailDeps),
+		routes:              deps.Routes,
+		Dashboard:           assetdashboard.NewView(dashboardDeps),
+		List:                assetlist.NewView(listDeps),
+		Table:               assetlist.NewTableView(listDeps),
+		Detail:              assetdetail.NewView(detailDeps),
+		TabAction:           assetdetail.NewTabAction(detailDeps),
+		Add:                 assetaction.NewAddAction(actionDeps),
+		Edit:                assetaction.NewEditAction(actionDeps),
+		Delete:              assetaction.NewDeleteAction(actionDeps),
+		BulkDelete:          assetaction.NewBulkDeleteAction(actionDeps),
+		SetStatus:           assetaction.NewSetStatusAction(actionDeps),
+		BulkSetStatus:       assetaction.NewBulkSetStatusAction(actionDeps),
+		AttachmentUpload:    assetdetail.NewAttachmentUploadAction(detailDeps),
+		AttachmentDelete:    assetdetail.NewAttachmentDeleteAction(detailDeps),
+		DepreciationRun:     assetaction.NewDepreciationRunAction(depRunDeps),
+		Revaluation:         assetaction.NewRevaluationAction(revalDeps),
+		RevaluationPreview:  assetaction.NewRevaluationPreviewAction(revalDeps),
 	}
 }
 
@@ -134,5 +182,18 @@ func (m *Module) RegisterRoutes(r view.RouteRegistrar) {
 		r.GET(m.routes.AttachmentUploadURL, m.AttachmentUpload)
 		r.POST(m.routes.AttachmentUploadURL, m.AttachmentUpload)
 		r.POST(m.routes.AttachmentDeleteURL, m.AttachmentDelete)
+	}
+	// Surface A — per-asset depreciation-run drawer
+	if m.DepreciationRun != nil {
+		r.GET(m.routes.DepreciationRunURL, m.DepreciationRun)
+		r.POST(m.routes.DepreciationRunURL, m.DepreciationRun)
+	}
+	// Surface E — per-asset revaluation drawer + preview
+	if m.Revaluation != nil {
+		r.GET(m.routes.RevaluationURL, m.Revaluation)
+		r.POST(m.routes.RevaluationURL, m.Revaluation)
+	}
+	if m.RevaluationPreview != nil {
+		r.POST(m.routes.RevaluationPreviewURL, m.RevaluationPreview)
 	}
 }

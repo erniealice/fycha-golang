@@ -57,6 +57,9 @@ func fychaRouteContractCases() []routeContractCase {
 		{name: "DepositRoutes", routes: DefaultDepositRoutes(), routeMap: DefaultDepositRoutes().RouteMap()},
 		{name: "PettyCashRoutes", routes: DefaultPettyCashRoutes(), routeMap: DefaultPettyCashRoutes().RouteMap()},
 		{name: "PrepaymentRoutes", routes: DefaultPrepaymentRoutes(), routeMap: DefaultPrepaymentRoutes().RouteMap()},
+		{name: "LapsingScheduleRoutes", routes: DefaultLapsingScheduleRoutes(), routeMap: DefaultLapsingScheduleRoutes().RouteMap()},
+		{name: "DepreciationRunRoutes", routes: DefaultDepreciationRunRoutes(), routeMap: DefaultDepreciationRunRoutes().RouteMap()},
+		{name: "AssetCategoryDepreciationRoutes", routes: DefaultAssetCategoryDepreciationRoutes(), routeMap: DefaultAssetCategoryDepreciationRoutes().RouteMap()},
 	}
 }
 

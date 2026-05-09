@@ -1,0 +1,162 @@
+{{/* Full page — for direct access / non-HTMX */}}
+{{define "depreciation-run-detail"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial — for HTMX navigation */}}
+{{define "depreciation-run-detail-content"}}
+<div class="page-content detail-layout"
+     data-page-title="{{.Title}}">
+
+    {{/* ─── Tabs ─── */}}
+    <div class="detail-tabs">
+        {{template "tabs" (dict "Items" .TabItems "ActiveTab" .ActiveTab "Variant" "default" "ID" "depreciation-run-detail-tabs")}}
+    </div>
+
+    {{/* ─── Tab Body ─── */}}
+    <div id="tabContent" class="detail-body" role="tabpanel" aria-labelledby="tab-{{.ActiveTab}}">
+        {{if eq .ActiveTab "summary"}}
+        {{template "depreciation-run-summary-tab" .}}
+        {{end}}
+        {{if eq .ActiveTab "selections"}}
+        {{template "depreciation-run-selections-tab" .}}
+        {{end}}
+        {{if eq .ActiveTab "results"}}
+        {{template "depreciation-run-results-tab" .}}
+        {{end}}
+        {{if eq .ActiveTab "transactions"}}
+        {{template "depreciation-run-transactions-tab" .}}
+        {{end}}
+        {{if eq .ActiveTab "history"}}
+        {{template "depreciation-run-history-tab" .}}
+        {{end}}
+    </div>
+</div>
+{{end}}
+
+{{/* ─────────────────────────────────────────────────────────────────────────
+    SUMMARY TAB
+───────────────────────────────────────────────────────────────────────── */}}
+{{define "depreciation-run-summary-tab"}}
+<div class="tab-scroll" data-testid="depreciation-run-summary-stats">
+
+    {{/* ── Possibly-interrupted warning banner ── */}}
+    {{if .IsPossiblyInterrupted}}
+    <div data-testid="depreciation-run-possibly-interrupted">
+    {{template "alert" (dict
+        "State"   "warning"
+        "Message" .Labels.Detail.Summary.PossiblyInterruptedNote
+    )}}
+    </div>
+    {{end}}
+
+    {{/* ── Totals stat cards ── */}}
+    <div class="stats-row">
+        {{template "stat-card" (dict
+            "Icon"  "icon-check-circle"
+            "Value" (printf "%d" .Run.CreatedCount)
+            "Label" .Labels.Detail.Summary.Created
+            "Color" "sage"
+        )}}
+        {{template "stat-card" (dict
+            "Icon"  "icon-skip-forward"
+            "Value" (printf "%d" .Run.SkippedCount)
+            "Label" .Labels.Detail.Summary.Skipped
+            "Color" "amber"
+        )}}
+        {{template "stat-card" (dict
+            "Icon"  "icon-x-circle"
+            "Value" (printf "%d" .Run.ErroredCount)
+            "Label" .Labels.Detail.Summary.Errored
+            "Color" "terracotta"
+        )}}
+    </div>
+
+    {{/* ── Info sections ── */}}
+    {{template "pyeza-info-sections" (dict
+        "TestID"   "depreciation-run-summary-info"
+        "Sections" (list
+            (dict "Title" ""
+                  "Rows" (list
+                      (dict "Label" .Labels.Detail.Summary.Status
+                            "Value" (printf "%s" .Run.Status))
+                      (dict "Label" .Labels.Detail.Summary.Scope
+                            "Value" (printf "%s" .Run.ScopeLabel))
+                      (dict "Label" .Labels.Detail.Summary.AsOfDate
+                            "Value" (printf "%s" .Run.AsOfDate))
+                      (dict "Label" .Labels.Detail.Summary.Initiator
+                            "Value" (printf "%s" .Run.InitiatorName))
+                      (dict "Label" .Labels.Detail.Summary.InitiatedAt
+                            "Value" (printf "%s" .Run.InitiatedAt))
+                      (dict "Label" .Labels.Detail.Summary.CompletedAt
+                            "Value" (printf "%s" .Run.CompletedAt))
+                  )
+            )
+        )
+    )}}
+
+</div>
+{{end}}
+
+{{/* ─────────────────────────────────────────────────────────────────────────
+    SELECTIONS TAB
+───────────────────────────────────────────────────────────────────────── */}}
+{{define "depreciation-run-selections-tab"}}
+<div class="tab-scroll">
+    {{if .SelectionsTable}}
+        {{template "table-card" .SelectionsTable}}
+    {{else}}
+        {{template "empty-state" (dict
+            "Icon"  "icon-list"
+            "Title" .Labels.List.Empty.Pending.Title
+            "Desc"  .Labels.List.Empty.Pending.Message
+        )}}
+    {{end}}
+</div>
+{{end}}
+
+{{/* ─────────────────────────────────────────────────────────────────────────
+    RESULTS TAB
+───────────────────────────────────────────────────────────────────────── */}}
+{{define "depreciation-run-results-tab"}}
+<div class="tab-scroll">
+    {{if .ResultsTable}}
+        {{template "table-card" .ResultsTable}}
+    {{else}}
+        {{template "empty-state" (dict
+            "Icon"  "icon-check-circle"
+            "Title" .Labels.List.Empty.Complete.Title
+            "Desc"  .Labels.List.Empty.Complete.Message
+        )}}
+    {{end}}
+</div>
+{{end}}
+
+{{/* ─────────────────────────────────────────────────────────────────────────
+    TRANSACTIONS TAB
+───────────────────────────────────────────────────────────────────────── */}}
+{{define "depreciation-run-transactions-tab"}}
+<div class="tab-scroll">
+    {{if .TransactionsTable}}
+        {{template "table-card" .TransactionsTable}}
+    {{else}}
+        {{template "empty-state" (dict
+            "Icon"  "icon-activity"
+            "Title" .Labels.List.Empty.Complete.Title
+            "Desc"  .Labels.List.Empty.Complete.Message
+        )}}
+    {{end}}
+</div>
+{{end}}
+
+{{/* ─────────────────────────────────────────────────────────────────────────
+    HISTORY TAB — audit log of state transitions
+───────────────────────────────────────────────────────────────────────── */}}
+{{define "depreciation-run-history-tab"}}
+<div class="tab-scroll">
+    {{template "alert" (dict
+        "State"   "info"
+        "Message" .Labels.Detail.Tabs.History
+    )}}
+</div>
+{{end}}

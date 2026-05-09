@@ -1,0 +1,114 @@
+{{/*
+asset-revaluation-drawer-form — Surface E per-asset revaluation drawer.
+
+Visible only when asset.measurement_model = REVALUATION.
+Loaded into #sheetContent via HTMX GET from the page-pillar [Revalue] action.
+
+Data: action.revaluationFormData
+Labels: all text via .Labels.* — no English literals.
+*/}}
+
+{{define "asset-revaluation-drawer-form"}}
+<form
+    hx-post="{{.FormAction}}"
+    hx-swap="none"
+    hx-on::after-request="lf.Sheet.handleResponse(event)"
+    data-testid="asset-revaluation-form"
+>
+    <input type="hidden" name="asset_id" value="{{.AssetID}}">
+
+    <div class="sheet-body">
+        {{template "form-section" (dict "Title" .Labels.Title)}}
+
+        <div class="form-row single">
+            {{template "form-group" (dict
+                "Type"     "number"
+                "Name"     "new_fair_value"
+                "Label"    .Labels.NewFairValue
+                "Required" true
+                "ID"       "asset-revaluation-new-fair-value"
+                "TestId"   "asset-revaluation-new-fair-value"
+                "HxPost"   .PreviewURL
+                "HxTarget" "#asset-revaluation-preview-section"
+                "HxTrigger" "change"
+                "HxInclude" "form"
+            )}}
+        </div>
+
+        <div class="form-row single">
+            {{template "form-group" (dict
+                "Type"     "text"
+                "Name"     "appraiser_name"
+                "Label"    .Labels.AppraiserName
+                "ID"       "asset-revaluation-appraiser-name"
+                "TestId"   "asset-revaluation-appraiser-name"
+            )}}
+        </div>
+
+        <div class="form-row single">
+            {{template "form-group" (dict
+                "Type"     "text"
+                "Name"     "valuation_method"
+                "Label"    .Labels.ValuationMethod
+                "ID"       "asset-revaluation-valuation-method"
+                "TestId"   "asset-revaluation-valuation-method"
+            )}}
+        </div>
+
+        <div class="form-row single">
+            {{template "form-group" (dict
+                "Type"     "textarea"
+                "Name"     "notes"
+                "Label"    .Labels.Notes
+            )}}
+        </div>
+
+        {{/* Live preview — HTMX inner-swap on field change */}}
+        <div id="asset-revaluation-preview-section">
+            {{template "asset-revaluation-preview-partial" .}}
+        </div>
+    </div>
+
+    <div class="sheet-footer">
+        <button
+            type="button"
+            class="btn btn-secondary"
+            data-sheet-close
+        >
+            {{.Labels.CancelLabel}}
+        </button>
+        <button
+            type="submit"
+            class="btn btn-primary"
+            data-testid="asset-revaluation-submit-btn"
+        >
+            {{.Labels.SubmitLabel}}
+        </button>
+    </div>
+</form>
+{{end}}
+
+
+{{/*
+asset-revaluation-preview-partial — inner partial returned by the preview endpoint.
+Shows the computed revaluation amount + PnL/OCI split.
+*/}}
+{{define "asset-revaluation-preview-partial"}}
+{{if .Preview}}
+<div class="form-preview-section" data-testid="asset-revaluation-preview-section">
+    <h4 class="form-preview-title">{{.Labels.PreviewTitle}}</h4>
+    <dl class="form-preview-dl">
+        <dt>{{.Labels.RevaluationAmount}}</dt>
+        <dd data-testid="asset-revaluation-preview-amount">{{.Preview.RevaluationAmountFmt}}</dd>
+        <dt>{{.Labels.PnlSplit}}</dt>
+        <dd data-testid="asset-revaluation-preview-split">{{.Preview.PnLAmountFmt}}</dd>
+        <dt>{{.Labels.OciSplit}}</dt>
+        <dd>{{.Preview.OCIAmountFmt}}</dd>
+    </dl>
+</div>
+{{end}}
+{{end}}
+
+
+{{/* Empty fragment — returned on success to close drawer */}}
+{{define "asset-revaluation-success"}}{{end}}

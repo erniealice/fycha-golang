@@ -1,0 +1,22 @@
+{{/*
+depreciation-policies — Surface F actionable Depreciation Policies page.
+
+URL: /app/assets/settings/depreciation-policies
+Data: policies.PageData
+Labels: all text via .Labels.* — no English literals.
+Selectors per flow.md:
+  data-testid="depreciation-policies-table"      (table wrapper — set on pyeza table)
+  data-testid="depreciation-policy-row"          (per-row — set in DataAttrs)
+  data-testid="depreciation-policy-action-preview"
+  data-testid="depreciation-policy-action-run"
+  data-testid="depreciation-policy-assets-count"
+  data-testid="depreciation-policy-assets-deviating-count"
+*/}}
+
+{{define "depreciation-policies"}}
+{{template "layout" .}}
+{{end}}
+
+{{define "depreciation-policies-content"}}
+{{template "table-card" .Table}}
+{{end}}

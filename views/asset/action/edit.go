@@ -25,47 +25,49 @@ func NewEditAction(deps *Deps) view.View {
 		id := viewCtx.Request.PathValue("id")
 
 		if viewCtx.Request.Method == http.MethodGet {
+			// Check whether depreciation fields are locked (posted depreciation exists).
+			depLocked := checkDepreciationFieldsLocked(ctx, deps, id)
+
 			// Load asset from DB for edit form pre-fill
 			if deps.ReadAsset != nil {
 				record, err := deps.ReadAsset(ctx, id)
 				if err != nil {
 					log.Printf("asset read error for edit: %v", err)
-					return fycha.HTMXError("Failed to read asset")
+					return fycha.HTMXError(deps.Labels.Actions.IDRequired)
 				}
 				return view.OK("asset-drawer-form", &assetform.Data{
-					FormAction:         route.ResolveURL(deps.Routes.EditURL, "id", record.ID),
-					IsEdit:             true,
-					ID:                 record.ID,
-					Name:               record.Name,
-					AssetNumber:        record.AssetNumber,
-					Description:        record.Description,
-					CategoryID:         record.AssetCategoryID,
-					LocationID:         record.LocationID,
-					AcquisitionCost:    fmt.Sprintf("%.2f", record.AcquisitionCost),
-					SalvageValue:       fmt.Sprintf("%.2f", record.SalvageValue),
-					UsefulLifeMonths:   strconv.Itoa(record.UsefulLifeMonths),
-					DepreciationMethod: record.DepreciationMethod,
-					Active:             record.Active,
-					Labels:             labelsFromDeps(deps),
-					CommonLabels:       nil,
+					FormAction:                  route.ResolveURL(deps.Routes.EditURL, "id", record.ID),
+					IsEdit:                      true,
+					ID:                          record.ID,
+					Name:                        record.Name,
+					AssetNumber:                 record.AssetNumber,
+					Description:                 record.Description,
+					CategoryID:                  record.AssetCategoryID,
+					LocationID:                  record.LocationID,
+					AcquisitionCost:             fmt.Sprintf("%.2f", record.AcquisitionCost),
+					SalvageValue:                fmt.Sprintf("%.2f", record.SalvageValue),
+					UsefulLifeMonths:            strconv.Itoa(record.UsefulLifeMonths),
+					DepreciationMethod:          record.DepreciationMethod,
+					Active:                      record.Active,
+					DepreciationFieldsLocked:    depLocked,
+					Labels:                      labelsFromDeps(deps),
+					CommonLabels:                nil,
 				})
 			}
 
 			// Fallback: mock data
 			return view.OK("asset-drawer-form", &assetform.Data{
-				FormAction:         route.ResolveURL(deps.Routes.EditURL, "id", id),
-				IsEdit:             true,
-				ID:                 id,
-				Name:               "Mock Asset",
-				AssetNumber:        "FA-001",
-				Description:        "Mock asset for development",
-				AcquisitionCost:    "85000.00",
-				SalvageValue:       "5000.00",
-				UsefulLifeMonths:   "60",
-				DepreciationMethod: "straight_line",
-				Active:             true,
-				Labels:             labelsFromDeps(deps),
-				CommonLabels:       nil,
+				FormAction:               route.ResolveURL(deps.Routes.EditURL, "id", id),
+				IsEdit:                   true,
+				ID:                       id,
+				AcquisitionCost:          "85000.00",
+				SalvageValue:             "5000.00",
+				UsefulLifeMonths:         "60",
+				DepreciationMethod:       "straight_line",
+				Active:                   true,
+				DepreciationFieldsLocked: depLocked,
+				Labels:                   labelsFromDeps(deps),
+				CommonLabels:             nil,
 			})
 		}
 
@@ -76,7 +78,7 @@ func NewEditAction(deps *Deps) view.View {
 
 		name := viewCtx.Request.FormValue("name")
 		if name == "" {
-			return fycha.HTMXError("Name is required")
+			return fycha.HTMXError(deps.Labels.Actions.InvalidFormData)
 		}
 
 		acqCost, _ := strconv.ParseFloat(viewCtx.Request.FormValue("acquisition_cost"), 64)
@@ -106,12 +108,31 @@ func NewEditAction(deps *Deps) view.View {
 		if deps.UpdateAsset != nil {
 			if err := deps.UpdateAsset(ctx, record); err != nil {
 				log.Printf("asset update error: %v", err)
-				return fycha.HTMXError("Failed to update asset")
+				return fycha.HTMXError(deps.Labels.Actions.InvalidFormData)
 			}
 		} else {
-			log.Printf("Mock update asset %s: %s (no UpdateAsset wired)", id, name)
+			log.Printf("mock update asset %s: %s (no UpdateAsset wired)", id, name)
 		}
 
 		return fycha.HTMXSuccess("assets-table")
 	})
+}
+
+// checkDepreciationFieldsLocked returns true when a posted depreciation_schedule
+// row exists for the given asset, locking useful_life_months / depreciation_method /
+// salvage_value / depreciation_start_date fields in the edit drawer.
+//
+// Implementation note: in the current mock-data phase this always returns false.
+// When the espyna asset use cases are wired in block.go the caller can pass a
+// deps.DepreciationFieldsLockedFn to perform the real DB check.
+func checkDepreciationFieldsLocked(_ context.Context, deps *Deps, id string) bool {
+	if deps.DepreciationFieldsLockedFn != nil {
+		locked, err := deps.DepreciationFieldsLockedFn(context.Background(), id)
+		if err != nil {
+			log.Printf("checkDepreciationFieldsLocked: %v", err)
+			return false
+		}
+		return locked
+	}
+	return false
 }

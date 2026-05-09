@@ -30,12 +30,14 @@ import (
 	consumer "github.com/erniealice/espyna-golang/consumer"
 
 	assetpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset"
+	deprunpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/depreciation_run"
 	attachmentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/document/attachment"
 	commonpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/common"
 	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
 
 	fycha "github.com/erniealice/fycha-golang"
 	assetmod "github.com/erniealice/fycha-golang/views/asset"
+	assetaction "github.com/erniealice/fycha-golang/views/asset/action"
 	assetform "github.com/erniealice/fycha-golang/views/asset/form"
 	assetlist "github.com/erniealice/fycha-golang/views/asset/list"
 	cashmod "github.com/erniealice/fycha-golang/views/cash"
@@ -47,8 +49,10 @@ import (
 	payrollmod "github.com/erniealice/fycha-golang/views/payroll"
 	reportmod "github.com/erniealice/fycha-golang/views/reports"
 	cashbookview "github.com/erniealice/fycha-golang/views/reports/cash_book"
-	depreciationview "github.com/erniealice/fycha-golang/views/reports/depreciation_policies"
-	lapsingview "github.com/erniealice/fycha-golang/views/reports/lapsing_schedule"
+	assetcataction "github.com/erniealice/fycha-golang/views/asset_category/action"
+	assetcatpolicies "github.com/erniealice/fycha-golang/views/asset_category/policies"
+	depreciationrunmod "github.com/erniealice/fycha-golang/views/depreciation_run"
+	lapsinglist "github.com/erniealice/fycha-golang/views/lapsing_schedule/list"
 )
 
 // ---------------------------------------------------------------------------
@@ -95,6 +99,10 @@ type blockConfig struct {
 	cash      bool
 	expenses  bool
 	financial bool
+	// assetDepreciationRunURL is the resolved run-detail URL template plumbed into
+	// the Surface A drawer so toast links point to the correct run-detail page.
+	// Set via WithAssetDepreciationRunURL (Wave 2 hard requirement).
+	assetDepreciationRunURL string
 }
 
 func WithReports() BlockOption   { return func(c *blockConfig) { c.reports = true } }
@@ -106,6 +114,20 @@ func WithPayroll() BlockOption   { return func(c *blockConfig) { c.payroll = tru
 func WithCash() BlockOption      { return func(c *blockConfig) { c.cash = true } }
 func WithExpenses() BlockOption  { return func(c *blockConfig) { c.expenses = true } }
 func WithFinancial() BlockOption { return func(c *blockConfig) { c.financial = true } }
+
+// WithAssetDepreciationRunURL injects the run-detail URL into the block so
+// the Surface A drawer can include a resolved link in its success toast payload.
+// Wave 2 hard requirement — must be called before routes register.
+//
+// Example:
+//
+//	fychablock.Block(
+//	    fychablock.WithAsset(),
+//	    fychablock.WithAssetDepreciationRunURL(fycha.DepreciationRunDetailURL),
+//	)
+func WithAssetDepreciationRunURL(url string) BlockOption {
+	return func(c *blockConfig) { c.assetDepreciationRunURL = url }
+}
 
 func (c *blockConfig) wantReports() bool   { return c.enableAll || c.reports }
 func (c *blockConfig) wantAsset() bool     { return c.enableAll || c.asset }
@@ -191,6 +213,15 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		equityRoutes := fycha.DefaultEquityRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "equity", &equityRoutes)
 
+		lapsingScheduleRoutes := fycha.DefaultLapsingScheduleRoutes()
+		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "lapsing_schedule", &lapsingScheduleRoutes)
+
+		depreciationRunRoutes := fycha.DefaultDepreciationRunRoutes()
+		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "depreciation_run", &depreciationRunRoutes)
+
+		assetCategoryDepreciationRoutes := fycha.DefaultAssetCategoryDepreciationRoutes()
+		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "asset_category_depreciation", &assetCategoryDepreciationRoutes)
+
 		// --- Load labels ---
 		var reportsLabels fycha.ReportsLabels
 		if err := translations.LoadPath("en", ctx.BusinessType, "report.json", "", &reportsLabels); err != nil {
@@ -214,6 +245,15 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 
 		loanLabels := fycha.DefaultLoanLabels()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "loan.json", "", &loanLabels)
+
+		depreciationRunLabels := fycha.DefaultDepreciationRunLabels()
+		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "depreciation_run.json", "", &depreciationRunLabels)
+
+		assetRevaluationLabels := fycha.DefaultAssetRevaluationLabels()
+		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "asset_revaluation.json", "", &assetRevaluationLabels)
+
+		depreciationPoliciesLabels := fycha.DefaultDepreciationPoliciesLabels()
+		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "depreciation_policies.json", "", &depreciationPoliciesLabels)
 
 		loanPaymentLabels := fycha.DefaultLoanPaymentLabels()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "loan_payment.json", "", &loanPaymentLabels)
@@ -242,6 +282,12 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 				CommonLabels: ctx.Common,
 				Labels:       assetLabels,
 				TableLabels:  ctx.Table,
+				// Depreciation Run + Revaluation labels (Surface A / E)
+				DepreciationRunLabels:   depreciationRunLabels,
+				AssetRevaluationLabels:  assetRevaluationLabels,
+				// Depreciation run routes + toast URL (Surface A)
+				DepreciationRunRoutes:   depreciationRunRoutes,
+				AssetDepreciationRunURL: cfg.assetDepreciationRunURL,
 				// Attachments
 				UploadFile:       uploadFile,
 				ListAttachments:  listAttachments,
@@ -313,12 +359,148 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 				}
 			}
 
+			// Wire Surface A (depreciation-run) use cases.
+			if useCases != nil && useCases.Asset != nil && useCases.Asset.DepreciationRun != nil {
+				udr := useCases.Asset.DepreciationRun
+				if udr.ListDepreciationCandidates != nil {
+					ucsCopy := useCases // capture for closure
+					assetDeps.ListDepreciationCandidates = func(fctx context.Context, assetID, asOfDate string) ([]assetaction.DepreciationCandidate, error) {
+						return listDepreciationCandidatesForAsset(fctx, ucsCopy, assetID, asOfDate)
+					}
+				}
+				if udr.GenerateDepreciationRun != nil {
+					ucsCopy := useCases // capture for closure
+					assetDeps.GenerateDepreciationRun = func(fctx context.Context, req assetaction.DepreciationRunRequest) (*assetaction.DepreciationRunResult, error) {
+						return generateDepreciationRunForAsset(fctx, ucsCopy, req)
+					}
+				}
+				// DepreciationFieldsLockedFn: fields are locked once any run has been posted.
+				// A dedicated use case (GetAssetDepreciationLock) is pending Wave 3 espyna work.
+				// For now we expose the hook so the edit form can call it — nil means unlocked.
+			}
+
+			// Wire Surface E (revaluation) use cases.
+			// RevalueAsset and PreviewRevaluation are wired when the asset revaluation
+			// use case is available (Wave 3 espyna wiring — nil-safe fallback for now).
+			// assetDeps.RevalueAsset / assetDeps.PreviewRevaluation remain nil until wired.
+
 			assetmod.NewModule(assetDeps).RegisterRoutes(ctx.Routes)
 
-			// Assets → Reports → Lapsing Schedule
-			ctx.Routes.GET(assetRoutes.LapsingScheduleURL, lapsingview.NewLapsingScheduleView(ctx.Common, ctx.Table))
-			// Assets → Settings → Depreciation Policies
-			ctx.Routes.GET(assetRoutes.DepreciationPoliciesURL, depreciationview.NewDepreciationPoliciesView(ctx.Common, ctx.Table))
+			// ---------------------------------------------------------------------------
+			// Surface B — Lapsing Schedule live list page (replaces mock at /app/assets/reports/lapsing-schedule)
+			// ---------------------------------------------------------------------------
+			lapsingDeps := &lapsinglist.ViewDeps{
+				Routes:                lapsingScheduleRoutes,
+				AssetRoutes:           assetRoutes,
+				DepreciationRunRoutes: depreciationRunRoutes,
+				Labels:                depreciationRunLabels,
+				CommonLabels:          ctx.Common,
+				TableLabels:           fychaTableLabels,
+			}
+			// Wire ListCandidates when depreciation use cases are available.
+			if useCases != nil && useCases.Asset != nil && useCases.Asset.DepreciationRun != nil &&
+				useCases.Asset.DepreciationRun.ListDepreciationCandidates != nil {
+				lapsingDeps.ListCandidates = func(fctx context.Context, asOfDate, cursor string, limit int32) ([]lapsinglist.CandidateRow, string, error) {
+					return listCandidatesWorkspace(fctx, useCases, asOfDate, cursor, limit)
+				}
+			}
+			// Register Surface B at new URL.
+			ctx.Routes.GET(fycha.LapsingScheduleListURL, lapsinglist.NewView(lapsingDeps))
+			// Redirect from legacy mock URL to new URL (preserves bookmarks).
+			handleFunc(ctx.Routes, "GET", fycha.AssetLapsingScheduleURL, func(w http.ResponseWriter, r *http.Request) {
+				http.Redirect(w, r, fycha.LapsingScheduleListURL, http.StatusMovedPermanently)
+			})
+
+			// ---------------------------------------------------------------------------
+			// Surface F — Depreciation Policies actionable page (replaces mock at /app/assets/settings/depreciation-policies)
+			// ---------------------------------------------------------------------------
+			policiesDeps := &assetcatpolicies.ViewDeps{
+				Routes:       assetCategoryDepreciationRoutes,
+				Labels:       depreciationPoliciesLabels,
+				CommonLabels: ctx.Common,
+				TableLabels:  fychaTableLabels,
+			}
+			// Wire ListPolicies when asset-category use cases are available.
+			if useCases != nil && useCases.Asset != nil && useCases.Asset.AssetCategory != nil {
+				policiesDeps.ListPolicies = func(fctx context.Context) ([]assetcatpolicies.PolicyRow, error) {
+					return listPoliciesWithRollup(fctx, useCases)
+				}
+			}
+			ctx.Routes.GET(fycha.DepreciationPoliciesURL, assetcatpolicies.NewView(policiesDeps))
+
+			// ---------------------------------------------------------------------------
+			// Surface F preview drawer (read-only /action/asset-policy/depreciation-preview/{category_id})
+			// ---------------------------------------------------------------------------
+			previewDeps := &assetcataction.DepreciationPreviewDeps{
+				Routes:       assetCategoryDepreciationRoutes,
+				Labels:       depreciationRunLabels,
+				CommonLabels: ctx.Common,
+				TableLabels:  fychaTableLabels,
+			}
+			if useCases != nil && useCases.Asset != nil && useCases.Asset.DepreciationRun != nil &&
+				useCases.Asset.DepreciationRun.ListDepreciationCandidates != nil {
+				previewDeps.ListPolicyCandidates = func(fctx context.Context, categoryID, asOfDate string) ([]assetcataction.PreviewCandidateRow, error) {
+					return listCandidatesForPolicy(fctx, useCases, categoryID, asOfDate)
+				}
+			}
+			ctx.Routes.GET(fycha.AssetPolicyDepreciationPreviewURL, assetcataction.NewDepreciationPreviewView(previewDeps))
+
+			// ---------------------------------------------------------------------------
+			// Surface C — per-category / per-policy depreciation-run drawer
+			// Both URLs use the same handler; scope kind is inferred from the URL path.
+			// ---------------------------------------------------------------------------
+			categoryRunDeps := &assetcataction.CategoryDepreciationRunDeps{
+				Routes:       assetCategoryDepreciationRoutes,
+				RunRoutes:    depreciationRunRoutes,
+				Labels:       depreciationRunLabels,
+				CommonLabels: ctx.Common,
+			}
+			if useCases != nil && useCases.Asset != nil && useCases.Asset.DepreciationRun != nil {
+				udr := useCases.Asset.DepreciationRun
+				if udr.ListDepreciationCandidates != nil {
+					ucsCopy := useCases // capture for closure
+					categoryRunDeps.ListCategoryCandidates = func(fctx context.Context, categoryID, scopeKind, asOfDate string) ([]assetcataction.CategoryDepreciationRunAssetRow, error) {
+						return listCandidatesForCategory(fctx, ucsCopy, categoryID, scopeKind, asOfDate)
+					}
+				}
+				if udr.GenerateDepreciationRun != nil {
+					ucsCopy := useCases // capture for closure
+					categoryRunDeps.GenerateCategoryRun = func(fctx context.Context, req assetcataction.CategoryDepreciationRunRequest) (*assetcataction.CategoryDepreciationRunResult, error) {
+						return generateDepreciationRunForCategory(fctx, ucsCopy, req)
+					}
+				}
+			}
+			categoryRunView := assetcataction.NewCategoryDepreciationRunAction(categoryRunDeps)
+			ctx.Routes.GET(fycha.AssetCategoryDepreciationRunURL, categoryRunView)
+			ctx.Routes.POST(fycha.AssetCategoryDepreciationRunURL, categoryRunView)
+			ctx.Routes.GET(fycha.AssetPolicyDepreciationRunURL, categoryRunView)
+			ctx.Routes.POST(fycha.AssetPolicyDepreciationRunURL, categoryRunView)
+
+			// ---------------------------------------------------------------------------
+			// Surface D — Depreciation Runs history list + detail module
+			// ---------------------------------------------------------------------------
+			drDeps := &depreciationrunmod.ModuleDeps{
+				Routes:       depreciationRunRoutes,
+				Labels:       depreciationRunLabels,
+				CommonLabels: ctx.Common,
+				TableLabels:  fychaTableLabels,
+			}
+			if useCases != nil && useCases.Asset != nil && useCases.Asset.DepreciationRun != nil {
+				udr := useCases.Asset.DepreciationRun
+				if udr.ListDepreciationRuns != nil {
+					ucsCopy := useCases
+					drDeps.ListDepreciationRuns = func(fctx context.Context, scope depreciationrunmod.ListDepreciationRunsScope) ([]depreciationrunmod.DepreciationRunRow, string, error) {
+						return listDepreciationRunsForWorkspace(fctx, ucsCopy, scope)
+					}
+				}
+				if udr.ReadDepreciationRun != nil {
+					ucsCopy := useCases
+					drDeps.ReadDepreciationRun = func(fctx context.Context, id string) (*depreciationrunmod.DepreciationRunWithEntries, error) {
+						return readDepreciationRunWithEntries(fctx, ucsCopy, id)
+					}
+				}
+			}
+			depreciationrunmod.NewModule(drDeps).RegisterRoutes(ctx.Routes)
 		}
 
 		// =====================================================================
@@ -532,6 +714,225 @@ func assetToRecord(a *assetpb.Asset) *assetform.Record {
 	return r
 }
 
+// ---------------------------------------------------------------------------
+// Lapsing schedule + policy helpers
+// ---------------------------------------------------------------------------
+
+// listCandidatesWorkspace calls ListDepreciationCandidates with scope_kind=WORKSPACE
+// and maps the proto response to view-layer CandidateRow slices.
+func listCandidatesWorkspace(
+	ctx context.Context,
+	useCases *consumer.UseCases,
+	asOfDate, cursor string,
+	limit int32,
+) ([]lapsinglist.CandidateRow, string, error) {
+	req := &deprunpb.ListDepreciationCandidatesRequest{
+		ScopeKind: deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_WORKSPACE,
+		AsOfDate:  asOfDate,
+		Pagination: &commonpb.PaginationRequest{
+			Limit: limit,
+			Method: &commonpb.PaginationRequest_Cursor{
+				Cursor: &commonpb.CursorPagination{Token: cursor},
+			},
+		},
+	}
+	resp, err := consumer.ListDepreciationCandidates(useCases, ctx, req)
+	if err != nil {
+		return nil, "", err
+	}
+	rows := make([]lapsinglist.CandidateRow, 0, len(resp.GetData()))
+	for _, c := range resp.GetData() {
+		row := lapsinglist.CandidateRow{
+			AssetID:          c.GetAssetId(),
+			AssetName:        c.GetAssetName(),
+			Currency:         c.GetCurrency(),
+			CurrentBookValue: c.GetCurrentBookValue(),
+			CanRun:           len(c.GetBlockers()) == 0 && len(c.GetPeriods()) > 0,
+		}
+		if len(c.GetPeriods()) > 0 {
+			row.PendingCount = len(c.GetPeriods())
+			row.NextAmount = c.GetPeriods()[0].GetAmount()
+			row.NextPendingPeriod = c.GetPeriods()[0].GetPeriodStartDate()
+		}
+		if len(c.GetBlockers()) > 0 {
+			row.Status = "blocked"
+			row.BlockerLabel = c.GetBlockers()[0].GetLabel()
+		} else if row.PendingCount == 0 {
+			row.Status = "up_to_date"
+		} else if row.LastPostedPeriod == "" {
+			row.Status = "not_started"
+		} else {
+			row.Status = "pending"
+		}
+		rows = append(rows, row)
+	}
+	nextCursor := ""
+	if resp.GetPagination() != nil {
+		nextCursor = resp.GetPagination().GetNextCursor()
+	}
+	return rows, nextCursor, nil
+}
+
+// listPoliciesWithRollup fetches all AssetCategory rows with per-category aggregate counts.
+// Uses the new ListAssetCategoriesWithPolicyRollup use case (Wave 3 espyna enhancement).
+// AssetsInPolicy and AssetsDeviating are real counts from the Postgres bulk query.
+func listPoliciesWithRollup(
+	ctx context.Context,
+	useCases *consumer.UseCases,
+) ([]assetcatpolicies.PolicyRow, error) {
+	rollupRows, err := consumer.ListAssetCategoriesWithPolicyRollup(useCases, ctx)
+	if err != nil {
+		return nil, err
+	}
+	rows := make([]assetcatpolicies.PolicyRow, 0, len(rollupRows))
+	for _, r := range rollupRows {
+		c := r.Category
+		if c == nil {
+			continue
+		}
+		method := c.GetDefaultDepreciationMethod()
+		if c.DepreciationMethod != nil {
+			method = c.GetDepreciationMethod()
+		}
+		usefulLife := c.GetDefaultUsefulLifeMonths()
+		if c.UsefulLifeMonths != nil {
+			usefulLife = c.GetUsefulLifeMonths()
+		}
+		salvage := c.GetDefaultSalvageValuePercent()
+		if c.SalvagePct != nil {
+			salvage = c.GetSalvagePct()
+		}
+		rows = append(rows, assetcatpolicies.PolicyRow{
+			CategoryID:         c.GetId(),
+			PolicyID:           c.GetId(),
+			Name:               c.GetName(),
+			DepreciationMethod: method,
+			UsefulLifeMonths:   usefulLife,
+			SalvagePct:         salvage,
+			AssetsInPolicy:     r.AssetsInPolicy,
+			AssetsDeviating:    r.AssetsDeviating,
+		})
+	}
+	return rows, nil
+}
+
+// listCandidatesForPolicy calls ListDepreciationCandidates with scope_kind=POLICY
+// and maps results to the preview drawer's PreviewCandidateRow.
+func listCandidatesForPolicy(
+	ctx context.Context,
+	useCases *consumer.UseCases,
+	categoryID, asOfDate string,
+) ([]assetcataction.PreviewCandidateRow, error) {
+	scopeID := categoryID
+	req := &deprunpb.ListDepreciationCandidatesRequest{
+		ScopeKind: deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_POLICY,
+		ScopeId:   &scopeID,
+		AsOfDate:  asOfDate,
+	}
+	resp, err := consumer.ListDepreciationCandidates(useCases, ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	rows := make([]assetcataction.PreviewCandidateRow, 0, len(resp.GetData()))
+	for _, c := range resp.GetData() {
+		row := assetcataction.PreviewCandidateRow{
+			AssetID:      c.GetAssetId(),
+			AssetName:    c.GetAssetName(),
+			Currency:     c.GetCurrency(),
+			BookValue:    c.GetCurrentBookValue(),
+			PendingCount: len(c.GetPeriods()),
+		}
+		if len(c.GetPeriods()) > 0 {
+			row.NextAmount = c.GetPeriods()[0].GetAmount()
+		}
+		for _, b := range c.GetBlockers() {
+			row.Blockers = append(row.Blockers, b.GetLabel())
+		}
+		rows = append(rows, row)
+	}
+	return rows, nil
+}
+
+// ---------------------------------------------------------------------------
+// Surface A helpers — per-asset depreciation-run wrappers
+// ---------------------------------------------------------------------------
+
+// listDepreciationCandidatesForAsset calls ListDepreciationCandidates with
+// scope_kind=ASSET and maps the proto response to the view-layer DepreciationCandidate slice.
+func listDepreciationCandidatesForAsset(
+	ctx context.Context,
+	useCases *consumer.UseCases,
+	assetID, asOfDate string,
+) ([]assetaction.DepreciationCandidate, error) {
+	if asOfDate == "" {
+		asOfDate = "today" // espyna engine accepts "today" as a sentinel
+	}
+	req := &deprunpb.ListDepreciationCandidatesRequest{
+		ScopeKind: deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_ASSET,
+		ScopeId:   &assetID,
+		AsOfDate:  asOfDate,
+	}
+	resp, err := consumer.ListDepreciationCandidates(useCases, ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	var rows []assetaction.DepreciationCandidate
+	for _, c := range resp.GetData() {
+		for _, p := range c.GetPeriods() {
+			rows = append(rows, assetaction.DepreciationCandidate{
+				PeriodStart:        p.GetPeriodStartDate(),
+				PeriodEnd:          p.GetPeriodEndDate(),
+				ProjectedAmount:    p.GetAmount(),
+				ProjectedAmountFmt: fmt.Sprintf("₱%.2f", float64(p.GetAmount())/100),
+				ProjectedAccum:     p.GetRunningAccumulated(),
+				ProjectedAccumFmt:  fmt.Sprintf("₱%.2f", float64(p.GetRunningAccumulated())/100),
+			})
+		}
+		for _, b := range c.GetBlockers() {
+			rows = append(rows, assetaction.DepreciationCandidate{
+				Blocked:       true,
+				BlockerReason: b.GetLabel(),
+			})
+		}
+	}
+	return rows, nil
+}
+
+// generateDepreciationRunForAsset posts selected periods for a single asset
+// and maps the proto response back to the view-layer DepreciationRunResult.
+func generateDepreciationRunForAsset(
+	ctx context.Context,
+	useCases *consumer.UseCases,
+	req assetaction.DepreciationRunRequest,
+) (*assetaction.DepreciationRunResult, error) {
+	protoReq := &deprunpb.GenerateDepreciationRunRequest{
+		ScopeKind: deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_ASSET,
+		ScopeId:   &req.AssetID,
+		AsOfDate:  req.AsOfDate,
+		Selections: []*deprunpb.DepreciationRunSelection{
+			{
+				AssetId:          req.AssetID,
+				PeriodStartDates: req.PeriodStartDates,
+			},
+		},
+	}
+	resp, err := consumer.GenerateDepreciationRun(useCases, ctx, protoReq)
+	if err != nil {
+		return nil, err
+	}
+	runID := ""
+	if resp.GetRun() != nil {
+		runID = resp.GetRun().GetId()
+	}
+	return &assetaction.DepreciationRunResult{
+		RunID:        runID,
+		CreatedCount: int(resp.GetCreatedCount()),
+		SkippedCount: int(resp.GetSkippedCount()),
+		ErroredCount: int(resp.GetErroredCount()),
+		Success:      resp.GetSuccess(),
+	}, nil
+}
+
 // assetToRow converts a proto Asset to the flat assetlist.AssetRow used by the list view.
 func assetToRow(a *assetpb.Asset) assetlist.AssetRow {
 	row := assetlist.AssetRow{
@@ -549,4 +950,169 @@ func assetToRow(a *assetpb.Asset) assetlist.AssetRow {
 		row.LocationName = a.Location.GetName()
 	}
 	return row
+}
+
+// ---------------------------------------------------------------------------
+// Surface C helpers — per-category / per-policy depreciation-run wrappers
+// ---------------------------------------------------------------------------
+
+// listCandidatesForCategory calls ListDepreciationCandidates with scope_kind=CATEGORY or POLICY
+// and maps results to the Surface C CategoryDepreciationRunAssetRow slice.
+// One row per asset (not per period — the drawer shows which assets to include, not individual periods).
+func listCandidatesForCategory(
+	ctx context.Context,
+	useCases *consumer.UseCases,
+	categoryID, scopeKind, asOfDate string,
+) ([]assetcataction.CategoryDepreciationRunAssetRow, error) {
+	if asOfDate == "" {
+		asOfDate = "today"
+	}
+	proto := deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_CATEGORY
+	if scopeKind == "policy" || scopeKind == "POLICY" {
+		proto = deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_POLICY
+	}
+	req := &deprunpb.ListDepreciationCandidatesRequest{
+		ScopeKind: proto,
+		ScopeId:   &categoryID,
+		AsOfDate:  asOfDate,
+	}
+	resp, err := consumer.ListDepreciationCandidates(useCases, ctx, req)
+	if err != nil {
+		return nil, err
+	}
+	rows := make([]assetcataction.CategoryDepreciationRunAssetRow, 0, len(resp.GetData()))
+	for _, c := range resp.GetData() {
+		row := assetcataction.CategoryDepreciationRunAssetRow{
+			AssetID:      c.GetAssetId(),
+			AssetName:    c.GetAssetName(),
+			Currency:     c.GetCurrency(),
+			BookValue:    c.GetCurrentBookValue(),
+			PendingCount: len(c.GetPeriods()),
+		}
+		if len(c.GetPeriods()) > 0 {
+			row.NextAmount = c.GetPeriods()[0].GetAmount()
+		}
+		for _, b := range c.GetBlockers() {
+			row.Blockers = append(row.Blockers, b.GetLabel())
+		}
+		row.CanRun = len(row.Blockers) == 0 && row.PendingCount > 0
+		rows = append(rows, row)
+	}
+	return rows, nil
+}
+
+// generateDepreciationRunForCategory posts a depreciation run for all selected assets
+// in a category/policy scope and maps the result back to the view-layer type.
+func generateDepreciationRunForCategory(
+	ctx context.Context,
+	useCases *consumer.UseCases,
+	req assetcataction.CategoryDepreciationRunRequest,
+) (*assetcataction.CategoryDepreciationRunResult, error) {
+	protoScope := deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_CATEGORY
+	if req.ScopeKind == "POLICY" {
+		protoScope = deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_POLICY
+	}
+	// Build per-asset selections: each selected asset contributes all its pending periods.
+	// The use case engine resolves pending periods server-side from the as_of_date; we pass
+	// an empty period list per asset so the engine computes them (same as the Revenue Run
+	// "all-for-scope" pattern). If asset IDs are empty, scope covers ALL assets in the category.
+	var selections []*deprunpb.DepreciationRunSelection
+	for _, assetID := range req.AssetIDs {
+		aid := assetID
+		selections = append(selections, &deprunpb.DepreciationRunSelection{
+			AssetId: aid,
+			// PeriodStartDates empty → use case posts all pending periods for this asset.
+		})
+	}
+	protoReq := &deprunpb.GenerateDepreciationRunRequest{
+		ScopeKind:  protoScope,
+		ScopeId:    &req.CategoryID,
+		AsOfDate:   req.AsOfDate,
+		Selections: selections,
+	}
+	resp, err := consumer.GenerateDepreciationRun(useCases, ctx, protoReq)
+	if err != nil {
+		return nil, err
+	}
+	runID := ""
+	if resp.GetRun() != nil {
+		runID = resp.GetRun().GetId()
+	}
+	return &assetcataction.CategoryDepreciationRunResult{
+		RunID:        runID,
+		CreatedCount: int(resp.GetCreatedCount()),
+		SkippedCount: int(resp.GetSkippedCount()),
+		ErroredCount: int(resp.GetErroredCount()),
+		Success:      resp.GetSuccess(),
+	}, nil
+}
+
+// ---------------------------------------------------------------------------
+// Surface D helpers — depreciation-run history wrappers
+// ---------------------------------------------------------------------------
+
+// listDepreciationRunsForWorkspace fetches a page of DepreciationRun rows for Surface D.
+func listDepreciationRunsForWorkspace(
+	ctx context.Context,
+	useCases *consumer.UseCases,
+	scope depreciationrunmod.ListDepreciationRunsScope,
+) ([]depreciationrunmod.DepreciationRunRow, string, error) {
+	req := &deprunpb.ListDepreciationRunsRequest{}
+	resp, err := consumer.ListDepreciationRuns(useCases, ctx, req)
+	if err != nil {
+		return nil, "", err
+	}
+	rows := make([]depreciationrunmod.DepreciationRunRow, 0, len(resp.GetData()))
+	for _, r := range resp.GetData() {
+		if scope.Status != "" {
+			status := strings.ToLower(strings.TrimPrefix(r.GetStatus().String(), "DEPRECIATION_RUN_STATUS_"))
+			if status != scope.Status {
+				continue
+			}
+		}
+		rows = append(rows, depreciationRunToRow(r))
+	}
+	return rows, "", nil
+}
+
+// readDepreciationRunWithEntries fetches a single DepreciationRun plus schedule entries.
+func readDepreciationRunWithEntries(
+	ctx context.Context,
+	useCases *consumer.UseCases,
+	id string,
+) (*depreciationrunmod.DepreciationRunWithEntries, error) {
+	resp, err := consumer.ReadDepreciationRun(useCases, ctx, &deprunpb.ReadDepreciationRunRequest{
+		Data: &deprunpb.DepreciationRun{Id: id},
+	})
+	if err != nil {
+		return nil, err
+	}
+	if resp == nil || len(resp.GetData()) == 0 {
+		return nil, fmt.Errorf("depreciation run %s not found", id)
+	}
+	run := depreciationRunToRow(resp.GetData()[0])
+	return &depreciationrunmod.DepreciationRunWithEntries{
+		Run: run,
+	}, nil
+}
+
+// depreciationRunToRow maps a proto DepreciationRun to the view-layer DepreciationRunRow.
+func depreciationRunToRow(r *deprunpb.DepreciationRun) depreciationrunmod.DepreciationRunRow {
+	if r == nil {
+		return depreciationrunmod.DepreciationRunRow{}
+	}
+	status := strings.ToLower(strings.TrimPrefix(r.GetStatus().String(), "DEPRECIATION_RUN_STATUS_"))
+	scopeKind := strings.ToLower(strings.TrimPrefix(r.GetScopeKind().String(), "DEPRECIATION_RUN_SCOPE_KIND_"))
+	return depreciationrunmod.DepreciationRunRow{
+		ID:           r.GetId(),
+		WorkspaceID:  r.GetWorkspaceId(),
+		ScopeKind:    scopeKind,
+		ScopeID:      r.GetScopeId(),
+		AsOfDate:     r.GetAsOfDate(),
+		InitiatorID:  r.GetInitiatorId(),
+		Status:       status,
+		CreatedCount: r.GetCreatedCount(),
+		SkippedCount: r.GetSkippedCount(),
+		ErroredCount: r.GetErroredCount(),
+	}
 }

@@ -67,6 +67,10 @@ type Data struct {
 	UsefulLifeMonths   string
 	DepreciationMethod string
 	Active             bool
-	Labels             Labels
-	CommonLabels       any
+	// DepreciationFieldsLocked is true when posted depreciation_schedule rows
+	// exist for this asset, causing useful_life_months / depreciation_method /
+	// salvage_value / depreciation_start_date to render as read-only with a warning.
+	DepreciationFieldsLocked bool
+	Labels                   Labels
+	CommonLabels             any
 }

@@ -1,0 +1,21 @@
+{{/*
+lapsing-schedule-list — Surface B workspace lapsing-schedule overview (live page).
+
+URL: /app/assets/lapsing-schedule/list
+Data: list.PageData
+Labels: all text via .Labels.* — no English literals.
+Selectors per flow.md:
+  data-testid="lapsing-schedule-list-table"
+  data-testid="lapsing-schedule-list-row"  (+ data-asset-id, data-status, data-can-run)
+  data-testid="lapsing-schedule-list-asofdate"
+  data-testid="lapsing-schedule-list-bulk-run-selected"
+  data-testid="lapsing-schedule-list-bulk-run-all-matching"
+*/}}
+
+{{define "lapsing-schedule-list"}}
+{{template "layout" .}}
+{{end}}
+
+{{define "lapsing-schedule-list-content"}}
+{{template "table-card" .Table}}
+{{end}}

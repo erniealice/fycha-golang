@@ -1,0 +1,191 @@
+{{/*
+asset-depreciation-run-drawer-form — Surface A per-asset "Run Depreciation" drawer.
+
+Loaded into #sheetContent via HTMX GET from the lapsing-actual-schedule tab.
+Shares the HTMX inner-swap pattern from centymo subscription-revenue-run-drawer-form.html.
+
+Data: action.depreciationRunFormData
+Labels: all text via .Labels.* — no English literals.
+*/}}
+
+{{define "asset-depreciation-run-drawer-form"}}
+<form
+    hx-post="{{.FormAction}}"
+    hx-swap="none"
+    hx-on::after-request="lf.Sheet.handleResponse(event)"
+    data-testid="asset-depreciation-run-form"
+>
+    <input type="hidden" name="asset_id" value="{{.AssetID}}">
+    <input type="hidden" name="as_of_date" value="{{.AsOfDate}}">
+
+    <div class="sheet-body">
+        {{template "form-section" (dict "Title" .Labels.RunForm.Title)}}
+
+        {{/* As-of date picker — HTMX inner-swap reloads the periods table */}}
+        <div class="form-row single">
+            {{template "form-group" (dict
+                "Type"     "date"
+                "Name"     "as_of_date_picker"
+                "Label"    .Labels.RunForm.AsOfDateLabel
+                "Value"    .AsOfDate
+                "Max"      .MaxAsOfDate
+                "Required" true
+                "Hint"     .Labels.RunForm.AsOfDateHint
+                "ID"       "asset-depreciation-run-as-of-date"
+                "TestId"   "asset-depreciation-run-as-of-date"
+            )}}
+        </div>
+
+        {{/* Pending-periods inner-swap container */}}
+        <div
+            id="asset-depreciation-run-periods"
+            hx-get="{{.FragmentURL}}"
+            hx-trigger="change from:#asset-depreciation-run-as-of-date"
+            hx-include="#asset-depreciation-run-as-of-date"
+            hx-target="#asset-depreciation-run-periods"
+            hx-swap="outerHTML"
+        >
+            {{template "asset-depreciation-run-periods" .}}
+        </div>
+    </div>
+
+    <div class="sheet-footer">
+        <button
+            type="button"
+            class="btn btn-secondary"
+            data-sheet-close
+            data-testid="asset-depreciation-run-cancel-btn"
+        >
+            {{.Labels.RunForm.CancelLabel}}
+        </button>
+        <button
+            type="submit"
+            class="btn btn-primary"
+            id="asset-depreciation-run-submit-btn"
+            data-testid="asset-depreciation-run-submit-btn"
+            {{if eq .EligibleCount 0}}disabled aria-disabled="true"{{end}}
+        >
+            <span id="asset-depreciation-run-btn-label">
+                {{.Labels.RunForm.GenerateLabel}}
+            </span>
+        </button>
+    </div>
+</form>
+
+<script>
+(function () {
+    var form = document.currentScript.previousElementSibling;
+    while (form && form.tagName !== 'FORM') { form = form.previousElementSibling; }
+    if (!form) { return; }
+
+    var submitBtn  = form.querySelector('#asset-depreciation-run-submit-btn');
+    var btnLabel   = form.querySelector('#asset-depreciation-run-btn-label');
+    var asOfInput  = form.querySelector('#asset-depreciation-run-as-of-date');
+    var genLabel   = {{.Labels.RunForm.GenerateLabel | js}};
+    var genCountTmpl = {{.Labels.RunForm.GenerateWithCountTemplate | js}};
+    var hiddenDate = form.querySelector('input[name="as_of_date"]');
+
+    // Select-all master checkbox behaviour
+    form.addEventListener('change', function (e) {
+        var t = e.target;
+        if (t && t.getAttribute('data-testid') === 'asset-depreciation-run-select-all') {
+            var boxes = form.querySelectorAll('[data-testid="asset-depreciation-run-period-checkbox"]');
+            boxes.forEach(function (b) { if (!b.disabled) { b.checked = t.checked; } });
+        }
+        refreshBtn();
+    });
+
+    form.addEventListener('htmx:afterSwap', function () { refreshBtn(); });
+
+    if (asOfInput) {
+        asOfInput.addEventListener('change', function () {
+            if (hiddenDate) { hiddenDate.value = asOfInput.value; }
+        });
+    }
+
+    function countChecked() {
+        return form.querySelectorAll('[data-testid="asset-depreciation-run-period-checkbox"]:checked').length;
+    }
+
+    function refreshBtn() {
+        var n = countChecked();
+        if (submitBtn) {
+            submitBtn.disabled = n === 0;
+            submitBtn.setAttribute('aria-disabled', n === 0 ? 'true' : 'false');
+        }
+        if (btnLabel) {
+            btnLabel.textContent = n > 0 && genCountTmpl
+                ? genCountTmpl.replace('{{.Count}}', n)
+                : genLabel;
+        }
+    }
+
+    refreshBtn();
+}());
+</script>
+{{end}}
+
+
+{{/*
+asset-depreciation-run-periods — inner partial, swapped on date change.
+
+Renders the pending-period selection table (compact style — not a full pyeza TableConfig).
+*/}}
+{{define "asset-depreciation-run-periods"}}
+<div id="asset-depreciation-run-periods">
+    {{if not .Candidates}}
+        {{template "empty-state" (dict
+            "Icon"  "icon-trending-down"
+            "Title" .Labels.RunForm.EmptyTitle
+            "Desc"  .Labels.RunForm.EmptyMessage
+        )}}
+    {{else}}
+        <table class="data-table data-table--compact" data-testid="asset-depreciation-run-periods-table">
+            <thead>
+                <tr>
+                    <th class="col-checkbox">
+                        <input
+                            type="checkbox"
+                            data-testid="asset-depreciation-run-select-all"
+                            aria-label="{{.Labels.RunForm.GenerateLabel}}"
+                        >
+                    </th>
+                    <th>{{.Labels.RunForm.ColPeriod}}</th>
+                    <th class="cell-right">{{.Labels.RunForm.ColAmount}}</th>
+                    <th class="cell-right">{{.Labels.RunForm.ColAccumulated}}</th>
+                    <th class="cell-right">{{.Labels.RunForm.ColBookValueAfter}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{range .Candidates}}
+                <tr
+                    data-testid="asset-depreciation-run-period-row"
+                    data-period="{{.PeriodStart}}"
+                    {{if .Blocked}}title="{{.BlockerReason}}"{{end}}
+                >
+                    <td class="col-checkbox">
+                        <input
+                            type="checkbox"
+                            name="selection"
+                            value="{{.PeriodStart}}"
+                            {{if .Blocked}}disabled{{end}}
+                            {{if not .Blocked}}checked{{end}}
+                            data-testid="asset-depreciation-run-period-checkbox"
+                            aria-label="{{.PeriodLabel}}"
+                        >
+                    </td>
+                    <td>{{.PeriodLabel}}</td>
+                    <td class="cell-right">{{.ProjectedAmountFmt}}</td>
+                    <td class="cell-right">{{.ProjectedAccumFmt}}</td>
+                    <td class="cell-right">—</td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    {{end}}
+</div>
+{{end}}
+
+
+{{/* Empty fragment — returned on success to close drawer */}}
+{{define "asset-depreciation-run-success"}}{{end}}

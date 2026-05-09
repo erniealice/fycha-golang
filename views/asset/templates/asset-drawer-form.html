@@ -1,12 +1,17 @@
 {{/*
 Asset drawer form -- loaded into #sheetContent via HTMX.
 Used by both Add and Edit actions.
-Data: .Name, .AssetNumber, .Description, .CategoryID, .LocationID,
-      .AcquisitionCost, .SalvageValue, .UsefulLifeMonths, .DepreciationMethod,
-      .Active, .ID, .FormAction, .IsEdit, .CommonLabels
+Data: assetform.Data (views/asset/form/form.go)
+  .DepreciationFieldsLocked  — when true, renders useful_life/method/salvage as read-only with warning chip.
+Labels: all text via .Labels.* — no English literals.
 */}}
 {{define "asset-drawer-form"}}
-<form hx-post="{{.FormAction}}" hx-swap="none" hx-on::after-request="lf.Sheet.handleResponse(event)">
+<form
+    hx-post="{{.FormAction}}"
+    hx-swap="none"
+    hx-on::after-request="lf.Sheet.handleResponse(event)"
+    data-testid="asset-edit-form"
+>
     {{if .ID}}<input type="hidden" name="id" value="{{.ID}}">{{end}}
 
     <div class="sheet-body">
@@ -70,6 +75,16 @@ Data: .Name, .AssetNumber, .Description, .CategoryID, .LocationID,
                 "Placeholder" .Labels.AcquisitionCostPlaceholder
                 "Info" .Labels.AcquisitionCostInfo
             )}}
+        </div>
+
+        {{/* Depreciation configuration fields — locked when posted depreciation exists */}}
+        {{if .DepreciationFieldsLocked}}
+        <div class="form-alert form-alert--warning" data-testid="asset-edit-depreciation-locked-warning">
+            {{.Labels.DepreciationMethodInfo}}
+        </div>
+        {{end}}
+
+        <div class="form-row">
             {{template "form-group" (dict
                 "Type" "number"
                 "Name" "salvage_value"
@@ -77,6 +92,8 @@ Data: .Name, .AssetNumber, .Description, .CategoryID, .LocationID,
                 "Value" .SalvageValue
                 "Placeholder" .Labels.SalvageValuePlaceholder
                 "Info" .Labels.SalvageValueInfo
+                "Readonly" .DepreciationFieldsLocked
+                "TestId" "asset-edit-salvage-value"
             )}}
         </div>
 
@@ -89,20 +106,32 @@ Data: .Name, .AssetNumber, .Description, .CategoryID, .LocationID,
                 "Required" true
                 "Placeholder" .Labels.UsefulLifePlaceholder
                 "Info" .Labels.UsefulLifeMonthsInfo
+                "Readonly" .DepreciationFieldsLocked
+                "TestId" "asset-edit-useful-life"
             )}}
-            {{template "form-group" (dict
-                "Type" "select"
-                "Name" "depreciation_method"
-                "Label" .Labels.DepreciationMethod
-                "Value" .DepreciationMethod
-                "Options" (list
-                    (dict "Value" "straight_line" "Label" .Labels.DepMethodStraightLine)
-                    (dict "Value" "declining_balance" "Label" .Labels.DepMethodDecliningBalance)
-                    (dict "Value" "sum_of_years" "Label" .Labels.DepMethodSumOfYears)
-                    (dict "Value" "units_of_production" "Label" .Labels.DepMethodUnitsOfProduction)
-                )
-                "Info" .Labels.DepreciationMethodInfo
-            )}}
+        </div>
+
+        <div class="form-row">
+            {{/* Custom select with UoP disabled option */}}
+            <div class="form-group" data-testid="asset-edit-method">
+                <label class="form-label" for="depreciation_method">{{.Labels.DepreciationMethod}}</label>
+                <select
+                    id="depreciation_method"
+                    name="depreciation_method"
+                    class="form-select"
+                    {{if .DepreciationFieldsLocked}}readonly aria-disabled="true"{{end}}
+                >
+                    <option value="straight_line" {{if eq .DepreciationMethod "straight_line"}}selected{{end}}>{{.Labels.DepMethodStraightLine}}</option>
+                    <option value="declining_balance" {{if eq .DepreciationMethod "declining_balance"}}selected{{end}}>{{.Labels.DepMethodDecliningBalance}}</option>
+                    <option value="sum_of_years" {{if eq .DepreciationMethod "sum_of_years"}}selected{{end}}>{{.Labels.DepMethodSumOfYears}}</option>
+                    <option
+                        value="units_of_production"
+                        disabled
+                        title="{{.Labels.DepreciationMethodInfo}}"
+                        {{if eq .DepreciationMethod "units_of_production"}}selected{{end}}
+                    >{{.Labels.DepMethodUnitsOfProduction}}</option>
+                </select>
+            </div>
         </div>
 
         <div class="form-row single">
@@ -113,6 +142,21 @@ Data: .Name, .AssetNumber, .Description, .CategoryID, .LocationID,
         </div>
     </div>
 
-    {{template "sheet-form-footer" (dict "CommonLabels" .CommonLabels "ShowCancel" true "IsEdit" .IsEdit)}}
+    <div class="sheet-footer">
+        <button
+            type="button"
+            class="btn btn-secondary"
+            data-sheet-close
+        >
+            {{if .CommonLabels}}{{.CommonLabels}}{{end}}
+        </button>
+        <button
+            type="submit"
+            class="btn btn-primary"
+            data-testid="asset-edit-submit-btn"
+        >
+            {{if .IsEdit}}{{.Labels.Name}}{{else}}{{.Labels.Name}}{{end}}
+        </button>
+    </div>
 </form>
 {{end}}

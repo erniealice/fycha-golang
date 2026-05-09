@@ -19,6 +19,11 @@ type Deps struct {
 	DeleteAsset func(ctx context.Context, id string) error
 	SetActive   func(ctx context.Context, id string, active bool) error
 	NewID       func() string
+
+	// DepreciationFieldsLockedFn returns true when a posted depreciation_schedule
+	// row exists for the asset, triggering locked-field rendering in the edit drawer.
+	// Nil = always unlocked (mock build or use cases not yet wired).
+	DepreciationFieldsLockedFn func(ctx context.Context, assetID string) (bool, error)
 }
 
 // labelsFromDeps builds form.Labels from the deps label tree. The inline

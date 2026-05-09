@@ -1,0 +1,172 @@
+{{/*
+asset-category-depreciation-run-form — Surface C per-category/per-policy "Run Depreciation" drawer.
+
+Served at:
+  GET/POST /action/asset-category/depreciation-run/{category_id}  (category breadcrumb)
+  GET/POST /action/asset-policy/depreciation-run/{category_id}    (policy breadcrumb)
+
+Data: action.categoryRunFormData
+Labels: all text via .Labels.* — no English literals.
+Selectors per flow.md:
+  data-testid="asset-category-depreciation-run-form"
+  data-testid="asset-category-depreciation-run-asset-row"  (+ data-asset-id)
+  data-testid="asset-category-depreciation-run-asset-checkbox"
+  data-testid="asset-category-depreciation-run-submit-btn"
+  data-testid="asset-category-depreciation-run-breadcrumb"
+*/}}
+
+{{define "asset-category-depreciation-run-form"}}
+<form
+    hx-post="{{.FormAction}}"
+    hx-swap="none"
+    hx-on::after-request="lf.Sheet.handleResponse(event)"
+    data-testid="asset-category-depreciation-run-form"
+>
+    <input type="hidden" name="category_id" value="{{.CategoryID}}">
+    <input type="hidden" name="scope_kind" value="{{.ScopeKind}}">
+    <input type="hidden" name="as_of_date" value="{{.AsOfDate}}">
+
+    <div class="sheet-body">
+        {{/* Breadcrumb title — differs by entry point */}}
+        <div class="sheet-breadcrumb" data-testid="asset-category-depreciation-run-breadcrumb">
+            {{if eq .ScopeKind "policy"}}
+                {{.Labels.CategoryRunForm.TitlePolicy}}
+            {{else}}
+                {{.Labels.CategoryRunForm.TitleCategory}}
+            {{end}}
+        </div>
+
+        {{/* Per-asset selection table */}}
+        {{if not .Rows}}
+            {{template "empty-state" (dict
+                "Icon"  "icon-trending-down"
+                "Title" .Labels.RunForm.EmptyTitle
+                "Desc"  .Labels.RunForm.EmptyMessage
+            )}}
+        {{else}}
+            <table class="data-table data-table--compact" id="asset-category-depreciation-run-assets">
+                <thead>
+                    <tr>
+                        <th class="col-checkbox">
+                            <input
+                                type="checkbox"
+                                id="asset-category-depreciation-run-select-all"
+                                aria-label="{{.Labels.CategoryRunForm.SubmitLabel}}"
+                            >
+                        </th>
+                        <th>{{.Labels.CategoryRunForm.ColAsset}}</th>
+                        <th>{{.Labels.CategoryRunForm.ColMethod}}</th>
+                        <th class="cell-right">{{.Labels.CategoryRunForm.ColPending}}</th>
+                        <th class="cell-right">{{.Labels.CategoryRunForm.ColAmount}}</th>
+                        <th>{{.Labels.CategoryRunForm.ColBlockers}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {{range .Rows}}
+                    <tr
+                        data-testid="asset-category-depreciation-run-asset-row"
+                        data-asset-id="{{.AssetID}}"
+                        {{if not .CanRun}}class="row--disabled"{{end}}
+                    >
+                        <td class="col-checkbox">
+                            <input
+                                type="checkbox"
+                                name="asset_id"
+                                value="{{.AssetID}}"
+                                {{if not .CanRun}}disabled{{end}}
+                                {{if .CanRun}}checked{{end}}
+                                data-testid="asset-category-depreciation-run-asset-checkbox"
+                                aria-label="{{.AssetName}}"
+                            >
+                        </td>
+                        <td>{{.AssetName}}</td>
+                        <td>—</td>
+                        <td class="cell-right">{{.PendingCount}}</td>
+                        <td class="cell-right">
+                            {{if gt .NextAmount 0}}
+                                {{formatCentavos .NextAmount .Currency}}
+                            {{else}}
+                                —
+                            {{end}}
+                        </td>
+                        <td>
+                            {{range .Blockers}}
+                                <span class="chip chip--warning">{{.}}</span>
+                            {{end}}
+                        </td>
+                    </tr>
+                    {{end}}
+                </tbody>
+            </table>
+        {{end}}
+    </div>
+
+    <div class="sheet-footer">
+        <button
+            type="button"
+            class="btn btn-secondary"
+            data-sheet-close
+        >
+            {{.Labels.CategoryRunForm.CancelLabel}}
+        </button>
+        <button
+            type="submit"
+            class="btn btn-primary"
+            id="asset-category-depreciation-run-submit-btn"
+            data-testid="asset-category-depreciation-run-submit-btn"
+            {{if eq .EligibleCount 0}}disabled aria-disabled="true"{{end}}
+        >
+            <span id="asset-category-run-btn-label">
+                {{.Labels.CategoryRunForm.SubmitLabel}}
+            </span>
+        </button>
+    </div>
+</form>
+
+<script>
+(function () {
+    var form = document.currentScript.previousElementSibling;
+    while (form && form.tagName !== 'FORM') { form = form.previousElementSibling; }
+    if (!form) { return; }
+
+    var selectAll = form.querySelector('#asset-category-depreciation-run-select-all');
+    var submitBtn = form.querySelector('#asset-category-depreciation-run-submit-btn');
+    var btnLabel  = form.querySelector('#asset-category-run-btn-label');
+    var submitLbl = {{.Labels.CategoryRunForm.SubmitLabel | js}};
+
+    function checkboxes() {
+        return form.querySelectorAll('[data-testid="asset-category-depreciation-run-asset-checkbox"]:not(:disabled)');
+    }
+    function countChecked() {
+        return form.querySelectorAll('[data-testid="asset-category-depreciation-run-asset-checkbox"]:checked:not(:disabled)').length;
+    }
+    function refresh() {
+        var n = countChecked();
+        if (submitBtn) {
+            submitBtn.disabled = n === 0;
+            submitBtn.setAttribute('aria-disabled', n === 0 ? 'true' : 'false');
+        }
+        if (btnLabel) { btnLabel.textContent = submitLbl; }
+        if (selectAll) {
+            var all = checkboxes();
+            selectAll.checked = all.length > 0 && countChecked() === all.length;
+            selectAll.indeterminate = countChecked() > 0 && countChecked() < all.length;
+        }
+    }
+
+    if (selectAll) {
+        selectAll.addEventListener('change', function () {
+            checkboxes().forEach(function (b) { b.checked = selectAll.checked; });
+            refresh();
+        });
+    }
+    form.addEventListener('change', function (e) {
+        if (e.target && e.target.getAttribute('data-testid') === 'asset-category-depreciation-run-asset-checkbox') {
+            refresh();
+        }
+    });
+
+    refresh();
+}());
+</script>
+{{end}}

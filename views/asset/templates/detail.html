@@ -6,20 +6,49 @@
 {{/* Content-only partial -- for HTMX navigation */}}
 {{define "asset-detail-content"}}
 <div class="page-content detail-layout" data-page-css="/assets/css/fycha/fycha-asset-detail.css?v={{.CacheVersion}}">
+
+    {{/* Page-pillar actions (resolved by resolveAssetActions in page.go) */}}
+    {{if .AssetActions.Primary.URL}}
+    <div class="detail-action-pillar" data-testid="asset-detail-action-pillar">
+        <a
+            href="{{.AssetActions.Primary.URL}}"
+            class="btn btn-primary"
+            data-hx-get="{{.AssetActions.Primary.URL}}"
+            hx-target="#sheetContent"
+            hx-swap="innerHTML"
+            data-testid="{{.AssetActions.Primary.TestID}}"
+        >
+            {{.AssetActions.Primary.Label}}
+        </a>
+        {{range .AssetActions.Secondary}}
+        <a
+            href="{{.URL}}"
+            class="btn btn-secondary"
+            data-hx-get="{{.URL}}"
+            hx-target="#sheetContent"
+            hx-swap="innerHTML"
+            data-testid="{{.TestID}}"
+        >
+            {{.Label}}
+        </a>
+        {{end}}
+    </div>
+    {{end}}
+
     <div class="detail-tabs">
         {{template "tabs" (dict "Items" .TabItems "ActiveTab" .ActiveTab "Variant" "default" "ID" "asset-detail-tabs")}}
     </div>
     <div id="tabContent" class="detail-body" role="tabpanel" aria-labelledby="tab-{{.ActiveTab}}">
         {{if eq .ActiveTab "info"}}
             {{template "asset-tab-info" .}}
-        {{else if eq .ActiveTab "depreciation"}}
-            {{template "asset-tab-depreciation" .}}
-        {{else if eq .ActiveTab "maintenance"}}
-            {{template "asset-tab-maintenance" .}}
-        {{else if eq .ActiveTab "transactions"}}
-            {{template "asset-tab-transactions" .}}
+        {{else if eq .ActiveTab "lapsing-actual-schedule"}}
+            {{template "asset-tab-lapsing-actual-schedule" .}}
+        {{else if eq .ActiveTab "transaction-ledger"}}
+            {{template "asset-tab-transaction-ledger" .}}
         {{else if eq .ActiveTab "attachments"}}
             {{template "attachment-tab" .}}
+        {{else if eq .ActiveTab "history"}}
+            {{template "asset-tab-history" .}}
         {{end}}
     </div>
 </div>
@@ -72,9 +101,9 @@
         </div>
 
         <div class="asset-section-spacer">
-            <button type="submit" class="btn btn-primary btn-sm">
+            <button type="submit" class="btn btn-primary btn-sm" data-testid="asset-edit-submit-btn">
                 {{template "icon-save"}}
-                <span>Save Changes</span>
+                <span>{{.Labels.Actions.Edit}}</span>
             </button>
         </div>
     </form>
@@ -87,9 +116,9 @@ lf.handleInfoUpdate = function(evt) {
     if (!el) return;
     if (evt.detail.successful) {
         el.className = 'form-result form-result--success';
-        el.textContent = 'Asset updated successfully';
+        el.textContent = evt.detail.xhr.getResponseHeader('HX-Success-Message') || '';
     } else {
-        var msg = evt.detail.xhr.getResponseHeader('HX-Error-Message') || 'Failed to update asset';
+        var msg = evt.detail.xhr.getResponseHeader('HX-Error-Message') || '';
         el.className = 'form-result form-result--error';
         el.textContent = msg;
     }
@@ -99,31 +128,75 @@ lf.handleInfoUpdate = function(evt) {
 {{end}}
 
 {{/* =============================================
-     TAB PARTIAL: Depreciation (table-card)
+     TAB PARTIAL: Lapsing Actual Schedule
+     Actual BIR worksheet — posted periods only.
+     Primary action: [Run depreciation] → Surface A drawer.
      ============================================= */}}
-{{define "asset-tab-depreciation"}}
-<div class="tab-scroll">
-    <h3 class="detail-section-title">Depreciation Schedule</h3>
-    {{template "table-card" .DepreciationTable}}
+{{define "asset-tab-lapsing-actual-schedule"}}
+<div class="tab-scroll" data-testid="asset-detail-tab-lapsing-actual-schedule">
+    {{/* Tab-level header with actions */}}
+    <div class="detail-section-header">
+        <div class="detail-section-info">
+            <h3 class="detail-section-title">{{.Labels.Detail.Tabs.LapsingActualSchedule}}</h3>
+        </div>
+        <div class="detail-section-actions" data-print-hide>
+            {{if and (ne .AssetStatus "fully_depreciated") (ne .AssetStatus "FULLY_DEPRECIATED") (ne .AssetStatus "disposed") (ne .AssetStatus "DISPOSED")}}
+            <a
+                hx-get="{{.DeprecRunURL}}"
+                hx-target="#sheetContent"
+                hx-swap="innerHTML"
+                class="btn btn-primary btn-sm"
+                data-testid="asset-detail-lapsing-tab-action-run"
+            >
+                {{.DepreciationRunLabels.RunForm.GenerateLabel}}
+            </a>
+            {{end}}
+            <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                onclick="window.print()"
+                data-testid="asset-detail-lapsing-tab-print-worksheet"
+                data-print-hide
+            >
+                {{.DepreciationRunLabels.LapsingSchedule.AsOfDateLabel}}
+            </button>
+        </div>
+    </div>
+
+    {{/* Posted-period table — grouped by fiscal year */}}
+    {{/* Placeholder: real data loaded when espyna use cases are wired */}}
+    {{template "empty-state" (dict
+        "Icon"  "icon-trending-down"
+        "Title" .DepreciationRunLabels.RunForm.EmptyTitle
+        "Desc"  .DepreciationRunLabels.RunForm.EmptyMessage
+    )}}
 </div>
+
+<style>
+@media print {
+    nav, .sidebar, .asset-detail-tabs, .detail-action-pillar,
+    .htmx-indicator, [data-print-hide] { display: none !important; }
+}
+</style>
 {{end}}
 
 {{/* =============================================
-     TAB PARTIAL: Maintenance (table-card)
+     TAB PARTIAL: Transaction Ledger
+     Chronological full-event ledger. Read-only.
      ============================================= */}}
-{{define "asset-tab-maintenance"}}
-<div class="tab-scroll">
-    <h3 class="detail-section-title">Maintenance History</h3>
-    {{template "table-card" .MaintenanceTable}}
-</div>
-{{end}}
-
-{{/* =============================================
-     TAB PARTIAL: Transactions (table-card)
-     ============================================= */}}
-{{define "asset-tab-transactions"}}
-<div class="tab-scroll">
-    <h3 class="detail-section-title">Transaction History</h3>
+{{define "asset-tab-transaction-ledger"}}
+<div class="tab-scroll" data-testid="asset-detail-tab-transaction-ledger">
+    <h3 class="detail-section-title">{{.Labels.Detail.Tabs.TransactionLedger}}</h3>
     {{template "table-card" .TransactionTable}}
+</div>
+{{end}}
+
+{{/* =============================================
+     TAB PARTIAL: History (audit log)
+     Renamed from audit-history.
+     ============================================= */}}
+{{define "asset-tab-history"}}
+<div class="tab-scroll" data-testid="asset-detail-tab-history">
+    {{template "audit-history-tab" .}}
 </div>
 {{end}}
