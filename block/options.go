@@ -30,6 +30,16 @@ type blockConfig struct {
 	// the Surface A drawer so toast links point to the correct run-detail page.
 	// Set via WithAssetDepreciationRunURL (Wave 2 hard requirement).
 	assetDepreciationRunURL string
+	// useCases is the typed use-case container supplied via WithUseCases().
+	useCases *UseCases
+}
+
+// WithUseCases supplies the typed use-case closures to Block().
+// Required: Block() returns an error if this option is not provided.
+// Service-admin constructs the *UseCases via an adapter function that
+// bridges espyna's consumer container to fycha's typed shape.
+func WithUseCases(uc *UseCases) BlockOption {
+	return func(c *blockConfig) { c.useCases = uc }
 }
 
 func WithReports() BlockOption                { return func(c *blockConfig) { c.reports = true } }

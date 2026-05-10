@@ -2,7 +2,7 @@
 //
 // This file holds small, stateless helpers that any wireXxxModule function
 // (and Block() itself) can call. They take args, return values, and never
-// mutate package-level state. Anything that grew here past ~150 lines should
+// mutate package-level state. Anything that grows here past ~150 lines should
 // be considered for a more specific name (e.g. workspace_currency.go).
 package block
 
@@ -10,7 +10,6 @@ import (
 	"context"
 	"os"
 
-	consumer "github.com/erniealice/espyna-golang/consumer"
 	workspacepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/entity/workspace"
 )
 
@@ -35,12 +34,11 @@ func getDefaultWorkspaceID() string {
 // values that already carry a per-row Currency field (e.g. depreciation
 // candidate periods), pass that field instead — assets in foreign-currency
 // workspaces may differ from the workspace currency at the row level.
-func getFunctionalCurrency(ctx context.Context, useCases *consumer.UseCases) string {
-	if useCases == nil || useCases.Entity == nil || useCases.Entity.Workspace == nil ||
-		useCases.Entity.Workspace.ReadWorkspace == nil {
+func getFunctionalCurrency(ctx context.Context, uc *UseCases) string {
+	if uc == nil || uc.Workspace.Read == nil {
 		return ""
 	}
-	resp, err := useCases.Entity.Workspace.ReadWorkspace.Execute(ctx, &workspacepb.ReadWorkspaceRequest{
+	resp, err := uc.Workspace.Read(ctx, &workspacepb.ReadWorkspaceRequest{
 		Data: &workspacepb.Workspace{Id: getDefaultWorkspaceID()},
 	})
 	if err != nil || resp == nil {

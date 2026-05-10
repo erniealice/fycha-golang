@@ -18,11 +18,11 @@ import (
 	"fmt"
 	"strings"
 
-	consumer "github.com/erniealice/espyna-golang/consumer"
-
 	assetpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset"
+	assetcategorypb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset_category"
 	deprunpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/depreciation_run"
 	depschpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/depreciation"
+	revaluationpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset_revaluation"
 	commonpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/common"
 
 	"github.com/erniealice/pyeza-golang/types"
@@ -43,10 +43,13 @@ import (
 // and maps the proto response to view-layer CandidateRow slices.
 func listCandidatesWorkspace(
 	ctx context.Context,
-	useCases *consumer.UseCases,
+	uc *UseCases,
 	asOfDate, cursor string,
 	limit int32,
 ) ([]lapsinglist.CandidateRow, string, error) {
+	if uc.DepRun.ListCandidates == nil {
+		return nil, "", nil
+	}
 	req := &deprunpb.ListDepreciationCandidatesRequest{
 		ScopeKind: deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_WORKSPACE,
 		AsOfDate:  asOfDate,
@@ -57,7 +60,7 @@ func listCandidatesWorkspace(
 			},
 		},
 	}
-	resp, err := consumer.ListDepreciationCandidates(useCases, ctx, req)
+	resp, err := uc.DepRun.ListCandidates(ctx, req)
 	if err != nil {
 		return nil, "", err
 	}
@@ -95,19 +98,22 @@ func listCandidatesWorkspace(
 }
 
 // listPoliciesWithRollup fetches all AssetCategory rows with per-category aggregate counts.
-// Uses the new ListAssetCategoriesWithPolicyRollup use case (Wave 3 espyna enhancement).
+// Uses the ListAssetCategoriesWithPolicyRollup use case.
 // AssetsInPolicy and AssetsDeviating are real counts from the Postgres bulk query.
 func listPoliciesWithRollup(
 	ctx context.Context,
-	useCases *consumer.UseCases,
+	uc *UseCases,
 ) ([]assetcatpolicies.PolicyRow, error) {
-	rollupRows, err := consumer.ListAssetCategoriesWithPolicyRollup(useCases, ctx)
+	if uc.Asset.Category.ListWithPolicyRollup == nil {
+		return nil, nil
+	}
+	resp, err := uc.Asset.Category.ListWithPolicyRollup(ctx, &assetcategorypb.ListAssetCategoriesWithPolicyRollupRequest{})
 	if err != nil {
 		return nil, err
 	}
-	rows := make([]assetcatpolicies.PolicyRow, 0, len(rollupRows))
-	for _, r := range rollupRows {
-		c := r.Category
+	rows := make([]assetcatpolicies.PolicyRow, 0, len(resp.GetData()))
+	for _, r := range resp.GetData() {
+		c := r.GetCategory()
 		if c == nil {
 			continue
 		}
@@ -130,8 +136,8 @@ func listPoliciesWithRollup(
 			DepreciationMethod: method,
 			UsefulLifeMonths:   usefulLife,
 			SalvagePct:         salvage,
-			AssetsInPolicy:     r.AssetsInPolicy,
-			AssetsDeviating:    r.AssetsDeviating,
+			AssetsInPolicy:     int(r.GetAssetsInPolicy()),
+			AssetsDeviating:    int(r.GetAssetsDeviating()),
 		})
 	}
 	return rows, nil
@@ -141,16 +147,19 @@ func listPoliciesWithRollup(
 // and maps results to the preview drawer's PreviewCandidateRow.
 func listCandidatesForPolicy(
 	ctx context.Context,
-	useCases *consumer.UseCases,
+	uc *UseCases,
 	categoryID, asOfDate string,
 ) ([]assetcataction.PreviewCandidateRow, error) {
+	if uc.DepRun.ListCandidates == nil {
+		return nil, nil
+	}
 	scopeID := categoryID
 	req := &deprunpb.ListDepreciationCandidatesRequest{
 		ScopeKind: deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_POLICY,
 		ScopeId:   &scopeID,
 		AsOfDate:  asOfDate,
 	}
-	resp, err := consumer.ListDepreciationCandidates(useCases, ctx, req)
+	resp, err := uc.DepRun.ListCandidates(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -183,9 +192,12 @@ func listCandidatesForPolicy(
 // scope_kind=ASSET and maps the proto response to the view-layer DepreciationCandidate slice.
 func listDepreciationCandidatesForAsset(
 	ctx context.Context,
-	useCases *consumer.UseCases,
+	uc *UseCases,
 	assetID, asOfDate string,
 ) ([]assetaction.DepreciationCandidate, error) {
+	if uc.DepRun.ListCandidates == nil {
+		return nil, nil
+	}
 	if asOfDate == "" {
 		asOfDate = "today" // espyna engine accepts "today" as a sentinel
 	}
@@ -194,7 +206,7 @@ func listDepreciationCandidatesForAsset(
 		ScopeId:   &assetID,
 		AsOfDate:  asOfDate,
 	}
-	resp, err := consumer.ListDepreciationCandidates(useCases, ctx, req)
+	resp, err := uc.DepRun.ListCandidates(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -230,9 +242,12 @@ func listDepreciationCandidatesForAsset(
 // and maps the proto response back to the view-layer DepreciationRunResult.
 func generateDepreciationRunForAsset(
 	ctx context.Context,
-	useCases *consumer.UseCases,
+	uc *UseCases,
 	req assetaction.DepreciationRunRequest,
 ) (*assetaction.DepreciationRunResult, error) {
+	if uc.DepRun.Generate == nil {
+		return nil, nil
+	}
 	protoReq := &deprunpb.GenerateDepreciationRunRequest{
 		ScopeKind: deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_ASSET,
 		ScopeId:   &req.AssetID,
@@ -244,7 +259,7 @@ func generateDepreciationRunForAsset(
 			},
 		},
 	}
-	resp, err := consumer.GenerateDepreciationRun(useCases, ctx, protoReq)
+	resp, err := uc.DepRun.Generate(ctx, protoReq)
 	if err != nil {
 		return nil, err
 	}
@@ -289,22 +304,25 @@ func assetToRow(a *assetpb.Asset) assetlist.AssetRow {
 // One row per asset (not per period — the drawer shows which assets to include, not individual periods).
 func listCandidatesForCategory(
 	ctx context.Context,
-	useCases *consumer.UseCases,
+	uc *UseCases,
 	categoryID, scopeKind, asOfDate string,
 ) ([]assetcataction.CategoryDepreciationRunAssetRow, error) {
+	if uc.DepRun.ListCandidates == nil {
+		return nil, nil
+	}
 	if asOfDate == "" {
 		asOfDate = "today"
 	}
-	proto := deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_CATEGORY
+	protoScope := deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_CATEGORY
 	if scopeKind == "policy" || scopeKind == "POLICY" {
-		proto = deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_POLICY
+		protoScope = deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_POLICY
 	}
 	req := &deprunpb.ListDepreciationCandidatesRequest{
-		ScopeKind: proto,
+		ScopeKind: protoScope,
 		ScopeId:   &categoryID,
 		AsOfDate:  asOfDate,
 	}
-	resp, err := consumer.ListDepreciationCandidates(useCases, ctx, req)
+	resp, err := uc.DepRun.ListCandidates(ctx, req)
 	if err != nil {
 		return nil, err
 	}
@@ -334,9 +352,12 @@ func listCandidatesForCategory(
 // in a category/policy scope and maps the result back to the view-layer type.
 func generateDepreciationRunForCategory(
 	ctx context.Context,
-	useCases *consumer.UseCases,
+	uc *UseCases,
 	req assetcataction.CategoryDepreciationRunRequest,
 ) (*assetcataction.CategoryDepreciationRunResult, error) {
+	if uc.DepRun.Generate == nil {
+		return nil, nil
+	}
 	protoScope := deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_CATEGORY
 	if req.ScopeKind == "POLICY" {
 		protoScope = deprunpb.DepreciationRunScopeKind_DEPRECIATION_RUN_SCOPE_KIND_POLICY
@@ -359,7 +380,7 @@ func generateDepreciationRunForCategory(
 		AsOfDate:   req.AsOfDate,
 		Selections: selections,
 	}
-	resp, err := consumer.GenerateDepreciationRun(useCases, ctx, protoReq)
+	resp, err := uc.DepRun.Generate(ctx, protoReq)
 	if err != nil {
 		return nil, err
 	}
@@ -383,11 +404,14 @@ func generateDepreciationRunForCategory(
 // listDepreciationRunsForWorkspace fetches a page of DepreciationRun rows for Surface D.
 func listDepreciationRunsForWorkspace(
 	ctx context.Context,
-	useCases *consumer.UseCases,
+	uc *UseCases,
 	scope depreciationrunmod.ListDepreciationRunsScope,
 ) ([]depreciationrunmod.DepreciationRunRow, string, error) {
+	if uc.DepRun.List == nil {
+		return nil, "", nil
+	}
 	req := &deprunpb.ListDepreciationRunsRequest{}
-	resp, err := consumer.ListDepreciationRuns(useCases, ctx, req)
+	resp, err := uc.DepRun.List(ctx, req)
 	if err != nil {
 		return nil, "", err
 	}
@@ -409,10 +433,13 @@ func listDepreciationRunsForWorkspace(
 // selections/results tabs render real data instead of empty tables.
 func readDepreciationRunWithEntries(
 	ctx context.Context,
-	useCases *consumer.UseCases,
+	uc *UseCases,
 	id string,
 ) (*depreciationrunmod.DepreciationRunWithEntries, error) {
-	resp, err := consumer.ReadDepreciationRun(useCases, ctx, &deprunpb.ReadDepreciationRunRequest{
+	if uc.DepRun.Read == nil {
+		return nil, fmt.Errorf("depreciation run %s not found: Read use case not wired", id)
+	}
+	resp, err := uc.DepRun.Read(ctx, &deprunpb.ReadDepreciationRunRequest{
 		Data: &deprunpb.DepreciationRun{Id: id},
 	})
 	if err != nil {
@@ -424,14 +451,18 @@ func readDepreciationRunWithEntries(
 	run := depreciationRunToRow(resp.GetData()[0])
 
 	// Fetch schedule entries (selections/results tabs).
-	entriesResp, err := consumer.ListDepreciationRunEntries(useCases, ctx, id, nil)
-	if err != nil {
-		return nil, err
-	}
-	entries := make([]depreciationrunmod.DepreciationRunEntryRow, 0)
-	if entriesResp != nil {
-		for _, s := range entriesResp.GetData() {
-			entries = append(entries, depreciationScheduleToEntryRow(s))
+	var entries []depreciationrunmod.DepreciationRunEntryRow
+	if uc.DepRun.ListEntries != nil {
+		entriesResp, err := uc.DepRun.ListEntries(ctx, &deprunpb.ListDepreciationRunEntriesRequest{
+			RunId: id,
+		})
+		if err != nil {
+			return nil, err
+		}
+		if entriesResp != nil {
+			for _, s := range entriesResp.GetData() {
+				entries = append(entries, depreciationScheduleToEntryRow(s))
+			}
 		}
 	}
 
@@ -494,26 +525,34 @@ func depreciationRunToRow(r *deprunpb.DepreciationRun) depreciationrunmod.Deprec
 // translates types and renders the view-friendly toast strings.
 func revalueAssetCallback(
 	ctx context.Context,
-	useCases *consumer.UseCases,
+	uc *UseCases,
 	req assetaction.RevaluationRequest,
 ) (*assetaction.RevaluationResult, error) {
-	ucReq := consumer.RevalueAssetRequest{
-		AssetID:         req.AssetID,
-		NewFairValue:    req.NewFairValue,
-		AppraiserName:   req.AppraiserName,
-		ValuationMethod: req.ValuationMethod,
-		Notes:           req.Notes,
+	if uc.Revaluation.Revalue == nil {
+		return nil, fmt.Errorf("revalue_asset: use case not wired")
 	}
-	ucResult, err := consumer.RevalueAsset(useCases, ctx, ucReq)
+	ucReq := &revaluationpb.RevalueAssetUseCaseRequest{
+		AssetId:      req.AssetID,
+		NewFairValue: req.NewFairValue,
+	}
+	if req.AppraiserName != "" {
+		ucReq.AppraiserName = &req.AppraiserName
+	}
+	if req.ValuationMethod != "" {
+		ucReq.ValuationMethod = &req.ValuationMethod
+	}
+	if req.Notes != "" {
+		ucReq.Notes = &req.Notes
+	}
+	resp, err := uc.Revaluation.Revalue(ctx, ucReq)
 	if err != nil {
 		return nil, err
 	}
-	if ucResult == nil || ucResult.Revaluation == nil || ucResult.Transaction == nil {
+	if resp == nil || resp.GetRevaluation() == nil {
 		return nil, fmt.Errorf("revalue_asset: use case returned an empty result")
 	}
 
-	rev := ucResult.Revaluation
-	tx := ucResult.Transaction
+	rev := resp.GetRevaluation()
 
 	direction := "UP"
 	if !rev.GetIsIncrease() {
@@ -543,18 +582,19 @@ func revalueAssetCallback(
 		recognition = "OCI"
 	}
 
-	absAmount := tx.GetAmount()
+	// Amount: use revaluation_amount (signed) converted to absolute value.
+	absAmount := rev.GetRevaluationAmount()
 	if absAmount < 0 {
 		absAmount = -absAmount
 	}
 
 	return &assetaction.RevaluationResult{
-		TransactionID: tx.GetId(),
+		TransactionID: resp.GetAssetTransactionId(),
 		Direction:     direction,
 		Amount:        absAmount,
-		AmountFmt:     types.FormatMoney(absAmount, getFunctionalCurrency(ctx, useCases)),
+		AmountFmt:     types.FormatMoney(absAmount, getFunctionalCurrency(ctx, uc)),
 		Recognition:   recognition,
-		Success:       true,
+		Success:       resp.GetSuccess(),
 	}, nil
 }
 
@@ -562,40 +602,43 @@ func revalueAssetCallback(
 // espyna PreviewRevaluation use case. Read-only; no DB writes.
 func previewRevaluationCallback(
 	ctx context.Context,
-	useCases *consumer.UseCases,
+	uc *UseCases,
 	assetID string,
 	newFairValue int64,
 ) (*assetaction.RevaluationPreview, error) {
-	ucResult, err := consumer.PreviewRevaluation(useCases, ctx, consumer.PreviewRevaluationRequest{
-		AssetID:      assetID,
+	if uc.Revaluation.Preview == nil {
+		return nil, nil
+	}
+	resp, err := uc.Revaluation.Preview(ctx, &revaluationpb.PreviewRevaluationUseCaseRequest{
+		AssetId:      assetID,
 		NewFairValue: newFairValue,
 	})
 	if err != nil {
 		return nil, err
 	}
-	if ucResult == nil {
+	if resp == nil {
 		return nil, nil
 	}
 
 	direction := "UP"
-	if !ucResult.IsIncrease {
+	if !resp.GetIsIncrease() {
 		direction = "DOWN"
 	}
 
-	revAmount := ucResult.RevaluationAmount
+	revAmount := resp.GetRevaluationAmount()
 	if revAmount < 0 {
 		revAmount = -revAmount
 	}
-	pnlMag := ucResult.RecognizedInPnL
+	pnlMag := resp.GetRecognizedInPnl()
 	if pnlMag < 0 {
 		pnlMag = -pnlMag
 	}
-	ociMag := ucResult.RecognizedInOCI
+	ociMag := resp.GetRecognizedInOci()
 	if ociMag < 0 {
 		ociMag = -ociMag
 	}
 
-	currency := getFunctionalCurrency(ctx, useCases)
+	currency := getFunctionalCurrency(ctx, uc)
 	return &assetaction.RevaluationPreview{
 		RevaluationAmountFmt: types.FormatMoney(revAmount, currency),
 		PnLAmountFmt:         types.FormatMoney(pnlMag, currency),

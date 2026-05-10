@@ -13,7 +13,6 @@ import (
 	"net/http"
 	"strings"
 
-	consumer "github.com/erniealice/espyna-golang/consumer"
 	topref "github.com/erniealice/espyna-golang/reference"
 
 	assetpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset"
@@ -65,7 +64,7 @@ type assetWiring struct {
 func wireAssetModule(
 	ctx *pyeza.AppContext, // route registrar + translation provider live on this
 	cfg *blockConfig,
-	useCases *consumer.UseCases,
+	useCases *UseCases,
 	w assetWiring,
 ) {
 	assetDeps := &assetmod.ModuleDeps{
@@ -96,8 +95,7 @@ func wireAssetModule(
 	// Typed asset stack (asset-stack buildout, 2026-05-03). Falls back to
 	// nothing-wired if the asset use cases are unavailable (mock build, etc.) —
 	// same graceful-degradation semantics as ledger/treasury.
-	if useCases != nil && useCases.Asset != nil && useCases.Asset.Asset != nil {
-		ua := useCases.Asset.Asset
+	if useCases != nil && useCases.Asset.Create != nil {
 		assetDeps.NewID = func() string {
 			if w.newAttachmentID != nil {
 				return w.newAttachmentID()
@@ -105,11 +103,11 @@ func wireAssetModule(
 			return "" // CreateAsset use case generates IDs internally via IDService
 		}
 		assetDeps.CreateAsset = func(fctx context.Context, a *assetform.Record) error {
-			_, err := ua.CreateAsset.Execute(fctx, &assetpb.CreateAssetRequest{Data: recordToAsset(a)})
+			_, err := useCases.Asset.Create(fctx, &assetpb.CreateAssetRequest{Data: recordToAsset(a)})
 			return err
 		}
 		assetDeps.ReadAsset = func(fctx context.Context, id string) (*assetform.Record, error) {
-			resp, err := ua.ReadAsset.Execute(fctx, &assetpb.ReadAssetRequest{Data: &assetpb.Asset{Id: id}})
+			resp, err := useCases.Asset.Read(fctx, &assetpb.ReadAssetRequest{Data: &assetpb.Asset{Id: id}})
 			if err != nil {
 				return nil, err
 			}
@@ -119,22 +117,22 @@ func wireAssetModule(
 			return assetToRecord(resp.Data[0]), nil
 		}
 		assetDeps.UpdateAsset = func(fctx context.Context, a *assetform.Record) error {
-			_, err := ua.UpdateAsset.Execute(fctx, &assetpb.UpdateAssetRequest{Data: recordToAsset(a)})
+			_, err := useCases.Asset.Update(fctx, &assetpb.UpdateAssetRequest{Data: recordToAsset(a)})
 			return err
 		}
 		// DeleteAsset preserves the legacy soft-delete (active=false) semantic via
 		// SetAssetActive — routes the change through audit/auth instead of bypass.
 		assetDeps.DeleteAsset = func(fctx context.Context, id string) error {
-			_, err := ua.SetAssetActive.Execute(fctx, &assetpb.SetAssetActiveRequest{AssetId: id, Active: false})
+			_, err := useCases.Asset.SetActive(fctx, &assetpb.SetAssetActiveRequest{AssetId: id, Active: false})
 			return err
 		}
 		assetDeps.SetActive = func(fctx context.Context, id string, active bool) error {
-			_, err := ua.SetAssetActive.Execute(fctx, &assetpb.SetAssetActiveRequest{AssetId: id, Active: active})
+			_, err := useCases.Asset.SetActive(fctx, &assetpb.SetAssetActiveRequest{AssetId: id, Active: active})
 			return err
 		}
 		assetDeps.ListAssets = func(fctx context.Context, status string) ([]assetlist.AssetRow, error) {
 			active := status == "active"
-			resp, err := ua.GetAssetListPageData.Execute(fctx, &assetpb.GetAssetListPageDataRequest{
+			resp, err := useCases.Asset.GetListPageData(fctx, &assetpb.GetAssetListPageDataRequest{
 				Filters: &commonpb.FilterRequest{
 					Filters: []*commonpb.TypedFilter{
 						{
@@ -158,19 +156,14 @@ func wireAssetModule(
 	}
 
 	// Wire Surface A (depreciation-run) use cases.
-	if useCases != nil && useCases.Asset != nil && useCases.Asset.DepreciationRun != nil {
-		udr := useCases.Asset.DepreciationRun
-		if udr.ListDepreciationCandidates != nil {
-			ucsCopy := useCases // capture for closure
-			assetDeps.ListDepreciationCandidates = func(fctx context.Context, assetID, asOfDate string) ([]assetaction.DepreciationCandidate, error) {
-				return listDepreciationCandidatesForAsset(fctx, ucsCopy, assetID, asOfDate)
-			}
+	if useCases != nil && useCases.DepRun.ListCandidates != nil {
+		assetDeps.ListDepreciationCandidates = func(fctx context.Context, assetID, asOfDate string) ([]assetaction.DepreciationCandidate, error) {
+			return listDepreciationCandidatesForAsset(fctx, useCases, assetID, asOfDate)
 		}
-		if udr.GenerateDepreciationRun != nil {
-			ucsCopy := useCases // capture for closure
-			assetDeps.GenerateDepreciationRun = func(fctx context.Context, req assetaction.DepreciationRunRequest) (*assetaction.DepreciationRunResult, error) {
-				return generateDepreciationRunForAsset(fctx, ucsCopy, req)
-			}
+	}
+	if useCases != nil && useCases.DepRun.Generate != nil {
+		assetDeps.GenerateDepreciationRun = func(fctx context.Context, req assetaction.DepreciationRunRequest) (*assetaction.DepreciationRunResult, error) {
+			return generateDepreciationRunForAsset(fctx, useCases, req)
 		}
 		// DepreciationFieldsLockedFn: fields are locked once any run has been posted.
 		// A dedicated use case (GetAssetDepreciationLock) is pending Wave 3 espyna work.
@@ -182,19 +175,14 @@ func wireAssetModule(
 	// inserts + asset update inside one tx). PreviewRevaluation computes the
 	// predicted PnL/OCI split read-only. Both nil-safe when the use case
 	// aggregate is missing (mock builds, etc.).
-	if useCases != nil && useCases.Asset != nil && useCases.Asset.AssetRevaluation != nil {
-		ar := useCases.Asset.AssetRevaluation
-		if ar.RevalueAsset != nil {
-			ucsCopy := useCases // capture for closure
-			assetDeps.RevalueAsset = func(fctx context.Context, req assetaction.RevaluationRequest) (*assetaction.RevaluationResult, error) {
-				return revalueAssetCallback(fctx, ucsCopy, req)
-			}
+	if useCases != nil && useCases.Revaluation.Revalue != nil {
+		assetDeps.RevalueAsset = func(fctx context.Context, req assetaction.RevaluationRequest) (*assetaction.RevaluationResult, error) {
+			return revalueAssetCallback(fctx, useCases, req)
 		}
-		if ar.PreviewRevaluation != nil {
-			ucsCopy := useCases // capture for closure
-			assetDeps.PreviewRevaluation = func(fctx context.Context, assetID string, newFairValue int64) (*assetaction.RevaluationPreview, error) {
-				return previewRevaluationCallback(fctx, ucsCopy, assetID, newFairValue)
-			}
+	}
+	if useCases != nil && useCases.Revaluation.Preview != nil {
+		assetDeps.PreviewRevaluation = func(fctx context.Context, assetID string, newFairValue int64) (*assetaction.RevaluationPreview, error) {
+			return previewRevaluationCallback(fctx, useCases, assetID, newFairValue)
 		}
 	}
 
@@ -212,8 +200,7 @@ func wireAssetModule(
 		TableLabels:           w.fychaTableLabels,
 	}
 	// Wire ListCandidates when depreciation use cases are available.
-	if useCases != nil && useCases.Asset != nil && useCases.Asset.DepreciationRun != nil &&
-		useCases.Asset.DepreciationRun.ListDepreciationCandidates != nil {
+	if useCases != nil && useCases.DepRun.ListCandidates != nil {
 		lapsingDeps.ListCandidates = func(fctx context.Context, asOfDate, cursor string, limit int32) ([]lapsinglist.CandidateRow, string, error) {
 			return listCandidatesWorkspace(fctx, useCases, asOfDate, cursor, limit)
 		}
@@ -235,7 +222,7 @@ func wireAssetModule(
 		TableLabels:  w.fychaTableLabels,
 	}
 	// Wire ListPolicies when asset-category use cases are available.
-	if useCases != nil && useCases.Asset != nil && useCases.Asset.AssetCategory != nil {
+	if useCases != nil && useCases.Asset.Category.ListWithPolicyRollup != nil {
 		policiesDeps.ListPolicies = func(fctx context.Context) ([]assetcatpolicies.PolicyRow, error) {
 			return listPoliciesWithRollup(fctx, useCases)
 		}
@@ -251,8 +238,7 @@ func wireAssetModule(
 		CommonLabels: w.common,
 		TableLabels:  w.fychaTableLabels,
 	}
-	if useCases != nil && useCases.Asset != nil && useCases.Asset.DepreciationRun != nil &&
-		useCases.Asset.DepreciationRun.ListDepreciationCandidates != nil {
+	if useCases != nil && useCases.DepRun.ListCandidates != nil {
 		previewDeps.ListPolicyCandidates = func(fctx context.Context, categoryID, asOfDate string) ([]assetcataction.PreviewCandidateRow, error) {
 			return listCandidatesForPolicy(fctx, useCases, categoryID, asOfDate)
 		}
@@ -269,19 +255,14 @@ func wireAssetModule(
 		Labels:       w.depreciationRunLabels,
 		CommonLabels: w.common,
 	}
-	if useCases != nil && useCases.Asset != nil && useCases.Asset.DepreciationRun != nil {
-		udr := useCases.Asset.DepreciationRun
-		if udr.ListDepreciationCandidates != nil {
-			ucsCopy := useCases // capture for closure
-			categoryRunDeps.ListCategoryCandidates = func(fctx context.Context, categoryID, scopeKind, asOfDate string) ([]assetcataction.CategoryDepreciationRunAssetRow, error) {
-				return listCandidatesForCategory(fctx, ucsCopy, categoryID, scopeKind, asOfDate)
-			}
+	if useCases != nil && useCases.DepRun.ListCandidates != nil {
+		categoryRunDeps.ListCategoryCandidates = func(fctx context.Context, categoryID, scopeKind, asOfDate string) ([]assetcataction.CategoryDepreciationRunAssetRow, error) {
+			return listCandidatesForCategory(fctx, useCases, categoryID, scopeKind, asOfDate)
 		}
-		if udr.GenerateDepreciationRun != nil {
-			ucsCopy := useCases // capture for closure
-			categoryRunDeps.GenerateCategoryRun = func(fctx context.Context, req assetcataction.CategoryDepreciationRunRequest) (*assetcataction.CategoryDepreciationRunResult, error) {
-				return generateDepreciationRunForCategory(fctx, ucsCopy, req)
-			}
+	}
+	if useCases != nil && useCases.DepRun.Generate != nil {
+		categoryRunDeps.GenerateCategoryRun = func(fctx context.Context, req assetcataction.CategoryDepreciationRunRequest) (*assetcataction.CategoryDepreciationRunResult, error) {
+			return generateDepreciationRunForCategory(fctx, useCases, req)
 		}
 	}
 	categoryRunView := assetcataction.NewCategoryDepreciationRunAction(categoryRunDeps)
@@ -299,26 +280,17 @@ func wireAssetModule(
 		CommonLabels: w.common,
 		TableLabels:  w.fychaTableLabels,
 	}
-	if useCases != nil && useCases.Asset != nil && useCases.Asset.DepreciationRun != nil {
-		udr := useCases.Asset.DepreciationRun
-		if udr.ListDepreciationRuns != nil {
-			ucsCopy := useCases
-			drDeps.ListDepreciationRuns = func(fctx context.Context, scope depreciationrunmod.ListDepreciationRunsScope) ([]depreciationrunmod.DepreciationRunRow, string, error) {
-				return listDepreciationRunsForWorkspace(fctx, ucsCopy, scope)
-			}
+	if useCases != nil && useCases.DepRun.List != nil {
+		drDeps.ListDepreciationRuns = func(fctx context.Context, scope depreciationrunmod.ListDepreciationRunsScope) ([]depreciationrunmod.DepreciationRunRow, string, error) {
+			return listDepreciationRunsForWorkspace(fctx, useCases, scope)
 		}
-		if udr.ReadDepreciationRun != nil {
-			ucsCopy := useCases
-			drDeps.ReadDepreciationRun = func(fctx context.Context, id string) (*depreciationrunmod.DepreciationRunWithEntries, error) {
-				return readDepreciationRunWithEntries(fctx, ucsCopy, id)
-			}
+	}
+	if useCases != nil && useCases.DepRun.Read != nil {
+		drDeps.ReadDepreciationRun = func(fctx context.Context, id string) (*depreciationrunmod.DepreciationRunWithEntries, error) {
+			return readDepreciationRunWithEntries(fctx, useCases, id)
 		}
-		// TODO: add ListAssetTransactionsByRunID consumer method (Followup — Phase 4 codex H2).
-		// When consumer.ListAssetTransactionsByRunID is available in espyna-golang, wire it here:
-		//   ucsCopy := useCases
-		//   drDeps.ListAssetTransactionsByRunID = func(fctx context.Context, runID string) ([]depreciationrunmod.AssetTransactionRow, error) {
-		//       return listAssetTransactionsByRunID(fctx, ucsCopy, runID)
-		//   }
+		// TODO: add ListAssetTransactionsByRunID use case (Followup — Phase 4 codex H2).
+		// When ListAssetTransactionsByRunID is available in espyna-golang, wire it here.
 		// Until then, the transactions tab renders an empty table (nil guard in detail/page.go:loadTabData).
 	}
 	depreciationrunmod.NewModule(drDeps).RegisterRoutes(ctx.Routes)

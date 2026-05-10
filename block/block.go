@@ -16,11 +16,12 @@
 // so Block() cannot live in the root package while also importing fycha/views/*.
 //
 // Companion files in this package:
-//   - options.go       — BlockOption / blockConfig / WithX / wantX accessors
+//   - options.go       — BlockOption / blockConfig / WithX / wantX accessors (incl. WithUseCases)
+//   - usecases.go      — typed UseCases struct (wiring contract for fycha.Block)
 //   - asset.go         — Asset domain wiring (wireAssetModule + proto<->record translators)
 //   - callbacks.go     — lapsing-schedule + revaluation callback helpers called by asset.go
 //   - helpers.go       — workspace/currency helpers (getDefaultWorkspaceID, getFunctionalCurrency)
-//   - dashboard_wiring.go — reflective dashboard wiring helpers (wireLedgerDashboard, etc.)
+//   - dashboard_wiring.go — closure-based dashboard wiring helpers (wireLedgerDashboard, etc.)
 package block
 
 import (
@@ -32,7 +33,6 @@ import (
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 
-	consumer "github.com/erniealice/espyna-golang/consumer"
 	topref "github.com/erniealice/espyna-golang/reference"
 
 	attachmentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/document/attachment"
@@ -88,10 +88,18 @@ func handleFunc(r pyeza.RouteRegistrar, method, path string, handler http.Handle
 // and expenses/prepayments). Call with no options to register ALL modules.
 // Call with specific WithX() options for a subset.
 func Block(opts ...BlockOption) pyeza.AppOption {
-	cfg := &blockConfig{enableAll: len(opts) == 0}
+	cfg := &blockConfig{}
 	for _, opt := range opts {
 		opt(cfg)
 	}
+	// "Enable all modules" is derived — true when no module-toggling option was
+	// passed. Non-module options (WithUseCases, WithAssetDepreciationRunURL)
+	// must NOT flip this off, otherwise `Block(WithUseCases(...), WithAssetDepreciationRunURL(...))`
+	// silently registers zero modules. Matches the centymo block pattern.
+	moduleSelected := cfg.reports || cfg.asset || cfg.ledger || cfg.loans ||
+		cfg.equity || cfg.payroll || cfg.cash || cfg.expenses || cfg.financial ||
+		cfg.taxRate || cfg.forexRate || cfg.withholdingCertificate
+	cfg.enableAll = !moduleSelected
 
 	return func(ctx *pyeza.AppContext) error {
 		// --- Type-assert translations ---
@@ -100,11 +108,11 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 			return fmt.Errorf("fycha.Block: ctx.Translations must be *lynguaV1.TranslationProvider")
 		}
 
-		// --- Type-assert use cases ---
-		useCases, ok := ctx.UseCases.(*consumer.UseCases)
-		if !ok || useCases == nil {
-			return fmt.Errorf("fycha.Block: ctx.UseCases must be *consumer.UseCases")
+		// --- Typed use cases supplied via WithUseCases() ---
+		if cfg.useCases == nil {
+			return fmt.Errorf("fycha.Block: WithUseCases(...) is required")
 		}
+		useCases := cfg.useCases
 
 		// --- Type-assert LedgerReportingSvc (optional — nil-safe) ---
 		var ledgerReportingSvc fycha.DataSource
@@ -286,27 +294,25 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 				CreateAttachment: createAttachment,
 				DeleteAttachment: deleteAttachment,
 			}
-			if useCases != nil && useCases.Ledger != nil && useCases.Ledger.Account != nil {
-				ledgerDeps.GetAccountListPageData = useCases.Ledger.Account.GetAccountListPageData.Execute
-				ledgerDeps.CreateAccount = useCases.Ledger.Account.CreateAccount.Execute
-				ledgerDeps.ReadAccount = useCases.Ledger.Account.ReadAccount.Execute
-				ledgerDeps.UpdateAccount = useCases.Ledger.Account.UpdateAccount.Execute
-				ledgerDeps.DeleteAccount = useCases.Ledger.Account.DeleteAccount.Execute
+			if useCases.Ledger.Account.GetListPageData != nil {
+				ledgerDeps.GetAccountListPageData = useCases.Ledger.Account.GetListPageData
+				ledgerDeps.CreateAccount = useCases.Ledger.Account.Create
+				ledgerDeps.ReadAccount = useCases.Ledger.Account.Read
+				ledgerDeps.UpdateAccount = useCases.Ledger.Account.Update
+				ledgerDeps.DeleteAccount = useCases.Ledger.Account.Delete
 			}
-			if useCases != nil && useCases.Ledger != nil && useCases.Ledger.JournalEntry != nil {
-				uje := useCases.Ledger.JournalEntry
-				ledgerDeps.GetJournalEntryListPageData = uje.GetJournalEntryListPageData.Execute
-				ledgerDeps.CreateJournalEntry = uje.CreateJournalEntry.Execute
-				ledgerDeps.ReadJournalEntry = uje.ReadJournalEntry.Execute
-				ledgerDeps.UpdateJournalEntry = uje.UpdateJournalEntry.Execute
-				ledgerDeps.DeleteJournalEntry = uje.DeleteJournalEntry.Execute
-				ledgerDeps.PostJournalEntry = uje.PostJournalEntry.Execute
-				ledgerDeps.ReverseJournalEntry = uje.ReverseJournalEntry.Execute
+			if useCases.Ledger.JournalEntry.GetListPageData != nil {
+				ledgerDeps.GetJournalEntryListPageData = useCases.Ledger.JournalEntry.GetListPageData
+				ledgerDeps.CreateJournalEntry = useCases.Ledger.JournalEntry.Create
+				ledgerDeps.ReadJournalEntry = useCases.Ledger.JournalEntry.Read
+				ledgerDeps.UpdateJournalEntry = useCases.Ledger.JournalEntry.Update
+				ledgerDeps.DeleteJournalEntry = useCases.Ledger.JournalEntry.Delete
+				ledgerDeps.PostJournalEntry = useCases.Ledger.JournalEntry.Post
+				ledgerDeps.ReverseJournalEntry = useCases.Ledger.JournalEntry.Reverse
 			}
-			if useCases != nil && useCases.Ledger != nil && useCases.Ledger.FiscalPeriod != nil {
-				ufp := useCases.Ledger.FiscalPeriod
+			if useCases.FiscalPeriod.GetListPageData != nil {
 				ledgerDeps.GetFiscalPeriodListPageData = func(fctx context.Context) ([]*fiscalperiodpb.FiscalPeriod, error) {
-					resp, err := ufp.GetFiscalPeriodListPageData.Execute(fctx, &fiscalperiodpb.GetFiscalPeriodListPageDataRequest{})
+					resp, err := useCases.FiscalPeriod.GetListPageData(fctx, &fiscalperiodpb.GetFiscalPeriodListPageDataRequest{})
 					if err != nil {
 						return nil, err
 					}
@@ -315,11 +321,11 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 					}
 					return resp.GetFiscalPeriodList(), nil
 				}
-				if ufp.CreateFiscalPeriod != nil {
-					ledgerDeps.CreateFiscalPeriod = ufp.CreateFiscalPeriod.Execute
+				if useCases.FiscalPeriod.Create != nil {
+					ledgerDeps.CreateFiscalPeriod = useCases.FiscalPeriod.Create
 				}
-				if ufp.CloseFiscalPeriod != nil {
-					ledgerDeps.CloseFiscalPeriod = ufp.CloseFiscalPeriod.Execute
+				if useCases.FiscalPeriod.Close != nil {
+					ledgerDeps.CloseFiscalPeriod = useCases.FiscalPeriod.Close
 				}
 			}
 			// Wire ledger dashboard use case.
@@ -418,8 +424,8 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 				CommonLabels: ctx.Common,
 				TableLabels:  fychaTableLabels,
 			}
-			if useCases.Tax != nil && useCases.Tax.TaxRate != nil {
-				taxRateDeps.ListTaxRates = useCases.Tax.TaxRate.ListTaxRates.Execute
+			if useCases.Tax.ListTaxRates != nil {
+				taxRateDeps.ListTaxRates = useCases.Tax.ListTaxRates
 			}
 			taxratemod.NewModule(taxRateDeps).RegisterRoutes(ctx.Routes)
 		}
@@ -435,8 +441,8 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 				CommonLabels: ctx.Common,
 				TableLabels:  fychaTableLabels,
 			}
-			if useCases.Finance != nil && useCases.Finance.ForexRate != nil {
-				forexRateDeps.ListForexRates = useCases.Finance.ForexRate.ListForexRates.Execute
+			if useCases.Finance.ListForexRates != nil {
+				forexRateDeps.ListForexRates = useCases.Finance.ListForexRates
 			}
 			forexratemod.NewModule(forexRateDeps).RegisterRoutes(ctx.Routes)
 		}
@@ -452,8 +458,8 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 				CommonLabels: ctx.Common,
 				TableLabels:  fychaTableLabels,
 			}
-			if useCases.Treasury != nil && useCases.Treasury.WithholdingCertificate != nil {
-				withholdingCertDeps.ListWithholdingCertificates = useCases.Treasury.WithholdingCertificate.ListWithholdingCertificates.Execute
+			if useCases.Treasury.ListWithholdingCertificates != nil {
+				withholdingCertDeps.ListWithholdingCertificates = useCases.Treasury.ListWithholdingCertificates
 			}
 			withholdingcertmod.NewModule(withholdingCertDeps).RegisterRoutes(ctx.Routes)
 		}
