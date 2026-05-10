@@ -45,6 +45,9 @@ type DepreciationCandidate struct {
 	ProjectedAccumFmt  string
 	Blocked            bool
 	BlockerReason      string
+	// BlockerKind is the machine-readable blocker kind string (e.g. "UNITS_REQUIRED").
+	// Used by the template to conditionally render UoP-specific messaging.
+	BlockerKind        string
 }
 
 // DepreciationRunRequest is the POST payload to GenerateDepreciationRun.
@@ -126,6 +129,20 @@ func handleDepreciationRunGET(ctx context.Context, viewCtx *view.ViewContext, de
 }
 
 func handleDepreciationRunPOST(ctx context.Context, viewCtx *view.ViewContext, deps *DepreciationRunDeps, assetID string) view.ViewResult {
+	// Soft-block path (deferred — no field-level validation needed today):
+	// For validation errors that need the form re-rendered with a field-level
+	// chip rather than a toast, return:
+	//     view.ViewResult{
+	//         StatusCode: 422,
+	//         Headers: map[string]string{
+	//             "HX-Reswap":   "outerHTML",
+	//             "HX-Retarget": "#sheet form",
+	//         },
+	//         Body: rerenderedFormHTML,
+	//     }
+	// lf.Sheet.handleResponse (sheet.js:208-225) honors these headers on non-2xx
+	// and swaps the body in. Canonical example: subscription/recognize/action.go:335-345.
+
 	if err := viewCtx.Request.ParseForm(); err != nil {
 		return fycha.HTMXError(deps.Labels.Errors.InvalidSelection)
 	}
@@ -136,25 +153,18 @@ func handleDepreciationRunPOST(ctx context.Context, viewCtx *view.ViewContext, d
 	}
 	selections := viewCtx.Request.Form["selection"]
 
-	var result *DepreciationRunResult
-	if deps.GenerateDepreciationRun != nil {
-		var err error
-		result, err = deps.GenerateDepreciationRun(ctx, DepreciationRunRequest{
-			AssetID:          assetID,
-			AsOfDate:         asOfDate,
-			PeriodStartDates: selections,
-		})
-		if err != nil {
-			log.Printf("GenerateDepreciationRun error: %v", err)
-			return fycha.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
-		}
-	} else {
-		// Graceful mock result when use case not yet wired
-		result = &DepreciationRunResult{
-			RunID:        "run-mock",
-			CreatedCount: len(selections),
-			Success:      true,
-		}
+	if deps.GenerateDepreciationRun == nil {
+		log.Printf("depreciation_run: GenerateDepreciationRun callback not wired (service unavailable)")
+		return fycha.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
+	}
+	result, err := deps.GenerateDepreciationRun(ctx, DepreciationRunRequest{
+		AssetID:          assetID,
+		AsOfDate:         asOfDate,
+		PeriodStartDates: selections,
+	})
+	if err != nil {
+		log.Printf("GenerateDepreciationRun error: %v", err)
+		return fycha.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
 	}
 
 	// Build toast payload per pyeza:toast contract

@@ -41,6 +41,12 @@ type ModuleDeps struct {
 	// Depreciation-fields lock check (wired when espyna use cases are available)
 	DepreciationFieldsLockedFn func(ctx context.Context, assetID string) (bool, error)
 
+	// GetAssetInUseIDs returns a map of asset IDs that have any asset_transaction
+	// row. Wired from block.go via the reference checker. Used for both the list
+	// page (data-deletable attribute) and the delete handler (H5 server-side gate).
+	// Nil = skip the check (mock build or use cases not yet wired).
+	GetAssetInUseIDs func(ctx context.Context, ids []string) (map[string]bool, error)
+
 	// Depreciation run use-case wrappers (Surface A)
 	ListDepreciationCandidates func(ctx context.Context, assetID, asOfDate string) ([]assetaction.DepreciationCandidate, error)
 	GenerateDepreciationRun    func(ctx context.Context, req assetaction.DepreciationRunRequest) (*assetaction.DepreciationRunResult, error)
@@ -87,11 +93,12 @@ type Module struct {
 // NewModule creates an asset module with all views wired.
 func NewModule(deps *ModuleDeps) *Module {
 	listDeps := &assetlist.ListViewDeps{
-		Routes:       deps.Routes,
-		Labels:       deps.Labels,
-		CommonLabels: deps.CommonLabels,
-		TableLabels:  deps.TableLabels,
-		ListAssets:   deps.ListAssets,
+		Routes:           deps.Routes,
+		Labels:           deps.Labels,
+		CommonLabels:     deps.CommonLabels,
+		TableLabels:      deps.TableLabels,
+		ListAssets:       deps.ListAssets,
+		GetAssetInUseIDs: deps.GetAssetInUseIDs,
 	}
 	actionDeps := &assetaction.Deps{
 		Routes:                     deps.Routes,
@@ -103,6 +110,7 @@ func NewModule(deps *ModuleDeps) *Module {
 		SetActive:                  deps.SetActive,
 		NewID:                      deps.NewID,
 		DepreciationFieldsLockedFn: deps.DepreciationFieldsLockedFn,
+		GetAssetInUseIDs:           deps.GetAssetInUseIDs,
 	}
 	detailDeps := &assetdetail.DetailViewDeps{
 		AttachmentOps: attachment.AttachmentOps{

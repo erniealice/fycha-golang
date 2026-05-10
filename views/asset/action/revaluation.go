@@ -3,12 +3,12 @@ package action
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
 
 	"github.com/erniealice/pyeza-golang/route"
+	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
 
 	fycha "github.com/erniealice/fycha-golang"
@@ -96,7 +96,7 @@ func NewRevaluationPreviewAction(deps *RevaluationDeps) view.View {
 			return view.OK("asset-revaluation-preview-partial", &revaluationFormData{Labels: deps.Labels})
 		}
 
-		newFairValueCents := parseCents(viewCtx.Request.FormValue("new_fair_value"))
+		newFairValueCents, _ := types.ParseCentavos(viewCtx.Request.FormValue("new_fair_value"))
 		var preview *RevaluationPreview
 		if deps.PreviewRevaluation != nil && newFairValueCents > 0 {
 			var err error
@@ -124,35 +124,50 @@ func handleRevaluationGET(_ context.Context, viewCtx *view.ViewContext, deps *Re
 }
 
 func handleRevaluationPOST(ctx context.Context, viewCtx *view.ViewContext, deps *RevaluationDeps, assetID string) view.ViewResult { //nolint:unparam
+	// Soft-block path (deferred — no field-level validation needed today):
+	// For validation errors that need the form re-rendered with a field-level
+	// chip rather than a toast, return:
+	//     view.ViewResult{
+	//         StatusCode: 422,
+	//         Headers: map[string]string{
+	//             "HX-Reswap":   "outerHTML",
+	//             "HX-Retarget": "#sheet form",
+	//         },
+	//         Body: rerenderedFormHTML,
+	//     }
+	// lf.Sheet.handleResponse (sheet.js:208-225) honors these headers on non-2xx
+	// and swaps the body in. Canonical example: subscription/recognize/action.go:335-345.
+
 	if err := viewCtx.Request.ParseForm(); err != nil {
-		return fycha.HTMXError(deps.Labels.SubmitLabel)
+		return fycha.HTMXError(deps.Labels.Errors.FormParseFailed)
+	}
+
+	newFairValueCents, err := types.ParseCentavos(viewCtx.Request.FormValue("new_fair_value"))
+	if err != nil {
+		log.Printf("revaluation: invalid amount input: %v", err)
+		return fycha.HTMXError(deps.Labels.Errors.InvalidAmount)
 	}
 
 	req := RevaluationRequest{
 		AssetID:         assetID,
-		NewFairValue:    parseCents(viewCtx.Request.FormValue("new_fair_value")),
+		NewFairValue:    newFairValueCents,
 		AppraiserName:   viewCtx.Request.FormValue("appraiser_name"),
 		ValuationMethod: viewCtx.Request.FormValue("valuation_method"),
 		Notes:           viewCtx.Request.FormValue("notes"),
 	}
 
-	var result *RevaluationResult
-	if deps.RevalueAsset != nil {
-		var err error
-		result, err = deps.RevalueAsset(ctx, req)
-		if err != nil {
-			log.Printf("RevalueAsset error: %v", err)
-			return fycha.HTMXError(deps.Labels.SubmitLabel)
-		}
-	} else {
-		result = &RevaluationResult{
-			TransactionID: "tx-mock",
-			Direction:     "UP",
-			Amount:        req.NewFairValue,
-			AmountFmt:     fmt.Sprintf("₱%.2f", float64(req.NewFairValue)/100),
-			Recognition:   "OCI",
-			Success:       true,
-		}
+	// Phase 3 (codex C4 part A): RevalueAsset is wired by fycha block.go
+	// against the espyna consumer. The previous tx-mock fallback was
+	// removed — when the wiring is missing in production it indicates a
+	// real bootstrap defect and we surface a service-unavailable error.
+	if deps.RevalueAsset == nil {
+		log.Printf("revalue_asset: RevalueAsset callback not wired (codex C4 — service unavailable)")
+		return fycha.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
+	}
+	result, err := deps.RevalueAsset(ctx, req)
+	if err != nil {
+		log.Printf("RevalueAsset error: %v", err)
+		return fycha.HTMXError(deps.Labels.Errors.RevaluateFailed)
 	}
 
 	detailURL := route.ResolveURL(deps.Routes.DetailURL, "id", assetID)
@@ -186,15 +201,3 @@ func handleRevaluationPOST(ctx context.Context, viewCtx *view.ViewContext, deps 
 	}
 }
 
-// parseCents parses a decimal peso string into centavos (int64).
-// Input format: "1234.56" → 123456. Returns 0 on parse failure.
-func parseCents(s string) int64 {
-	if s == "" {
-		return 0
-	}
-	var pesos float64
-	if _, err := fmt.Sscanf(s, "%f", &pesos); err != nil {
-		return 0
-	}
-	return int64(pesos * 100)
-}

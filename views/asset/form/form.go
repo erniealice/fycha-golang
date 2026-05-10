@@ -50,6 +50,8 @@ type Labels struct {
 	SalvageValueInfo       string
 	UsefulLifeMonthsInfo   string
 	DepreciationMethodInfo string
+	// UoP-specific tooltip rendered on the disabled Units of Production option.
+	UnitsOfProductionDisabledTooltip string
 }
 
 // Data is the template data for the asset drawer form.

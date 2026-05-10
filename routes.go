@@ -151,4 +151,22 @@ const (
 	// Expenses — Prepayments
 	PrepaymentListURL         = "/app/expenses/prepayments/{status}"
 	PrepaymentAmortizationURL = "/app/expenses/prepayments/amortization"
+
+	// Tax — Tax Rates (read-only; supersession via admin SQL recipe)
+	TaxRateListURL   = "/app/tax/tax-rates/list/{status}"
+	TaxRateDetailURL = "/app/tax/tax-rates/detail/{id}"
+
+	// Finance — Forex Rates (read-only in UI; appended only via RecordOperatorRate)
+	ForexRateListURL   = "/app/finance/forex-rates/list/{status}"
+	ForexRateDetailURL = "/app/finance/forex-rates/detail/{id}"
+
+	// Treasury — Withholding Certificates (full CRUD)
+	WithholdingCertificateListURL        = "/app/treasury/withholding-certificates/list/{status}"
+	WithholdingCertificateDetailURL      = "/app/treasury/withholding-certificates/detail/{id}"
+	WithholdingCertificateTableURL       = "/action/withholding-certificate/table/{status}"
+	WithholdingCertificateAddURL         = "/action/withholding-certificate/add"
+	WithholdingCertificateEditURL        = "/action/withholding-certificate/edit/{id}"
+	WithholdingCertificateDeleteURL      = "/action/withholding-certificate/delete"
+	WithholdingCertificateBulkDeleteURL  = "/action/withholding-certificate/bulk-delete"
+	WithholdingCertificateSetStatusURL   = "/action/withholding-certificate/set-status"
 )

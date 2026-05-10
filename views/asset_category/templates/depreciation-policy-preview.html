@@ -33,7 +33,7 @@ Selectors per flow.md:
                     <td class="cell-right">{{.PendingCount}}</td>
                     <td class="cell-right">
                         {{if gt .NextAmount 0}}
-                            {{formatCentavos .NextAmount .Currency}}
+                            {{.NextAmountFmt}}
                         {{else}}
                             —
                         {{end}}

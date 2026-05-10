@@ -316,7 +316,7 @@ func resolveStatusBadge(l fycha.DepreciationRunLabels, r CandidateRow) (label, v
 	case "blocked":
 		msg := ls.StatusBlockedTemplate
 		if r.BlockerLabel != "" {
-			msg = "Blocked: " + r.BlockerLabel
+			msg = ls.BlockedPrefix + r.BlockerLabel
 		}
 		return msg, "error"
 	default:

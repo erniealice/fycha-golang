@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
@@ -36,6 +37,12 @@ type ListViewDeps struct {
 
 	// ListAssets returns asset rows filtered by status. Wired from block.go.
 	ListAssets func(ctx context.Context, status string) ([]AssetRow, error)
+
+	// GetAssetInUseIDs returns a map of asset IDs that have at least one
+	// asset_transaction row. Used to set data-deletable=false and disable the
+	// delete action on rows with posted transactions (H5 soft-delete gate).
+	// Nil = skip the check (mock build or use cases not yet wired).
+	GetAssetInUseIDs func(ctx context.Context, ids []string) (map[string]bool, error)
 }
 
 // PageData holds the data for the asset list page.
@@ -114,7 +121,24 @@ func buildTableConfig(ctx context.Context, deps *ListViewDeps, status string, pe
 		}
 	}
 
-	rows := buildTableRows(assets, l, deps.Routes, perms, status)
+	// Batch-fetch which assets are in use (have any asset_transaction row).
+	// Performed once per page render; nil map = no in-use assets (safe default).
+	var inUseIDs map[string]bool
+	if deps.GetAssetInUseIDs != nil && len(assets) > 0 {
+		ids := make([]string, 0, len(assets))
+		for _, a := range assets {
+			ids = append(ids, a.ID)
+		}
+		var err error
+		inUseIDs, err = deps.GetAssetInUseIDs(ctx, ids)
+		if err != nil {
+			// Non-fatal: log and fall back to permitting all deletes rather than
+			// blocking all deletes. The server-side handler is the hard gate.
+			log.Printf("asset in-use check error: %v", err)
+		}
+	}
+
+	rows := buildTableRows(assets, l, deps.Routes, perms, status, inUseIDs)
 	types.ApplyColumnStyles(columns, rows)
 
 	bulkCfg := fycha.MapBulkConfig(deps.CommonLabels)
@@ -168,7 +192,7 @@ func assetColumns(l fycha.AssetLabels) []types.TableColumn {
 	}
 }
 
-func buildTableRows(assets []AssetRow, l fycha.AssetLabels, routes fycha.AssetRoutes, perms *types.UserPermissions, status string) []types.TableRow {
+func buildTableRows(assets []AssetRow, l fycha.AssetLabels, routes fycha.AssetRoutes, perms *types.UserPermissions, status string, inUseIDs map[string]bool) []types.TableRow {
 	rows := []types.TableRow{}
 	for _, asset := range assets {
 		id := asset.ID
@@ -181,6 +205,21 @@ func buildTableRows(assets []AssetRow, l fycha.AssetLabels, routes fycha.AssetRo
 
 		canUpdate := perms.Can("asset", "update")
 		canDelete := perms.Can("asset", "delete")
+
+		// An asset is non-deletable when it has any posted asset_transaction row,
+		// regardless of the operator's delete permission.
+		isInUse := inUseIDs[id]
+		deletable := canDelete && !isInUse
+
+		// Determine tooltip for a disabled delete action:
+		// - in-use takes priority over no-permission (more informative)
+		var deleteTooltip string
+		switch {
+		case isInUse:
+			deleteTooltip = l.Actions.CannotDeleteInUse
+		case !canDelete:
+			deleteTooltip = l.Actions.NoPermission
+		}
 
 		actions := []types.TableAction{
 			{Type: "view", Label: l.Actions.View, Action: "view", Href: route.ResolveURL(routes.DetailURL, "id", id)},
@@ -204,12 +243,13 @@ func buildTableRows(assets []AssetRow, l fycha.AssetLabels, routes fycha.AssetRo
 			})
 		}
 		actions = append(actions, types.TableAction{
-			Type:     "delete",
-			Label:    l.Actions.Delete,
-			Action:   "delete",
-			URL:      routes.DeleteURL,
-			ItemName: name,
-			Disabled: !canDelete, DisabledTooltip: l.Actions.NoPermission,
+			Type:            "delete",
+			Label:           l.Actions.Delete,
+			Action:          "delete",
+			URL:             routes.DeleteURL,
+			ItemName:        name,
+			Disabled:        !deletable,
+			DisabledTooltip: deleteTooltip,
 		})
 
 		rows = append(rows, types.TableRow{
@@ -219,6 +259,8 @@ func buildTableRows(assets []AssetRow, l fycha.AssetLabels, routes fycha.AssetRo
 				{Type: "text", Value: name},
 				{Type: "text", Value: asset.CategoryName},
 				{Type: "text", Value: asset.LocationName},
+				// centMode=false is CORRECT here: assetToRow in block.go already
+				// converts proto centavos → float64 pesos via float64(x)/100.
 				types.MoneyCell(asset.AcquisitionCost, "PHP", false),
 				types.MoneyCell(asset.BookValue, "PHP", false),
 				{Type: "badge", Value: recordStatus, Variant: statusVariant(recordStatus)},
@@ -231,6 +273,7 @@ func buildTableRows(assets []AssetRow, l fycha.AssetLabels, routes fycha.AssetRo
 				"acquisition_cost": fmt.Sprintf("%.2f", asset.AcquisitionCost),
 				"book_value":       fmt.Sprintf("%.2f", asset.BookValue),
 				"status":           recordStatus,
+				"deletable":        strconv.FormatBool(!isInUse),
 			},
 			Actions: actions,
 		})
@@ -322,13 +365,14 @@ func buildBulkActions(l fycha.AssetLabels, common pyeza.CommonLabels, status str
 	}
 
 	actions = append(actions, types.BulkAction{
-		Key:            "delete",
-		Label:          common.Bulk.Delete,
-		Icon:           "icon-trash-2",
-		Variant:        "danger",
-		Endpoint:       routes.BulkDeleteURL,
-		ConfirmTitle:   common.Bulk.Delete,
-		ConfirmMessage: l.Actions.ConfirmBulkDelete,
+		Key:              "delete",
+		Label:            common.Bulk.Delete,
+		Icon:             "icon-trash-2",
+		Variant:          "danger",
+		Endpoint:         routes.BulkDeleteURL,
+		ConfirmTitle:     common.Bulk.Delete,
+		ConfirmMessage:   l.Actions.ConfirmBulkDelete,
+		RequiresDataAttr: "deletable",
 	})
 
 	return actions

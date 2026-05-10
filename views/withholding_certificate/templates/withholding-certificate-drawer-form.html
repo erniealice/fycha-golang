@@ -1,0 +1,102 @@
+{{/*
+Withholding Certificate drawer form — add and edit.
+Loaded into the side sheet via hx-get from the list page CTA or row Edit action.
+
+Data:
+  .FormAction              string  — POST target URL
+  .IsEdit                  bool    — true on edit; false on add
+  .ID                      string  — record ID (edit only)
+  .RevenueID               string  — pre-filled revenue_id (from CTA query param)
+  .CertificateNumber       string
+  .PayorTin                string
+  .DateIssued              string
+  .WhtAmountCertified      string  — display value (e.g. "1500.00")
+  .ExpectedAmount          string  — pre-fill hint from revenue.wht_amount_expected
+  .StatusOptions           []form.StatusOption
+  .Labels                  form.Labels
+  .CommonLabels
+*/}}
+{{define "withholding-certificate-drawer-form"}}
+<form hx-post="{{.FormAction}}"
+      hx-swap="none"
+      hx-on::after-request="lf.Sheet.handleResponse(event)"
+      data-testid="wht-cert-drawer-form">
+    {{if .IsEdit}}<input type="hidden" name="id" value="{{.ID}}">{{end}}
+
+    <div class="sheet-body">
+        {{/* ── Revenue reference ── */}}
+        <div class="form-row single">
+            {{template "form-group" (dict
+                "Type" "text"
+                "Name" "revenue_id"
+                "Label" .Labels.RevenueID
+                "Value" .RevenueID
+                "Required" true
+                "TestId" "wht-cert-revenue-id"
+            )}}
+        </div>
+
+        {{/* ── Certificate number ── */}}
+        <div class="form-row single">
+            {{template "form-group" (dict
+                "Type" "text"
+                "Name" "certificate_number"
+                "Label" .Labels.CertificateNumber
+                "Value" .CertificateNumber
+                "TestId" "wht-cert-number"
+            )}}
+        </div>
+
+        {{/* ── Payor TIN ── */}}
+        <div class="form-row single">
+            {{template "form-group" (dict
+                "Type" "text"
+                "Name" "payor_tin"
+                "Label" .Labels.PayorTin
+                "Value" .PayorTin
+                "TestId" "wht-cert-payor-tin"
+            )}}
+        </div>
+
+        {{/* ── WHT amount certified ── */}}
+        <div class="form-row single">
+            {{template "form-group" (dict
+                "Type" "number"
+                "Name" "wht_amount_certified"
+                "Label" .Labels.WhtAmountCertified
+                "Value" .WhtAmountCertified
+                "Placeholder" .ExpectedAmount
+                "Required" true
+                "TestId" "wht-cert-amount"
+            )}}
+        </div>
+
+        {{/* ── Date issued ── */}}
+        <div class="form-row single">
+            {{template "form-group" (dict
+                "Type" "date"
+                "Name" "date_issued"
+                "Label" .Labels.DateIssued
+                "Value" .DateIssued
+                "TestId" "wht-cert-date-issued"
+            )}}
+        </div>
+
+        {{/* ── Status ── */}}
+        {{if .StatusOptions}}
+        <div class="form-row single">
+            <div class="form-group" data-testid="wht-cert-status">
+                <label class="form-label">{{.Labels.Status}}</label>
+                <select name="status" class="form-control">
+                    {{range .StatusOptions}}
+                    <option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>
+                    {{end}}
+                </select>
+            </div>
+        </div>
+        {{end}}
+    </div>
+
+    {{template "sheet-form-footer" (dict "CommonLabels" .CommonLabels "ShowCancel" true "IsEdit" .IsEdit)}}
+</form>
+{{end}}

@@ -414,11 +414,15 @@ type AssetFormLabels struct {
 	SalvageValueInfo       string `json:"salvageValueInfo"`
 	UsefulLifeMonthsInfo   string `json:"usefulLifeMonthsInfo"`
 	DepreciationMethodInfo string `json:"depreciationMethodInfo"`
+	// UnitsOfProductionDisabledTooltip is the title shown on the disabled UoP
+	// depreciation-method option in the asset edit drawer.
+	UnitsOfProductionDisabledTooltip string `json:"unitsOfProductionDisabledTooltip"`
 }
 
 type AssetActionLabels struct {
-	View       string `json:"view"`
-	Edit       string `json:"edit"`
+	View    string `json:"view"`
+	Edit    string `json:"edit"`
+	Revalue string `json:"revalue"`
 	Delete     string `json:"delete"`
 	Activate   string `json:"activate"`
 	Deactivate string `json:"deactivate"`
@@ -436,6 +440,9 @@ type AssetActionLabels struct {
 	InvalidStatus       string `json:"invalidStatus"`
 	InvalidTargetStatus string `json:"invalidTargetStatus"`
 	NoPermission        string `json:"noPermission"`
+	// CannotDeleteInUse is shown (as a tooltip and server-side error) when a
+	// delete is attempted on an asset that has one or more asset_transaction rows.
+	CannotDeleteInUse string `json:"cannotDeleteInUse"`
 }
 
 type AssetDetailLabels struct {
@@ -574,11 +581,13 @@ func DefaultAssetLabels() AssetLabels {
 			AcquisitionCostInfo:        "Total cost to acquire or construct the asset, including installation.",
 			SalvageValueInfo:           "Estimated residual value at the end of the asset's useful life.",
 			UsefulLifeMonthsInfo:       "Expected productive life of the asset in months, used to calculate depreciation.",
-			DepreciationMethodInfo:     "The accounting method used to allocate the asset's cost over its useful life.",
+			DepreciationMethodInfo:           "The accounting method used to allocate the asset's cost over its useful life.",
+			UnitsOfProductionDisabledTooltip: "Units of Production depreciation is not yet supported.",
 		},
 		Actions: AssetActionLabels{
 			View:                  "View",
 			Edit:                  "Edit",
+			Revalue:               "Revalue",
 			Delete:                "Delete",
 			Activate:              "Activate",
 			Deactivate:            "Deactivate",
@@ -594,6 +603,7 @@ func DefaultAssetLabels() AssetLabels {
 			InvalidStatus:         "Invalid status",
 			InvalidTargetStatus:   "Invalid target status",
 			NoPermission:          "No permission",
+			CannotDeleteInUse:     "Cannot delete: asset has posted transactions.",
 		},
 		Detail: AssetDetailLabels{
 			BasicInfo: AssetDetailBasicInfoLabels{
@@ -3445,6 +3455,9 @@ type DepreciationRunFormLabels struct {
 	BlockerFullyDepreciated string `json:"blockerFullyDepreciated"`
 	BlockerMissingMethod    string `json:"blockerMissingMethod"`
 	BlockerUnitsRequired    string `json:"blockerUnitsRequired"`
+	// UoP-specific blocker messaging (rendered as a translated message + link in the drawer)
+	BlockerUnitsRequiredMessage string `json:"blockerUnitsRequiredMessage"`
+	BlockerUnitsRequiredLink    string `json:"blockerUnitsRequiredLink"`
 	// Empty state (no pending periods)
 	EmptyTitle   string `json:"emptyTitle"`
 	EmptyMessage string `json:"emptyMessage"`
@@ -3464,6 +3477,10 @@ type DepreciationRunLapsingScheduleLabels struct {
 	StatusNPeriodsPendingTemplate string `json:"statusNPeriodsPendingTemplate"`
 	StatusNotStarted        string `json:"statusNotStarted"`
 	StatusBlockedTemplate   string `json:"statusBlockedTemplate"`
+	// BlockedPrefix is the human-readable prefix for blocked-status badges
+	// when a specific BlockerLabel is provided (e.g. "Blocked: Units required").
+	// The trailing space is intentional — it is concatenated with the reason string.
+	BlockedPrefix string `json:"blockedPrefix"`
 	// Bulk action labels
 	BulkRunForSelected   string `json:"bulkRunForSelected"`
 	BulkRunForAllMatching string `json:"bulkRunForAllMatching"`
@@ -3625,6 +3642,8 @@ type DepreciationRunErrorLabels struct {
 	RunForSelectedCapExceededError string `json:"runForSelectedCapExceededError"`
 	PermissionDenied               string `json:"permissionDenied"`
 	UseCaseUnavailable             string `json:"useCaseUnavailable"`
+	FormParseFailed                string `json:"formParseFailed"`
+	GenerateFailed                 string `json:"generateFailed"`
 	InvalidSelection               string `json:"invalidSelection"`
 	IdempotencyConflict            string `json:"idempotencyConflict"`
 	WorkspaceMismatch              string `json:"workspaceMismatch"`
@@ -3647,11 +3666,13 @@ func DefaultDepreciationRunLabels() DepreciationRunLabels {
 			GenerateLabel:             "Generate",
 			GenerateWithCountTemplate: "Generate ({{.Count}})",
 			CancelLabel:               "Cancel",
-			BlockerNotInService:       "Not in service",
-			BlockerFullyDepreciated:   "Fully depreciated",
-			BlockerMissingMethod:      "Missing depreciation method",
-			BlockerUnitsRequired:      "Units of Production not yet supported",
-			EmptyTitle:                "No pending periods",
+			BlockerNotInService:         "Not in service",
+			BlockerFullyDepreciated:     "Fully depreciated",
+			BlockerMissingMethod:        "Missing depreciation method",
+			BlockerUnitsRequired:        "Units of Production not yet supported",
+			BlockerUnitsRequiredMessage: "Units of Production depreciation requires per-period units input. See the future-release plan.",
+			BlockerUnitsRequiredLink:    "Open future-release plan",
+			EmptyTitle:                  "No pending periods",
 			EmptyMessage:              "All periods up to the selected date have been posted.",
 		},
 		LapsingSchedule: DepreciationRunLapsingScheduleLabels{
@@ -3675,6 +3696,7 @@ func DefaultDepreciationRunLabels() DepreciationRunLabels {
 			StatusNPeriodsPendingTemplate: "{{.Count}} periods pending",
 			StatusNotStarted:              "Not started",
 			StatusBlockedTemplate:         "Blocked: {{.Reason}}",
+			BlockedPrefix:                 "Blocked: ",
 			BulkRunForSelected:            "Run for selected",
 			BulkRunForAllMatching:         "Run for all matching",
 			FilterCategory:                "Category",
@@ -3779,7 +3801,9 @@ func DefaultDepreciationRunLabels() DepreciationRunLabels {
 		Errors: DepreciationRunErrorLabels{
 			RunForSelectedCapExceededError: "Batch cap exceeded — maximum 500 assets per run. Narrow the filter to run the rest.",
 			PermissionDenied:              "You do not have permission to run depreciation.",
-			UseCaseUnavailable:            "Depreciation run is not available for this asset type.",
+			UseCaseUnavailable:            "Service unavailable. Please try again.",
+			FormParseFailed:               "Form data could not be read.",
+			GenerateFailed:                "Failed to record the depreciation run.",
 			InvalidSelection:              "One or more selected assets are invalid.",
 			IdempotencyConflict:           "Depreciation for one or more periods has already been posted.",
 			WorkspaceMismatch:             "Selected assets belong to a different workspace.",
@@ -3793,6 +3817,14 @@ func DefaultDepreciationRunLabels() DepreciationRunLabels {
 // Asset Revaluation labels (Surface E)
 // Lyngua root key: "assetRevaluation"
 // ---------------------------------------------------------------------------
+
+// AssetRevaluationErrorLabels holds error message strings for the asset revaluation drawer.
+type AssetRevaluationErrorLabels struct {
+	UseCaseUnavailable string `json:"useCaseUnavailable"`
+	FormParseFailed    string `json:"formParseFailed"`
+	RevaluateFailed    string `json:"revaluateFailed"`
+	InvalidAmount      string `json:"invalidAmount"`
+}
 
 // AssetRevaluationLabels holds all translatable strings for the Asset Revaluation drawer.
 type AssetRevaluationLabels struct {
@@ -3812,6 +3844,8 @@ type AssetRevaluationLabels struct {
 	CancelLabel string `json:"cancelLabel"`
 	// Toast message template (supports {{.Direction}}/{{.Amount}}/{{.Recognition}} placeholders)
 	ToastSuccessTemplate string `json:"toastSuccessTemplate"`
+	// Errors
+	Errors AssetRevaluationErrorLabels `json:"errors"`
 }
 
 // DefaultAssetRevaluationLabels returns AssetRevaluationLabels with sensible English defaults.
@@ -3829,6 +3863,12 @@ func DefaultAssetRevaluationLabels() AssetRevaluationLabels {
 		SubmitLabel:          "Revalue",
 		CancelLabel:          "Cancel",
 		ToastSuccessTemplate: "Asset revalued: {{.Direction}}{{.Amount}} recognized in {{.Recognition}}",
+		Errors: AssetRevaluationErrorLabels{
+			UseCaseUnavailable: "Service unavailable. Please try again.",
+			FormParseFailed:    "Form data could not be read.",
+			RevaluateFailed:    "Failed to record the revaluation.",
+			InvalidAmount:      "Invalid amount format. Use a number with up to 2 decimal places.",
+		},
 	}
 }
 
@@ -3854,6 +3894,9 @@ type DepreciationPoliciesLabels struct {
 	// Empty state
 	EmptyTitle   string `json:"emptyTitle"`
 	EmptyMessage string `json:"emptyMessage"`
+	// UsefulLifeMonthsSuffix is appended after the numeric useful_life_months value
+	// in the table (e.g. "60" + " mo" → "60 mo"). Leading space is intentional.
+	UsefulLifeMonthsSuffix string `json:"usefulLifeMonthsSuffix"`
 }
 
 // DepreciationPoliciesColumnLabels holds column headers for the Surface F policies table.
@@ -3881,12 +3924,350 @@ func DefaultDepreciationPoliciesLabels() DepreciationPoliciesLabels {
 			AssetsDeviating: "Assets deviating",
 			Actions:         "Actions",
 		},
-		ActionPreview:   "Preview",
-		ActionRun:       "Run",
-		PreviewSubtitle: "Preview depreciation amounts for this policy (no changes will be posted)",
-		RunSubtitle:     "Post depreciation for all in-service assets under this policy",
-		EmptyTitle:      "No depreciation policies",
-		EmptyMessage:    "Add an asset category to define a depreciation policy.",
+		ActionPreview:          "Preview",
+		ActionRun:              "Run",
+		PreviewSubtitle:        "Preview depreciation amounts for this policy (no changes will be posted)",
+		RunSubtitle:            "Post depreciation for all in-service assets under this policy",
+		EmptyTitle:             "No depreciation policies",
+		EmptyMessage:           "Add an asset category to define a depreciation policy.",
+		UsefulLifeMonthsSuffix: " mo",
+	}
+}
+
+// ---------------------------------------------------------------------------
+// TaxRateLabels
+// Lyngua root key: "taxRate"
+// ---------------------------------------------------------------------------
+
+// TaxRateLabels holds all translatable strings for the Tax Rate read-only views.
+// Tax rates are read-only in the UI; supersession is via admin SQL recipe.
+type TaxRateLabels struct {
+	Page    TaxRatePageLabels    `json:"page"`
+	Columns TaxRateColumnLabels  `json:"columns"`
+	Actions TaxRateActionLabels  `json:"actions"`
+	Empty   TaxRateEmptyLabels   `json:"empty"`
+	Detail  TaxRateDetailLabels  `json:"detail"`
+}
+
+// TaxRatePageLabels holds page heading strings.
+type TaxRatePageLabels struct {
+	HeadingActive     string `json:"headingActive"`
+	CaptionActive     string `json:"captionActive"`
+	HeadingSuperseded string `json:"headingSuperseded"`
+	CaptionSuperseded string `json:"captionSuperseded"`
+}
+
+// TaxRateColumnLabels holds table column headers.
+type TaxRateColumnLabels struct {
+	Jurisdiction  string `json:"jurisdiction"`
+	AuthorityCode string `json:"authorityCode"`
+	Kind          string `json:"kind"`
+	TreatmentCode string `json:"treatmentCode"`
+	Direction     string `json:"direction"`
+	RateBps       string `json:"rateBps"`
+	EffectiveFrom string `json:"effectiveFrom"`
+	Status        string `json:"status"`
+}
+
+// TaxRateActionLabels holds action button labels.
+type TaxRateActionLabels struct {
+	View         string `json:"view"`
+	NoPermission string `json:"noPermission"`
+}
+
+// TaxRateEmptyLabels holds empty-state strings.
+type TaxRateEmptyLabels struct {
+	Title   string `json:"title"`
+	Message string `json:"message"`
+}
+
+// TaxRateDetailLabels holds detail-page field labels.
+type TaxRateDetailLabels struct {
+	Title             string `json:"title"`
+	Jurisdiction      string `json:"jurisdiction"`
+	AuthorityCode     string `json:"authorityCode"`
+	Kind              string `json:"kind"`
+	TreatmentCode     string `json:"treatmentCode"`
+	Direction         string `json:"direction"`
+	RateBps           string `json:"rateBps"`
+	EffectiveFrom     string `json:"effectiveFrom"`
+	EffectiveTo       string `json:"effectiveTo"`
+	Status            string `json:"status"`
+	SupersedesID      string `json:"supersedesId"`
+	WorkspaceID       string `json:"workspaceId"`
+}
+
+// DefaultTaxRateLabels returns TaxRateLabels with sensible English defaults.
+func DefaultTaxRateLabels() TaxRateLabels {
+	return TaxRateLabels{
+		Page: TaxRatePageLabels{
+			HeadingActive:     "Tax Rates",
+			CaptionActive:     "Active tax rates applied during computation",
+			HeadingSuperseded: "Superseded Tax Rates",
+			CaptionSuperseded: "Historical tax rates (superseded by newer versions)",
+		},
+		Columns: TaxRateColumnLabels{
+			Jurisdiction:  "Jurisdiction",
+			AuthorityCode: "Authority",
+			Kind:          "Kind",
+			TreatmentCode: "Treatment",
+			Direction:     "Direction",
+			RateBps:       "Rate (bps)",
+			EffectiveFrom: "Effective From",
+			Status:        "Status",
+		},
+		Actions: TaxRateActionLabels{
+			View:         "View",
+			NoPermission: "You do not have permission to view tax rates",
+		},
+		Empty: TaxRateEmptyLabels{
+			Title:   "No tax rates found",
+			Message: "Tax rates are added via the seed CSVs and superseded via admin SQL recipe.",
+		},
+		Detail: TaxRateDetailLabels{
+			Title:         "Tax Rate Detail",
+			Jurisdiction:  "Jurisdiction",
+			AuthorityCode: "Authority Code",
+			Kind:          "Kind",
+			TreatmentCode: "Treatment",
+			Direction:     "Direction",
+			RateBps:       "Rate (basis points)",
+			EffectiveFrom: "Effective From",
+			EffectiveTo:   "Effective To",
+			Status:        "Status",
+			SupersedesID:  "Supersedes",
+			WorkspaceID:   "Workspace",
+		},
+	}
+}
+
+// ---------------------------------------------------------------------------
+// ForexRateLabels
+// Lyngua root key: "forexRate"
+// ---------------------------------------------------------------------------
+
+// ForexRateLabels holds all translatable strings for the Forex Rate read-only views.
+// Forex rates are read-only in the UI; rows are appended only via RecordOperatorRate.
+type ForexRateLabels struct {
+	Page    ForexRatePageLabels   `json:"page"`
+	Columns ForexRateColumnLabels `json:"columns"`
+	Actions ForexRateActionLabels `json:"actions"`
+	Empty   ForexRateEmptyLabels  `json:"empty"`
+	Detail  ForexRateDetailLabels `json:"detail"`
+}
+
+// ForexRatePageLabels holds page heading strings.
+type ForexRatePageLabels struct {
+	HeadingActive     string `json:"headingActive"`
+	CaptionActive     string `json:"captionActive"`
+	HeadingSuperseded string `json:"headingSuperseded"`
+	CaptionSuperseded string `json:"captionSuperseded"`
+}
+
+// ForexRateColumnLabels holds table column headers.
+type ForexRateColumnLabels struct {
+	FromCurrency  string `json:"fromCurrency"`
+	ToCurrency    string `json:"toCurrency"`
+	RateMicroUnits string `json:"rateMicroUnits"`
+	Source        string `json:"source"`
+	EffectiveFrom string `json:"effectiveFrom"`
+	Status        string `json:"status"`
+}
+
+// ForexRateActionLabels holds action button labels.
+type ForexRateActionLabels struct {
+	View         string `json:"view"`
+	NoPermission string `json:"noPermission"`
+}
+
+// ForexRateEmptyLabels holds empty-state strings.
+type ForexRateEmptyLabels struct {
+	Title   string `json:"title"`
+	Message string `json:"message"`
+}
+
+// ForexRateDetailLabels holds detail-page field labels.
+type ForexRateDetailLabels struct {
+	Title           string `json:"title"`
+	FromCurrency    string `json:"fromCurrency"`
+	ToCurrency      string `json:"toCurrency"`
+	RateMicroUnits  string `json:"rateMicroUnits"`
+	Source          string `json:"source"`
+	EffectiveFrom   string `json:"effectiveFrom"`
+	EffectiveTo     string `json:"effectiveTo"`
+	Status          string `json:"status"`
+	SupersedesID    string `json:"supersedesId"`
+	WorkspaceID     string `json:"workspaceId"`
+	CreatedByUserID string `json:"createdByUserId"`
+	Notes           string `json:"notes"`
+}
+
+// DefaultForexRateLabels returns ForexRateLabels with sensible English defaults.
+func DefaultForexRateLabels() ForexRateLabels {
+	return ForexRateLabels{
+		Page: ForexRatePageLabels{
+			HeadingActive:     "Forex Rates",
+			CaptionActive:     "Active foreign exchange rates used during billing",
+			HeadingSuperseded: "Superseded Forex Rates",
+			CaptionSuperseded: "Historical foreign exchange rates (superseded by newer versions)",
+		},
+		Columns: ForexRateColumnLabels{
+			FromCurrency:   "From",
+			ToCurrency:     "To",
+			RateMicroUnits: "Rate (micro-units)",
+			Source:         "Source",
+			EffectiveFrom:  "Effective From",
+			Status:         "Status",
+		},
+		Actions: ForexRateActionLabels{
+			View:         "View",
+			NoPermission: "You do not have permission to view forex rates",
+		},
+		Empty: ForexRateEmptyLabels{
+			Title:   "No forex rates found",
+			Message: "Forex rates are recorded automatically when revenue is recognized with a foreign currency.",
+		},
+		Detail: ForexRateDetailLabels{
+			Title:           "Forex Rate Detail",
+			FromCurrency:    "From Currency",
+			ToCurrency:      "To Currency",
+			RateMicroUnits:  "Rate (micro-units)",
+			Source:          "Source",
+			EffectiveFrom:   "Effective From",
+			EffectiveTo:     "Effective To",
+			Status:          "Status",
+			SupersedesID:    "Supersedes",
+			WorkspaceID:     "Workspace",
+			CreatedByUserID: "Created By",
+			Notes:           "Notes",
+		},
+	}
+}
+
+// ---------------------------------------------------------------------------
+// WithholdingCertificateLabels
+// Lyngua root key: "withholdingCertificate"
+// ---------------------------------------------------------------------------
+
+// WithholdingCertificateLabels holds all translatable strings for the
+// Withholding Certificate CRUD views.
+type WithholdingCertificateLabels struct {
+	Page    WithholdingCertificatePageLabels    `json:"page"`
+	Columns WithholdingCertificateColumnLabels  `json:"columns"`
+	Buttons WithholdingCertificateButtonLabels  `json:"buttons"`
+	Actions WithholdingCertificateActionLabels  `json:"actions"`
+	Empty   WithholdingCertificateEmptyLabels   `json:"empty"`
+	Fields  WithholdingCertificateFieldLabels   `json:"fields"`
+}
+
+// WithholdingCertificatePageLabels holds page heading strings.
+type WithholdingCertificatePageLabels struct {
+	HeadingActive   string `json:"headingActive"`
+	CaptionActive   string `json:"captionActive"`
+	HeadingVoided   string `json:"headingVoided"`
+	CaptionVoided   string `json:"captionVoided"`
+}
+
+// WithholdingCertificateColumnLabels holds table column headers.
+type WithholdingCertificateColumnLabels struct {
+	CertificateNumber string `json:"certificateNumber"`
+	RevenueID         string `json:"revenueId"`
+	PeriodYear        string `json:"periodYear"`
+	PeriodQuarter     string `json:"periodQuarter"`
+	WhtAmountCertified string `json:"whtAmountCertified"`
+	Status            string `json:"status"`
+	DateIssued        string `json:"dateIssued"`
+}
+
+// WithholdingCertificateButtonLabels holds button text.
+type WithholdingCertificateButtonLabels struct {
+	Add    string `json:"add"`
+	Edit   string `json:"edit"`
+	Delete string `json:"delete"`
+	Void   string `json:"void"`
+}
+
+// WithholdingCertificateActionLabels holds action dropdown labels.
+type WithholdingCertificateActionLabels struct {
+	View         string `json:"view"`
+	Edit         string `json:"edit"`
+	Delete       string `json:"delete"`
+	NoPermission string `json:"noPermission"`
+}
+
+// WithholdingCertificateEmptyLabels holds empty-state strings.
+type WithholdingCertificateEmptyLabels struct {
+	Title   string `json:"title"`
+	Message string `json:"message"`
+}
+
+// WithholdingCertificateFieldLabels holds drawer form field labels.
+type WithholdingCertificateFieldLabels struct {
+	CertificateNumber   string `json:"certificateNumber"`
+	RevenueID           string `json:"revenueId"`
+	TaxAuthorityID      string `json:"taxAuthorityId"`
+	PayorTin            string `json:"payorTin"`
+	PayorName           string `json:"payorName"`
+	PayeeTin            string `json:"payeeTin"`
+	PayeeName           string `json:"payeeName"`
+	PeriodYear          string `json:"periodYear"`
+	PeriodQuarter       string `json:"periodQuarter"`
+	WhtAmountCertified  string `json:"whtAmountCertified"`
+	Status              string `json:"status"`
+	DateIssued          string `json:"dateIssued"`
+	Notes               string `json:"notes"`
+}
+
+// DefaultWithholdingCertificateLabels returns WithholdingCertificateLabels with
+// sensible English defaults.
+func DefaultWithholdingCertificateLabels() WithholdingCertificateLabels {
+	return WithholdingCertificateLabels{
+		Page: WithholdingCertificatePageLabels{
+			HeadingActive: "Withholding Certificates",
+			CaptionActive: "BIR Form 2307 withholding tax certificates",
+			HeadingVoided: "Voided Certificates",
+			CaptionVoided: "Voided withholding tax certificates",
+		},
+		Columns: WithholdingCertificateColumnLabels{
+			CertificateNumber:  "Certificate No.",
+			RevenueID:          "Invoice",
+			PeriodYear:         "Period Year",
+			PeriodQuarter:      "Quarter",
+			WhtAmountCertified: "WHT Certified",
+			Status:             "Status",
+			DateIssued:         "Date Issued",
+		},
+		Buttons: WithholdingCertificateButtonLabels{
+			Add:    "Add Certificate",
+			Edit:   "Edit",
+			Delete: "Delete",
+			Void:   "Void",
+		},
+		Actions: WithholdingCertificateActionLabels{
+			View:         "View",
+			Edit:         "Edit",
+			Delete:       "Delete",
+			NoPermission: "You do not have permission to manage withholding certificates",
+		},
+		Empty: WithholdingCertificateEmptyLabels{
+			Title:   "No withholding certificates",
+			Message: "Add a withholding certificate received from a customer to record creditable WHT.",
+		},
+		Fields: WithholdingCertificateFieldLabels{
+			CertificateNumber:  "Certificate Number",
+			RevenueID:          "Invoice",
+			TaxAuthorityID:     "Tax Authority",
+			PayorTin:           "Payor TIN",
+			PayorName:          "Payor Name",
+			PayeeTin:           "Payee TIN",
+			PayeeName:          "Payee Name",
+			PeriodYear:         "Period Year",
+			PeriodQuarter:      "Quarter",
+			WhtAmountCertified: "WHT Amount Certified",
+			Status:             "Status",
+			DateIssued:         "Date Issued",
+			Notes:              "Notes",
+		},
 	}
 }
 

@@ -651,3 +651,148 @@ func TestNewDeleteAction_NilDeleteAsset(t *testing.T) {
 		t.Errorf("status = %d, want %d (nil DeleteAsset should not error)", result.StatusCode, http.StatusOK)
 	}
 }
+
+// ----- Phase 5 H5: server-side soft-delete gate tests -----
+
+// TestNewDeleteAction_InUseAssetRejected verifies that when GetAssetInUseIDs
+// returns the asset as in-use, the delete handler returns the translated
+// CannotDeleteInUse error and does NOT call DeleteAsset.
+func TestNewDeleteAction_InUseAssetRejected(t *testing.T) {
+	t.Parallel()
+
+	deps := testDeps()
+	deps.Labels.Actions.CannotDeleteInUse = "Cannot delete: asset has posted transactions."
+
+	// Asset "asset-123" has transactions — in-use.
+	deps.GetAssetInUseIDs = func(ctx context.Context, ids []string) (map[string]bool, error) {
+		m := map[string]bool{}
+		for _, id := range ids {
+			if id == "asset-123" {
+				m[id] = true
+			}
+		}
+		return m, nil
+	}
+
+	deleteCallCount := 0
+	deps.DeleteAsset = func(ctx context.Context, id string) error {
+		deleteCallCount++
+		return nil
+	}
+
+	v := NewDeleteAction(deps)
+
+	req := httptest.NewRequest(http.MethodPost, "/assets/delete?id=asset-123", nil)
+	viewCtx := &view.ViewContext{Request: req}
+
+	result := v.Handle(ctxWithPerms("asset:delete"), viewCtx)
+
+	if result.StatusCode != http.StatusUnprocessableEntity {
+		t.Errorf("status = %d, want %d (in-use asset must be rejected)", result.StatusCode, http.StatusUnprocessableEntity)
+	}
+	if result.Headers["HX-Error-Message"] != deps.Labels.Actions.CannotDeleteInUse {
+		t.Errorf("HX-Error-Message = %q, want %q",
+			result.Headers["HX-Error-Message"], deps.Labels.Actions.CannotDeleteInUse)
+	}
+	if deleteCallCount != 0 {
+		t.Errorf("DeleteAsset called %d times, want 0 (in-use asset must NOT be deleted)", deleteCallCount)
+	}
+}
+
+// TestNewDeleteAction_NotInUseAssetAllowed verifies that when GetAssetInUseIDs
+// returns the asset as NOT in-use, the delete proceeds normally.
+func TestNewDeleteAction_NotInUseAssetAllowed(t *testing.T) {
+	t.Parallel()
+
+	deps := testDeps()
+	deps.Labels.Actions.CannotDeleteInUse = "Cannot delete: asset has posted transactions."
+
+	// No transactions — not in-use.
+	deps.GetAssetInUseIDs = func(ctx context.Context, ids []string) (map[string]bool, error) {
+		return map[string]bool{}, nil
+	}
+
+	deleteCallCount := 0
+	deps.DeleteAsset = func(ctx context.Context, id string) error {
+		deleteCallCount++
+		return nil
+	}
+
+	v := NewDeleteAction(deps)
+
+	req := httptest.NewRequest(http.MethodPost, "/assets/delete?id=asset-456", nil)
+	viewCtx := &view.ViewContext{Request: req}
+
+	result := v.Handle(ctxWithPerms("asset:delete"), viewCtx)
+
+	if result.StatusCode != http.StatusOK {
+		t.Errorf("status = %d, want %d (non-in-use asset delete should succeed)", result.StatusCode, http.StatusOK)
+	}
+	if deleteCallCount != 1 {
+		t.Errorf("DeleteAsset called %d times, want 1", deleteCallCount)
+	}
+}
+
+// TestNewDeleteAction_InUseCheckerError_ProceedsWithDelete verifies that when
+// GetAssetInUseIDs returns an error (e.g. DB connection failure), the handler
+// proceeds with the delete rather than blocking all deletes on a transient error.
+// The server-side gate is best-effort: the UI already disabled the button, and
+// a failed checker should not create a permanent UI deadlock.
+func TestNewDeleteAction_InUseCheckerError_ProceedsWithDelete(t *testing.T) {
+	t.Parallel()
+
+	deps := testDeps()
+
+	deps.GetAssetInUseIDs = func(ctx context.Context, ids []string) (map[string]bool, error) {
+		return nil, errors.New("db connection failure")
+	}
+
+	deleteCallCount := 0
+	deps.DeleteAsset = func(ctx context.Context, id string) error {
+		deleteCallCount++
+		return nil
+	}
+
+	v := NewDeleteAction(deps)
+
+	req := httptest.NewRequest(http.MethodPost, "/assets/delete?id=asset-789", nil)
+	viewCtx := &view.ViewContext{Request: req}
+
+	result := v.Handle(ctxWithPerms("asset:delete"), viewCtx)
+
+	if result.StatusCode != http.StatusOK {
+		t.Errorf("status = %d, want %d (checker error should not block delete)", result.StatusCode, http.StatusOK)
+	}
+	if deleteCallCount != 1 {
+		t.Errorf("DeleteAsset called %d times, want 1 on checker error", deleteCallCount)
+	}
+}
+
+// TestNewDeleteAction_NilGetAssetInUseIDs verifies nil-safety: when
+// GetAssetInUseIDs is not wired (mock/test build), delete proceeds normally.
+func TestNewDeleteAction_NilGetAssetInUseIDs(t *testing.T) {
+	t.Parallel()
+
+	deps := testDeps()
+	deps.GetAssetInUseIDs = nil // not wired
+
+	deleteCallCount := 0
+	deps.DeleteAsset = func(ctx context.Context, id string) error {
+		deleteCallCount++
+		return nil
+	}
+
+	v := NewDeleteAction(deps)
+
+	req := httptest.NewRequest(http.MethodPost, "/assets/delete?id=asset-001", nil)
+	viewCtx := &view.ViewContext{Request: req}
+
+	result := v.Handle(ctxWithPerms("asset:delete"), viewCtx)
+
+	if result.StatusCode != http.StatusOK {
+		t.Errorf("status = %d, want %d (nil checker should allow delete)", result.StatusCode, http.StatusOK)
+	}
+	if deleteCallCount != 1 {
+		t.Errorf("DeleteAsset called %d times, want 1", deleteCallCount)
+	}
+}

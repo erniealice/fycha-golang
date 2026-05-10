@@ -27,14 +27,15 @@ import (
 
 // CategoryDepreciationRunAssetRow is one asset row inside the Surface C drawer.
 type CategoryDepreciationRunAssetRow struct {
-	AssetID      string
-	AssetName    string
-	Currency     string
-	BookValue    int64  // centavos
-	PendingCount int
-	NextAmount   int64  // centavos — next period projected
-	Blockers     []string
-	CanRun       bool // true when no blockers and pendingCount > 0
+	AssetID       string
+	AssetName     string
+	Currency      string
+	BookValue     int64  // centavos
+	PendingCount  int
+	NextAmount    int64  // centavos — next period projected
+	NextAmountFmt string // pre-formatted via types.FormatMoney (e.g. "PHP 50,000.00")
+	Blockers      []string
+	CanRun        bool // true when no blockers and pendingCount > 0
 }
 
 // CategoryDepreciationRunRequest is the POST payload for Surface C.
@@ -162,6 +163,20 @@ func handleCategoryRunPOST(
 	deps *CategoryDepreciationRunDeps,
 	categoryID, scopeKind string,
 ) view.ViewResult {
+	// Soft-block path (deferred — no field-level validation needed today):
+	// For validation errors that need the form re-rendered with a field-level
+	// chip rather than a toast, return:
+	//     view.ViewResult{
+	//         StatusCode: 422,
+	//         Headers: map[string]string{
+	//             "HX-Reswap":   "outerHTML",
+	//             "HX-Retarget": "#sheet form",
+	//         },
+	//         Body: rerenderedFormHTML,
+	//     }
+	// lf.Sheet.handleResponse (sheet.js:208-225) honors these headers on non-2xx
+	// and swaps the body in. Canonical example: subscription/recognize/action.go:335-345.
+
 	if err := viewCtx.Request.ParseForm(); err != nil {
 		return fycha.HTMXError(deps.Labels.Errors.InvalidSelection)
 	}
@@ -179,26 +194,19 @@ func handleCategoryRunPOST(
 		protoScopeKind = "POLICY"
 	}
 
-	var result *CategoryDepreciationRunResult
-	if deps.GenerateCategoryRun != nil {
-		var err error
-		result, err = deps.GenerateCategoryRun(ctx, CategoryDepreciationRunRequest{
-			CategoryID: categoryID,
-			ScopeKind:  protoScopeKind,
-			AsOfDate:   asOfDate,
-			AssetIDs:   selectedAssets,
-		})
-		if err != nil {
-			log.Printf("surface-c: GenerateCategoryRun error for category %s: %v", categoryID, err)
-			return fycha.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
-		}
-	} else {
-		// Graceful mock result when use case not yet wired.
-		result = &CategoryDepreciationRunResult{
-			RunID:        "run-mock",
-			CreatedCount: len(selectedAssets),
-			Success:      true,
-		}
+	if deps.GenerateCategoryRun == nil {
+		log.Printf("surface-c: GenerateCategoryRun callback not wired (service unavailable)")
+		return fycha.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
+	}
+	result, err := deps.GenerateCategoryRun(ctx, CategoryDepreciationRunRequest{
+		CategoryID: categoryID,
+		ScopeKind:  protoScopeKind,
+		AsOfDate:   asOfDate,
+		AssetIDs:   selectedAssets,
+	})
+	if err != nil {
+		log.Printf("surface-c: GenerateCategoryRun error for category %s: %v", categoryID, err)
+		return fycha.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
 	}
 
 	// Build toast payload per pyeza:toast contract.

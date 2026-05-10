@@ -158,10 +158,32 @@ Renders the pending-period selection table (compact style — not a full pyeza T
             </thead>
             <tbody>
                 {{range .Candidates}}
+                {{if and .Blocked (eq .BlockerKind "UNITS_REQUIRED")}}
                 <tr
                     data-testid="asset-depreciation-run-period-row"
                     data-period="{{.PeriodStart}}"
-                    {{if .Blocked}}title="{{.BlockerReason}}"{{end}}
+                    class="row--blocked row--blocked-uop"
+                >
+                    <td class="col-checkbox">
+                        <input
+                            type="checkbox"
+                            name="selection"
+                            value="{{.PeriodStart}}"
+                            disabled
+                            data-testid="asset-depreciation-run-period-checkbox"
+                            aria-label="{{.PeriodLabel}}"
+                        >
+                    </td>
+                    <td colspan="4" class="blocker-message">
+                        {{$.Labels.RunForm.BlockerUnitsRequiredMessage}}
+                        <a href="/docs/plan/20260601-uop-depreciation/" target="_blank" rel="noopener noreferrer">{{$.Labels.RunForm.BlockerUnitsRequiredLink}}</a>
+                    </td>
+                </tr>
+                {{else}}
+                <tr
+                    data-testid="asset-depreciation-run-period-row"
+                    data-period="{{.PeriodStart}}"
+                    {{if .Blocked}}class="row--blocked" title="{{.BlockerReason}}"{{end}}
                 >
                     <td class="col-checkbox">
                         <input
@@ -179,6 +201,7 @@ Renders the pending-period selection table (compact style — not a full pyeza T
                     <td class="cell-right">{{.ProjectedAccumFmt}}</td>
                     <td class="cell-right">—</td>
                 </tr>
+                {{end}}
                 {{end}}
             </tbody>
         </table>

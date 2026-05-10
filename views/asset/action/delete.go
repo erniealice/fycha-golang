@@ -27,6 +27,15 @@ func NewDeleteAction(deps *Deps) view.View {
 			return fycha.HTMXError(deps.Labels.Actions.IDRequired)
 		}
 
+		// H5 server-side gate: reject delete if the asset has any posted
+		// asset_transaction row, regardless of whether the UI already disabled
+		// the button. This prevents bypass via direct HTTP requests.
+		if deps.GetAssetInUseIDs != nil {
+			if m, err := deps.GetAssetInUseIDs(ctx, []string{id}); err == nil && m[id] {
+				return fycha.HTMXError(deps.Labels.Actions.CannotDeleteInUse)
+			}
+		}
+
 		if deps.DeleteAsset != nil {
 			if err := deps.DeleteAsset(ctx, id); err != nil {
 				log.Printf("asset delete error: %v", err)

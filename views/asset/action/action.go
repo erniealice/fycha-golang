@@ -24,6 +24,12 @@ type Deps struct {
 	// row exists for the asset, triggering locked-field rendering in the edit drawer.
 	// Nil = always unlocked (mock build or use cases not yet wired).
 	DepreciationFieldsLockedFn func(ctx context.Context, assetID string) (bool, error)
+
+	// GetAssetInUseIDs returns a map of asset IDs that have any asset_transaction
+	// row. Used by the delete handler to enforce the H5 server-side soft-delete
+	// gate before calling DeleteAsset.
+	// Nil = skip the check (mock build or use cases not yet wired).
+	GetAssetInUseIDs func(ctx context.Context, ids []string) (map[string]bool, error)
 }
 
 // labelsFromDeps builds form.Labels from the deps label tree. The inline
@@ -57,6 +63,7 @@ func labelsFromDeps(deps *Deps) assetform.Labels {
 		AcquisitionCostInfo:        deps.Labels.Form.AcquisitionCostInfo,
 		SalvageValueInfo:           deps.Labels.Form.SalvageValueInfo,
 		UsefulLifeMonthsInfo:       deps.Labels.Form.UsefulLifeMonthsInfo,
-		DepreciationMethodInfo:     deps.Labels.Form.DepreciationMethodInfo,
+		DepreciationMethodInfo:           deps.Labels.Form.DepreciationMethodInfo,
+		UnitsOfProductionDisabledTooltip: deps.Labels.Form.UnitsOfProductionDisabledTooltip,
 	}
 }

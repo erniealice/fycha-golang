@@ -836,6 +836,134 @@ func (r AssetCategoryDepreciationRoutes) PolicyPreviewFor(categoryID string) str
 }
 
 // ---------------------------------------------------------------------------
+// TaxRateRoutes
+// ---------------------------------------------------------------------------
+
+// TaxRateRoutes holds route paths for Tax Rate read-only views.
+// Tax rates are read-only in the UI; supersession is done via admin SQL recipe.
+type TaxRateRoutes struct {
+	ActiveNav string `json:"active_nav"`
+	ListURL   string `json:"list_url"`
+	DetailURL string `json:"detail_url"`
+}
+
+// DefaultTaxRateRoutes returns a TaxRateRoutes populated from the package-level
+// route constants.
+func DefaultTaxRateRoutes() TaxRateRoutes {
+	return TaxRateRoutes{
+		ActiveNav: "tax_rate",
+		ListURL:   TaxRateListURL,
+		DetailURL: TaxRateDetailURL,
+	}
+}
+
+// RouteMap returns a map of dot-notation keys to route paths.
+func (r TaxRateRoutes) RouteMap() map[string]string {
+	return map[string]string{
+		"tax_rate.list":   r.ListURL,
+		"tax_rate.detail": r.DetailURL,
+	}
+}
+
+// DetailFor returns the resolved detail URL for a given tax rate ID.
+func (r TaxRateRoutes) DetailFor(id string) string {
+	return resolveParam(r.DetailURL, "id", id)
+}
+
+// ---------------------------------------------------------------------------
+// ForexRateRoutes
+// ---------------------------------------------------------------------------
+
+// ForexRateRoutes holds route paths for Forex Rate read-only views.
+// Forex rates are read-only in the UI; rows are appended only via RecordOperatorRate.
+type ForexRateRoutes struct {
+	ActiveNav string `json:"active_nav"`
+	ListURL   string `json:"list_url"`
+	DetailURL string `json:"detail_url"`
+}
+
+// DefaultForexRateRoutes returns a ForexRateRoutes populated from the
+// package-level route constants.
+func DefaultForexRateRoutes() ForexRateRoutes {
+	return ForexRateRoutes{
+		ActiveNav: "forex_rate",
+		ListURL:   ForexRateListURL,
+		DetailURL: ForexRateDetailURL,
+	}
+}
+
+// RouteMap returns a map of dot-notation keys to route paths.
+func (r ForexRateRoutes) RouteMap() map[string]string {
+	return map[string]string{
+		"forex_rate.list":   r.ListURL,
+		"forex_rate.detail": r.DetailURL,
+	}
+}
+
+// DetailFor returns the resolved detail URL for a given forex rate ID.
+func (r ForexRateRoutes) DetailFor(id string) string {
+	return resolveParam(r.DetailURL, "id", id)
+}
+
+// ---------------------------------------------------------------------------
+// WithholdingCertificateRoutes
+// ---------------------------------------------------------------------------
+
+// WithholdingCertificateRoutes holds route paths for Withholding Certificate
+// CRUD views (Treasury domain — tax integration v1).
+type WithholdingCertificateRoutes struct {
+	ActiveNav     string `json:"active_nav"`
+	ListURL       string `json:"list_url"`
+	DetailURL     string `json:"detail_url"`
+	TableURL      string `json:"table_url"`
+	AddURL        string `json:"add_url"`
+	EditURL       string `json:"edit_url"`
+	DeleteURL     string `json:"delete_url"`
+	BulkDeleteURL string `json:"bulk_delete_url"`
+	SetStatusURL  string `json:"set_status_url"`
+}
+
+// DefaultWithholdingCertificateRoutes returns a WithholdingCertificateRoutes
+// populated from the package-level route constants.
+func DefaultWithholdingCertificateRoutes() WithholdingCertificateRoutes {
+	return WithholdingCertificateRoutes{
+		ActiveNav:     "withholding_certificate",
+		ListURL:       WithholdingCertificateListURL,
+		DetailURL:     WithholdingCertificateDetailURL,
+		TableURL:      WithholdingCertificateTableURL,
+		AddURL:        WithholdingCertificateAddURL,
+		EditURL:       WithholdingCertificateEditURL,
+		DeleteURL:     WithholdingCertificateDeleteURL,
+		BulkDeleteURL: WithholdingCertificateBulkDeleteURL,
+		SetStatusURL:  WithholdingCertificateSetStatusURL,
+	}
+}
+
+// RouteMap returns a map of dot-notation keys to route paths.
+func (r WithholdingCertificateRoutes) RouteMap() map[string]string {
+	return map[string]string{
+		"withholding_certificate.list":        r.ListURL,
+		"withholding_certificate.detail":      r.DetailURL,
+		"withholding_certificate.table":       r.TableURL,
+		"withholding_certificate.add":         r.AddURL,
+		"withholding_certificate.edit":        r.EditURL,
+		"withholding_certificate.delete":      r.DeleteURL,
+		"withholding_certificate.bulk_delete": r.BulkDeleteURL,
+		"withholding_certificate.set_status":  r.SetStatusURL,
+	}
+}
+
+// DetailFor returns the resolved detail URL for a given withholding certificate ID.
+func (r WithholdingCertificateRoutes) DetailFor(id string) string {
+	return resolveParam(r.DetailURL, "id", id)
+}
+
+// EditFor returns the resolved edit drawer URL for a given withholding certificate ID.
+func (r WithholdingCertificateRoutes) EditFor(id string) string {
+	return resolveParam(r.EditURL, "id", id)
+}
+
+// ---------------------------------------------------------------------------
 // resolveParam — internal URL template helper
 // ---------------------------------------------------------------------------
 

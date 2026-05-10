@@ -153,7 +153,7 @@ func buildTableRows(
 		previewURL := deps.Routes.PolicyPreviewFor(r.CategoryID)
 		runURL := deps.Routes.PolicyRunFor(r.CategoryID)
 
-		usefulLifeDisplay := fmt.Sprintf("%d mo", r.UsefulLifeMonths)
+		usefulLifeDisplay := fmt.Sprintf("%d", r.UsefulLifeMonths) + l.UsefulLifeMonthsSuffix
 		salvagePctDisplay := fmt.Sprintf("%.0f%%", r.SalvagePct)
 
 		deviatingVariant := "neutral"

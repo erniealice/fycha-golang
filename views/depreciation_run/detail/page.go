@@ -279,7 +279,7 @@ func buildTransactionsTable(txs []drshared.AssetTransactionRow, l fycha.Deprecia
 				{Type: "text", Value: assetDisplay},
 				{Type: "text", Value: tx.TransactionDate},
 				{Type: "text", Value: tx.PeriodStartDate},
-				types.MoneyCell(float64(tx.Amount)/100.0, tx.Currency, true),
+				types.MoneyCell(float64(tx.Amount), tx.Currency, true),
 			},
 		})
 	}

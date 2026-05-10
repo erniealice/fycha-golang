@@ -92,7 +92,7 @@ func resolveAssetActions(asset MockAssetDetail, routes fycha.AssetRoutes, labels
 			return AssetActions{
 				Primary: AssetAction{
 					URL:     revalURL,
-					Label:   labels.Actions.Edit, // lyngua: assetDetail.actions.revalue — using actions.edit as fallback
+					Label:   labels.Actions.Revalue,
 					TestID:  "asset-detail-action-revalue",
 					Variant: "primary",
 				},
