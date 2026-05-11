@@ -20,9 +20,9 @@ import (
 
 	assetpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset"
 	assetcategorypb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset_category"
-	deprunpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/depreciation_run"
-	depschpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/depreciation"
 	revaluationpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset_revaluation"
+	depschpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/depreciation"
+	deprunpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/depreciation_run"
 	commonpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/common"
 
 	"github.com/erniealice/pyeza-golang/types"

@@ -351,4 +351,3 @@ func remittanceStatusSubtitle(l fycha.PayrollLabels, status string) string {
 		return l.Remittance.Page.SubtitlePending
 	}
 }
-

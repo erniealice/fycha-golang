@@ -420,9 +420,9 @@ type AssetFormLabels struct {
 }
 
 type AssetActionLabels struct {
-	View    string `json:"view"`
-	Edit    string `json:"edit"`
-	Revalue string `json:"revalue"`
+	View       string `json:"view"`
+	Edit       string `json:"edit"`
+	Revalue    string `json:"revalue"`
 	Delete     string `json:"delete"`
 	Activate   string `json:"activate"`
 	Deactivate string `json:"deactivate"`
@@ -555,32 +555,32 @@ func DefaultAssetLabels() AssetLabels {
 			InactiveMessage: "Deactivated or disposed assets will appear here.",
 		},
 		Form: AssetFormLabels{
-			Name:                       "Name",
-			NamePlaceholder:            "e.g. Office Laptop",
-			AssetNumber:                "Asset Number",
-			AssetNumberPlaceholder:     "e.g. FA-001",
-			Description:                "Description",
-			DescriptionPlaceholder:     "Brief description of the asset",
-			Category:                   "Category",
-			CategoryPlaceholder:        "Select a category",
-			Location:                   "Location",
-			LocationPlaceholder:        "Select a location",
-			AcquisitionCost:            "Acquisition Cost",
-			AcquisitionCostPlaceholder: "0.00",
-			SalvageValue:               "Salvage Value",
-			SalvageValuePlaceholder:    "0.00",
-			UsefulLifeMonths:           "Useful Life (Months)",
-			UsefulLifePlaceholder:      "e.g. 60",
-			DepreciationMethod:         "Depreciation Method",
-			Active:                     "Active",
-			DepMethodStraightLine:      "Straight Line",
-			DepMethodDecliningBalance:  "Declining Balance",
-			DepMethodSumOfYears:        "Sum of Years' Digits",
-			DepMethodUnitsOfProduction: "Units of Production",
-			AssetNumberInfo:            "Unique identifier for this asset in your register (e.g. FA-001).",
-			AcquisitionCostInfo:        "Total cost to acquire or construct the asset, including installation.",
-			SalvageValueInfo:           "Estimated residual value at the end of the asset's useful life.",
-			UsefulLifeMonthsInfo:       "Expected productive life of the asset in months, used to calculate depreciation.",
+			Name:                             "Name",
+			NamePlaceholder:                  "e.g. Office Laptop",
+			AssetNumber:                      "Asset Number",
+			AssetNumberPlaceholder:           "e.g. FA-001",
+			Description:                      "Description",
+			DescriptionPlaceholder:           "Brief description of the asset",
+			Category:                         "Category",
+			CategoryPlaceholder:              "Select a category",
+			Location:                         "Location",
+			LocationPlaceholder:              "Select a location",
+			AcquisitionCost:                  "Acquisition Cost",
+			AcquisitionCostPlaceholder:       "0.00",
+			SalvageValue:                     "Salvage Value",
+			SalvageValuePlaceholder:          "0.00",
+			UsefulLifeMonths:                 "Useful Life (Months)",
+			UsefulLifePlaceholder:            "e.g. 60",
+			DepreciationMethod:               "Depreciation Method",
+			Active:                           "Active",
+			DepMethodStraightLine:            "Straight Line",
+			DepMethodDecliningBalance:        "Declining Balance",
+			DepMethodSumOfYears:              "Sum of Years' Digits",
+			DepMethodUnitsOfProduction:       "Units of Production",
+			AssetNumberInfo:                  "Unique identifier for this asset in your register (e.g. FA-001).",
+			AcquisitionCostInfo:              "Total cost to acquire or construct the asset, including installation.",
+			SalvageValueInfo:                 "Estimated residual value at the end of the asset's useful life.",
+			UsefulLifeMonthsInfo:             "Expected productive life of the asset in months, used to calculate depreciation.",
 			DepreciationMethodInfo:           "The accounting method used to allocate the asset's cost over its useful life.",
 			UnitsOfProductionDisabledTooltip: "Units of Production depreciation is not yet supported.",
 		},
@@ -1086,16 +1086,16 @@ func DefaultAccountLabels() AccountLabels {
 			NoTransactionsDetail:  "No journal entries found for this account in the selected date range.",
 		},
 		Dashboard: LedgerDashboardLabels{
-			Title:              "Ledger Dashboard",
-			Subtitle:           "Live position of your books — assets, liabilities, equity, and net income",
-			TotalAssets:        "Total Assets",
-			TotalLiabilities:   "Total Liabilities",
-			TotalEquity:        "Total Equity",
-			NetIncomeMTD:       "Net Income (MTD)",
-			BalanceByType:      "Account Balance by Type",
-			UnpostedJournals:   "Unposted Journals",
-			RecentJournals:     "Recent Journals",
-			NoRecentJournals:   "No recent journal entries",
+			Title:                  "Ledger Dashboard",
+			Subtitle:               "Live position of your books — assets, liabilities, equity, and net income",
+			TotalAssets:            "Total Assets",
+			TotalLiabilities:       "Total Liabilities",
+			TotalEquity:            "Total Equity",
+			NetIncomeMTD:           "Net Income (MTD)",
+			BalanceByType:          "Account Balance by Type",
+			UnpostedJournals:       "Unposted Journals",
+			RecentJournals:         "Recent Journals",
+			NoRecentJournals:       "No recent journal entries",
 			QuickNewJournal:        "New Journal Entry",
 			QuickTrialBalance:      "Trial Balance",
 			QuickClosePeriod:       "Close Period",
@@ -1610,10 +1610,10 @@ type PayrollDashboardLabels struct {
 	Title    string `json:"title"`
 	Subtitle string `json:"subtitle"`
 	// Stats
-	CurrentRunStatus    string `json:"currentRunStatus"`
-	EmployeesInCurrent  string `json:"employeesInCurrent"`
-	TotalGrossMTD       string `json:"totalGrossMtd"`
-	RemittancesDue      string `json:"remittancesDue"`
+	CurrentRunStatus   string `json:"currentRunStatus"`
+	EmployeesInCurrent string `json:"employeesInCurrent"`
+	TotalGrossMTD      string `json:"totalGrossMtd"`
+	RemittancesDue     string `json:"remittancesDue"`
 	// Widgets
 	GrossPayByMonth     string `json:"grossPayByMonth"`
 	RecentRuns          string `json:"recentRuns"`
@@ -1621,14 +1621,14 @@ type PayrollDashboardLabels struct {
 	NoRecentRuns        string `json:"noRecentRuns"`
 	NoUpcomingDeadlines string `json:"noUpcomingDeadlines"`
 	// Quick actions
-	QuickNewRun           string `json:"quickNewRun"`
-	QuickProcessRun       string `json:"quickProcessRun"`
-	QuickFileRemittance   string `json:"quickFileRemittance"`
+	QuickNewRun            string `json:"quickNewRun"`
+	QuickProcessRun        string `json:"quickProcessRun"`
+	QuickFileRemittance    string `json:"quickFileRemittance"`
 	QuickPayPeriodSettings string `json:"quickPayPeriodSettings"`
 	// Common
-	ViewAll    string `json:"viewAll"`
-	AxisGross  string `json:"axisGross"`
-	NoRunYet   string `json:"noRunYet"`
+	ViewAll   string `json:"viewAll"`
+	AxisGross string `json:"axisGross"`
+	NoRunYet  string `json:"noRunYet"`
 }
 
 // PayrollRunLabels holds labels for the Payroll Run sub-module.
@@ -2488,15 +2488,15 @@ type EquityDashboardLabels struct {
 	Title    string `json:"title"`
 	Subtitle string `json:"subtitle"`
 	// Stats
-	TotalContributed   string `json:"totalContributed"`
-	ActiveOwners       string `json:"activeOwners"`
-	DistributionsYTD   string `json:"distributionsYtd"`
-	NetMovementYTD     string `json:"netMovementYtd"`
+	TotalContributed string `json:"totalContributed"`
+	ActiveOwners     string `json:"activeOwners"`
+	DistributionsYTD string `json:"distributionsYtd"`
+	NetMovementYTD   string `json:"netMovementYtd"`
 	// Widgets
-	EquityByOwner     string `json:"equityByOwner"`
-	TopContributors   string `json:"topContributors"`
+	EquityByOwner      string `json:"equityByOwner"`
+	TopContributors    string `json:"topContributors"`
 	RecentTransactions string `json:"recentTransactions"`
-	NoRecentTxns      string `json:"noRecentTxns"`
+	NoRecentTxns       string `json:"noRecentTxns"`
 	// Quick actions
 	QuickRecordContribution string `json:"quickRecordContribution"`
 	QuickRecordDistribution string `json:"quickRecordDistribution"`
@@ -2701,17 +2701,17 @@ func DefaultEquityLabels() EquityLabels {
 
 // LoanLabels is the top-level label container for the Loans app.
 type LoanLabels struct {
-	Page      LoanPageLabels       `json:"page"`
-	Tabs      LoanTabLabels        `json:"tabs"`
-	Buttons   LoanButtonLabels     `json:"buttons"`
-	Columns   LoanColumnLabels     `json:"columns"`
-	Empty     LoanEmptyLabels      `json:"empty"`
-	Actions   LoanActionLabels     `json:"actions"`
-	Form      LoanFormLabels       `json:"form"`
-	Status    LoanStatusLabels     `json:"status"`
-	Type      LoanTypeLabels       `json:"type"`
-	Sheet     LoanSheetLabels      `json:"sheet"`
-	Dashboard LoanDashboardLabels  `json:"dashboard"`
+	Page      LoanPageLabels      `json:"page"`
+	Tabs      LoanTabLabels       `json:"tabs"`
+	Buttons   LoanButtonLabels    `json:"buttons"`
+	Columns   LoanColumnLabels    `json:"columns"`
+	Empty     LoanEmptyLabels     `json:"empty"`
+	Actions   LoanActionLabels    `json:"actions"`
+	Form      LoanFormLabels      `json:"form"`
+	Status    LoanStatusLabels    `json:"status"`
+	Type      LoanTypeLabels      `json:"type"`
+	Sheet     LoanSheetLabels     `json:"sheet"`
+	Dashboard LoanDashboardLabels `json:"dashboard"`
 }
 
 // LoanDashboardLabels holds translatable strings for the Loan live dashboard
@@ -3409,28 +3409,28 @@ func (l CollectionSummaryReportLabels) PrimaryGroupLabel(dim string) string {
 
 // DepreciationRunLabels is the top-level struct for all Depreciation Run copy.
 type DepreciationRunLabels struct {
-	AppLabel       string                             `json:"appLabel"`
+	AppLabel string `json:"appLabel"`
 	// Surface A — per-asset drawer
-	RunForm        DepreciationRunFormLabels          `json:"runForm"`
+	RunForm DepreciationRunFormLabels `json:"runForm"`
 	// Surface B — Lapsing Schedule list page (workspace overview)
 	LapsingSchedule DepreciationRunLapsingScheduleLabels `json:"lapsingSchedule"`
 	// Surface C — per-category / per-policy drawer
 	CategoryRunForm DepreciationRunCategoryFormLabels `json:"categoryRunForm"`
 	// Surface D — run history list + detail
-	List           DepreciationRunListLabels          `json:"list"`
-	Detail         DepreciationRunDetailLabels        `json:"detail"`
+	List   DepreciationRunListLabels   `json:"list"`
+	Detail DepreciationRunDetailLabels `json:"detail"`
 	// Status badges shared across Surfaces B and D
-	StatusBadges   DepreciationRunStatusBadgeLabels   `json:"statusBadges"`
+	StatusBadges DepreciationRunStatusBadgeLabels `json:"statusBadges"`
 	// Scope kind display labels
-	ScopeKind      DepreciationRunScopeKindLabels     `json:"scopeKind"`
+	ScopeKind DepreciationRunScopeKindLabels `json:"scopeKind"`
 	// Entry outcome labels
-	EntryOutcome   DepreciationRunEntryOutcomeLabels  `json:"entryOutcome"`
+	EntryOutcome DepreciationRunEntryOutcomeLabels `json:"entryOutcome"`
 	// Cross-cutting toast labels
-	Toast          DepreciationRunToastLabels         `json:"toast"`
+	Toast DepreciationRunToastLabels `json:"toast"`
 	// Errors
-	Errors         DepreciationRunErrorLabels         `json:"errors"`
+	Errors DepreciationRunErrorLabels `json:"errors"`
 	// Cross-cutting asset-edit field labels
-	AssetEditDepreciationFieldsLockedWarning string `json:"assetEditDepreciationFieldsLockedWarning"`
+	AssetEditDepreciationFieldsLockedWarning  string `json:"assetEditDepreciationFieldsLockedWarning"`
 	AssetEditUnitsOfProductionDisabledTooltip string `json:"assetEditUnitsOfProductionDisabledTooltip"`
 }
 
@@ -3442,14 +3442,14 @@ type DepreciationRunFormLabels struct {
 	AsOfDateLabel string `json:"asOfDateLabel"`
 	AsOfDateHint  string `json:"asOfDateHint"`
 	// Pending-periods table column headers
-	ColPeriod        string `json:"colPeriod"`
-	ColAmount        string `json:"colAmount"`
-	ColAccumulated   string `json:"colAccumulated"`
+	ColPeriod         string `json:"colPeriod"`
+	ColAmount         string `json:"colAmount"`
+	ColAccumulated    string `json:"colAccumulated"`
 	ColBookValueAfter string `json:"colBookValueAfter"`
 	// Generate button (label and count-template variant)
-	GenerateLabel         string `json:"generateLabel"`
+	GenerateLabel             string `json:"generateLabel"`
 	GenerateWithCountTemplate string `json:"generateWithCountTemplate"`
-	CancelLabel           string `json:"cancelLabel"`
+	CancelLabel               string `json:"cancelLabel"`
 	// Blocker chip labels
 	BlockerNotInService     string `json:"blockerNotInService"`
 	BlockerFullyDepreciated string `json:"blockerFullyDepreciated"`
@@ -3473,16 +3473,16 @@ type DepreciationRunLapsingScheduleLabels struct {
 	// Table column labels
 	Columns DepreciationRunLapsingScheduleColumnLabels `json:"columns"`
 	// Status badge variants
-	StatusUpToDate          string `json:"statusUpToDate"`
+	StatusUpToDate                string `json:"statusUpToDate"`
 	StatusNPeriodsPendingTemplate string `json:"statusNPeriodsPendingTemplate"`
-	StatusNotStarted        string `json:"statusNotStarted"`
-	StatusBlockedTemplate   string `json:"statusBlockedTemplate"`
+	StatusNotStarted              string `json:"statusNotStarted"`
+	StatusBlockedTemplate         string `json:"statusBlockedTemplate"`
 	// BlockedPrefix is the human-readable prefix for blocked-status badges
 	// when a specific BlockerLabel is provided (e.g. "Blocked: Units required").
 	// The trailing space is intentional — it is concatenated with the reason string.
 	BlockedPrefix string `json:"blockedPrefix"`
 	// Bulk action labels
-	BulkRunForSelected   string `json:"bulkRunForSelected"`
+	BulkRunForSelected    string `json:"bulkRunForSelected"`
 	BulkRunForAllMatching string `json:"bulkRunForAllMatching"`
 	// Filter chip labels
 	FilterCategory string `json:"filterCategory"`
@@ -3513,7 +3513,7 @@ type DepreciationRunLapsingScheduleColumnLabels struct {
 // per-policy drawer. The same drawer serves both entry points; only the breadcrumb differs.
 type DepreciationRunCategoryFormLabels struct {
 	// Category breadcrumb variant
-	TitleCategory    string `json:"titleCategory"`
+	TitleCategory string `json:"titleCategory"`
 	// Policy breadcrumb variant
 	TitlePolicy      string `json:"titlePolicy"`
 	SubtitleTemplate string `json:"subtitleTemplate"`
@@ -3573,9 +3573,9 @@ type DepreciationRunListEmptyStateLabels struct {
 
 // DepreciationRunDetailLabels holds copy for the Surface D run-detail page.
 type DepreciationRunDetailLabels struct {
-	Title   string                           `json:"title"`
-	Tabs    DepreciationRunDetailTabLabels   `json:"tabs"`
-	Summary DepreciationRunSummaryLabels     `json:"summary"`
+	Title   string                         `json:"title"`
+	Tabs    DepreciationRunDetailTabLabels `json:"tabs"`
+	Summary DepreciationRunSummaryLabels   `json:"summary"`
 }
 
 // DepreciationRunDetailTabLabels holds tab labels for the Surface D detail page.
@@ -3655,17 +3655,17 @@ func DefaultDepreciationRunLabels() DepreciationRunLabels {
 	return DepreciationRunLabels{
 		AppLabel: "Lapsing Schedule",
 		RunForm: DepreciationRunFormLabels{
-			Title:                     "Run Depreciation",
-			SubtitleTemplate:          "Post depreciation for {{.AssetName}} through {{.AsOfDate}}",
-			AsOfDateLabel:             "As of date",
-			AsOfDateHint:              "Periods up to and including this date will be posted.",
-			ColPeriod:                 "Period",
-			ColAmount:                 "Amount",
-			ColAccumulated:            "Accumulated",
-			ColBookValueAfter:         "Book value after",
-			GenerateLabel:             "Generate",
-			GenerateWithCountTemplate: "Generate ({{.Count}})",
-			CancelLabel:               "Cancel",
+			Title:                       "Run Depreciation",
+			SubtitleTemplate:            "Post depreciation for {{.AssetName}} through {{.AsOfDate}}",
+			AsOfDateLabel:               "As of date",
+			AsOfDateHint:                "Periods up to and including this date will be posted.",
+			ColPeriod:                   "Period",
+			ColAmount:                   "Amount",
+			ColAccumulated:              "Accumulated",
+			ColBookValueAfter:           "Book value after",
+			GenerateLabel:               "Generate",
+			GenerateWithCountTemplate:   "Generate ({{.Count}})",
+			CancelLabel:                 "Cancel",
 			BlockerNotInService:         "Not in service",
 			BlockerFullyDepreciated:     "Fully depreciated",
 			BlockerMissingMethod:        "Missing depreciation method",
@@ -3673,11 +3673,11 @@ func DefaultDepreciationRunLabels() DepreciationRunLabels {
 			BlockerUnitsRequiredMessage: "Units of Production depreciation requires per-period units input. See the future-release plan.",
 			BlockerUnitsRequiredLink:    "Open future-release plan",
 			EmptyTitle:                  "No pending periods",
-			EmptyMessage:              "All periods up to the selected date have been posted.",
+			EmptyMessage:                "All periods up to the selected date have been posted.",
 		},
 		LapsingSchedule: DepreciationRunLapsingScheduleLabels{
-			Title:    "Lapsing Schedule",
-			Subtitle: "In-service assets with pending depreciation periods",
+			Title:         "Lapsing Schedule",
+			Subtitle:      "In-service assets with pending depreciation periods",
 			AsOfDateLabel: "As of date",
 			Columns: DepreciationRunLapsingScheduleColumnLabels{
 				Asset:             "Asset",
@@ -3800,13 +3800,13 @@ func DefaultDepreciationRunLabels() DepreciationRunLabels {
 		},
 		Errors: DepreciationRunErrorLabels{
 			RunForSelectedCapExceededError: "Batch cap exceeded — maximum 500 assets per run. Narrow the filter to run the rest.",
-			PermissionDenied:              "You do not have permission to run depreciation.",
-			UseCaseUnavailable:            "Service unavailable. Please try again.",
-			FormParseFailed:               "Form data could not be read.",
-			GenerateFailed:                "Failed to record the depreciation run.",
-			InvalidSelection:              "One or more selected assets are invalid.",
-			IdempotencyConflict:           "Depreciation for one or more periods has already been posted.",
-			WorkspaceMismatch:             "Selected assets belong to a different workspace.",
+			PermissionDenied:               "You do not have permission to run depreciation.",
+			UseCaseUnavailable:             "Service unavailable. Please try again.",
+			FormParseFailed:                "Form data could not be read.",
+			GenerateFailed:                 "Failed to record the depreciation run.",
+			InvalidSelection:               "One or more selected assets are invalid.",
+			IdempotencyConflict:            "Depreciation for one or more periods has already been posted.",
+			WorkspaceMismatch:              "Selected assets belong to a different workspace.",
 		},
 		AssetEditDepreciationFieldsLockedWarning:  "Posted depreciation exists for this asset. Changing depreciation configuration requires a Useful Life Change action (not yet available — see Run history for posted periods).",
 		AssetEditUnitsOfProductionDisabledTooltip: "Units of Production depreciation is not yet supported.",
@@ -3830,15 +3830,15 @@ type AssetRevaluationErrorLabels struct {
 type AssetRevaluationLabels struct {
 	Title string `json:"title"`
 	// Form field labels
-	NewFairValue       string `json:"newFairValue"`
-	AppraiserName      string `json:"appraiserName"`
-	ValuationMethod    string `json:"valuationMethod"`
-	Notes              string `json:"notes"`
+	NewFairValue    string `json:"newFairValue"`
+	AppraiserName   string `json:"appraiserName"`
+	ValuationMethod string `json:"valuationMethod"`
+	Notes           string `json:"notes"`
 	// Preview section labels
-	PreviewTitle         string `json:"previewTitle"`
-	RevaluationAmount    string `json:"revaluationAmount"`
-	PnlSplit             string `json:"pnlSplit"`
-	OciSplit             string `json:"ociSplit"`
+	PreviewTitle      string `json:"previewTitle"`
+	RevaluationAmount string `json:"revaluationAmount"`
+	PnlSplit          string `json:"pnlSplit"`
+	OciSplit          string `json:"ociSplit"`
 	// Submit and cancel
 	SubmitLabel string `json:"submitLabel"`
 	CancelLabel string `json:"cancelLabel"`
@@ -3901,13 +3901,13 @@ type DepreciationPoliciesLabels struct {
 
 // DepreciationPoliciesColumnLabels holds column headers for the Surface F policies table.
 type DepreciationPoliciesColumnLabels struct {
-	Policy           string `json:"policy"`
-	Method           string `json:"method"`
-	UsefulLife       string `json:"usefulLife"`
-	SalvagePct       string `json:"salvagePct"`
-	AssetsInPolicy   string `json:"assetsInPolicy"`
-	AssetsDeviating  string `json:"assetsDeviating"`
-	Actions          string `json:"actions"`
+	Policy          string `json:"policy"`
+	Method          string `json:"method"`
+	UsefulLife      string `json:"usefulLife"`
+	SalvagePct      string `json:"salvagePct"`
+	AssetsInPolicy  string `json:"assetsInPolicy"`
+	AssetsDeviating string `json:"assetsDeviating"`
+	Actions         string `json:"actions"`
 }
 
 // DefaultDepreciationPoliciesLabels returns DepreciationPoliciesLabels with sensible English defaults.
@@ -3942,11 +3942,11 @@ func DefaultDepreciationPoliciesLabels() DepreciationPoliciesLabels {
 // TaxRateLabels holds all translatable strings for the Tax Rate read-only views.
 // Tax rates are read-only in the UI; supersession is via admin SQL recipe.
 type TaxRateLabels struct {
-	Page    TaxRatePageLabels    `json:"page"`
-	Columns TaxRateColumnLabels  `json:"columns"`
-	Actions TaxRateActionLabels  `json:"actions"`
-	Empty   TaxRateEmptyLabels   `json:"empty"`
-	Detail  TaxRateDetailLabels  `json:"detail"`
+	Page    TaxRatePageLabels   `json:"page"`
+	Columns TaxRateColumnLabels `json:"columns"`
+	Actions TaxRateActionLabels `json:"actions"`
+	Empty   TaxRateEmptyLabels  `json:"empty"`
+	Detail  TaxRateDetailLabels `json:"detail"`
 }
 
 // TaxRatePageLabels holds page heading strings.
@@ -3983,18 +3983,18 @@ type TaxRateEmptyLabels struct {
 
 // TaxRateDetailLabels holds detail-page field labels.
 type TaxRateDetailLabels struct {
-	Title             string `json:"title"`
-	Jurisdiction      string `json:"jurisdiction"`
-	AuthorityCode     string `json:"authorityCode"`
-	Kind              string `json:"kind"`
-	TreatmentCode     string `json:"treatmentCode"`
-	Direction         string `json:"direction"`
-	RateBps           string `json:"rateBps"`
-	EffectiveFrom     string `json:"effectiveFrom"`
-	EffectiveTo       string `json:"effectiveTo"`
-	Status            string `json:"status"`
-	SupersedesID      string `json:"supersedesId"`
-	WorkspaceID       string `json:"workspaceId"`
+	Title         string `json:"title"`
+	Jurisdiction  string `json:"jurisdiction"`
+	AuthorityCode string `json:"authorityCode"`
+	Kind          string `json:"kind"`
+	TreatmentCode string `json:"treatmentCode"`
+	Direction     string `json:"direction"`
+	RateBps       string `json:"rateBps"`
+	EffectiveFrom string `json:"effectiveFrom"`
+	EffectiveTo   string `json:"effectiveTo"`
+	Status        string `json:"status"`
+	SupersedesID  string `json:"supersedesId"`
+	WorkspaceID   string `json:"workspaceId"`
 }
 
 // DefaultTaxRateLabels returns TaxRateLabels with sensible English defaults.
@@ -4066,12 +4066,12 @@ type ForexRatePageLabels struct {
 
 // ForexRateColumnLabels holds table column headers.
 type ForexRateColumnLabels struct {
-	FromCurrency  string `json:"fromCurrency"`
-	ToCurrency    string `json:"toCurrency"`
+	FromCurrency   string `json:"fromCurrency"`
+	ToCurrency     string `json:"toCurrency"`
 	RateMicroUnits string `json:"rateMicroUnits"`
-	Source        string `json:"source"`
-	EffectiveFrom string `json:"effectiveFrom"`
-	Status        string `json:"status"`
+	Source         string `json:"source"`
+	EffectiveFrom  string `json:"effectiveFrom"`
+	Status         string `json:"status"`
 }
 
 // ForexRateActionLabels holds action button labels.
@@ -4152,31 +4152,31 @@ func DefaultForexRateLabels() ForexRateLabels {
 // WithholdingCertificateLabels holds all translatable strings for the
 // Withholding Certificate CRUD views.
 type WithholdingCertificateLabels struct {
-	Page    WithholdingCertificatePageLabels    `json:"page"`
-	Columns WithholdingCertificateColumnLabels  `json:"columns"`
-	Buttons WithholdingCertificateButtonLabels  `json:"buttons"`
-	Actions WithholdingCertificateActionLabels  `json:"actions"`
-	Empty   WithholdingCertificateEmptyLabels   `json:"empty"`
-	Fields  WithholdingCertificateFieldLabels   `json:"fields"`
+	Page    WithholdingCertificatePageLabels   `json:"page"`
+	Columns WithholdingCertificateColumnLabels `json:"columns"`
+	Buttons WithholdingCertificateButtonLabels `json:"buttons"`
+	Actions WithholdingCertificateActionLabels `json:"actions"`
+	Empty   WithholdingCertificateEmptyLabels  `json:"empty"`
+	Fields  WithholdingCertificateFieldLabels  `json:"fields"`
 }
 
 // WithholdingCertificatePageLabels holds page heading strings.
 type WithholdingCertificatePageLabels struct {
-	HeadingActive   string `json:"headingActive"`
-	CaptionActive   string `json:"captionActive"`
-	HeadingVoided   string `json:"headingVoided"`
-	CaptionVoided   string `json:"captionVoided"`
+	HeadingActive string `json:"headingActive"`
+	CaptionActive string `json:"captionActive"`
+	HeadingVoided string `json:"headingVoided"`
+	CaptionVoided string `json:"captionVoided"`
 }
 
 // WithholdingCertificateColumnLabels holds table column headers.
 type WithholdingCertificateColumnLabels struct {
-	CertificateNumber string `json:"certificateNumber"`
-	RevenueID         string `json:"revenueId"`
-	PeriodYear        string `json:"periodYear"`
-	PeriodQuarter     string `json:"periodQuarter"`
+	CertificateNumber  string `json:"certificateNumber"`
+	RevenueID          string `json:"revenueId"`
+	PeriodYear         string `json:"periodYear"`
+	PeriodQuarter      string `json:"periodQuarter"`
 	WhtAmountCertified string `json:"whtAmountCertified"`
-	Status            string `json:"status"`
-	DateIssued        string `json:"dateIssued"`
+	Status             string `json:"status"`
+	DateIssued         string `json:"dateIssued"`
 }
 
 // WithholdingCertificateButtonLabels holds button text.
@@ -4203,19 +4203,19 @@ type WithholdingCertificateEmptyLabels struct {
 
 // WithholdingCertificateFieldLabels holds drawer form field labels.
 type WithholdingCertificateFieldLabels struct {
-	CertificateNumber   string `json:"certificateNumber"`
-	RevenueID           string `json:"revenueId"`
-	TaxAuthorityID      string `json:"taxAuthorityId"`
-	PayorTin            string `json:"payorTin"`
-	PayorName           string `json:"payorName"`
-	PayeeTin            string `json:"payeeTin"`
-	PayeeName           string `json:"payeeName"`
-	PeriodYear          string `json:"periodYear"`
-	PeriodQuarter       string `json:"periodQuarter"`
-	WhtAmountCertified  string `json:"whtAmountCertified"`
-	Status              string `json:"status"`
-	DateIssued          string `json:"dateIssued"`
-	Notes               string `json:"notes"`
+	CertificateNumber  string `json:"certificateNumber"`
+	RevenueID          string `json:"revenueId"`
+	TaxAuthorityID     string `json:"taxAuthorityId"`
+	PayorTin           string `json:"payorTin"`
+	PayorName          string `json:"payorName"`
+	PayeeTin           string `json:"payeeTin"`
+	PayeeName          string `json:"payeeName"`
+	PeriodYear         string `json:"periodYear"`
+	PeriodQuarter      string `json:"periodQuarter"`
+	WhtAmountCertified string `json:"whtAmountCertified"`
+	Status             string `json:"status"`
+	DateIssued         string `json:"dateIssued"`
+	Notes              string `json:"notes"`
 }
 
 // DefaultWithholdingCertificateLabels returns WithholdingCertificateLabels with

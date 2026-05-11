@@ -21,14 +21,14 @@ import (
 // PolicyRow is the view-layer representation of one depreciation policy row.
 // A policy corresponds to an AssetCategory in v1.
 type PolicyRow struct {
-	CategoryID       string
-	PolicyID         string // = CategoryID in v1
-	Name             string
+	CategoryID         string
+	PolicyID           string // = CategoryID in v1
+	Name               string
 	DepreciationMethod string
-	UsefulLifeMonths int32
-	SalvagePct       float64
-	AssetsInPolicy   int
-	AssetsDeviating  int
+	UsefulLifeMonths   int32
+	SalvagePct         float64
+	AssetsInPolicy     int
+	AssetsDeviating    int
 }
 
 // ViewDeps holds all dependencies for the depreciation policies page.
@@ -199,9 +199,9 @@ func buildTableRows(
 				{Type: "text", Value: usefulLifeDisplay, Align: "right"},
 				{Type: "text", Value: salvagePctDisplay, Align: "right"},
 				{
-					Type:   "text",
-					Value:  strconv.Itoa(r.AssetsInPolicy),
-					Align:  "right",
+					Type:  "text",
+					Value: strconv.Itoa(r.AssetsInPolicy),
+					Align: "right",
 				},
 				{
 					Type:    "badge",

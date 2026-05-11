@@ -337,4 +337,3 @@ func buildCustodianBalancesTableConfig(deps *PettyCashDeps) *types.TableConfig {
 	types.ApplyTableSettings(tableConfig)
 	return tableConfig
 }
-

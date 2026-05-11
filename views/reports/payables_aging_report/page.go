@@ -232,16 +232,16 @@ func buildTable(resp *payagingpb.PayablesAgingResponse, l fycha.PayablesAgingRep
 	}
 
 	table := &types.TableConfig{
-		ID:      "payablesAgingReportTable",
-		Columns: columns,
-		ShowSearch:      false,
-		ShowFilters:     false,
-		ShowSort:        false,
-		ShowColumns:     false,
-		ShowExport:      true,
-		ShowEntries:     true,
-		ShowDensity:     true,
-		Labels:          tableLabels,
+		ID:          "payablesAgingReportTable",
+		Columns:     columns,
+		ShowSearch:  false,
+		ShowFilters: false,
+		ShowSort:    false,
+		ShowColumns: false,
+		ShowExport:  true,
+		ShowEntries: true,
+		ShowDensity: true,
+		Labels:      tableLabels,
 		EmptyState: types.TableEmptyState{
 			Title:   l.EmptyTitle,
 			Message: l.EmptyMessage,
@@ -334,4 +334,3 @@ func buildFilterSheetURL(base, asOfDate, rows string) string {
 	params.Set("rows", rows)
 	return base + "?" + params.Encode()
 }
-

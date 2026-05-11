@@ -8,21 +8,21 @@ import (
 
 // Labels holds the translatable strings used by the drawer template.
 type Labels struct {
-	DrawerTitleAdd    string
-	DrawerTitleEdit   string
-	CertificateNumber string
-	RevenueID         string
-	TaxAuthorityID    string
-	PayorTin          string
-	PayorName         string
-	PayeeTin          string
-	PayeeName         string
-	PeriodYear        string
-	PeriodQuarter     string
+	DrawerTitleAdd     string
+	DrawerTitleEdit    string
+	CertificateNumber  string
+	RevenueID          string
+	TaxAuthorityID     string
+	PayorTin           string
+	PayorName          string
+	PayeeTin           string
+	PayeeName          string
+	PeriodYear         string
+	PeriodQuarter      string
 	WhtAmountCertified string
-	Status            string
-	DateIssued        string
-	Notes             string
+	Status             string
+	DateIssued         string
+	Notes              string
 }
 
 // BuildLabels converts WithholdingCertificateLabels to the flat Labels struct.
@@ -48,19 +48,19 @@ func BuildLabels(l fycha.WithholdingCertificateLabels) Labels {
 
 // Data is the template data for the withholding certificate drawer form.
 type Data struct {
-	FormAction         string
-	IsEdit             bool
-	ID                 string
+	FormAction string
+	IsEdit     bool
+	ID         string
 	// Pre-populated fields
-	RevenueID          string
-	CertificateNumber  string
-	TaxAuthorityID     string
-	PayorTin           string
-	PayorName          string
-	PayeeTin           string
-	PayeeName          string
-	PeriodYear         string
-	PeriodQuarter      string
+	RevenueID         string
+	CertificateNumber string
+	TaxAuthorityID    string
+	PayorTin          string
+	PayorName         string
+	PayeeTin          string
+	PayeeName         string
+	PeriodYear        string
+	PeriodQuarter     string
 	// WhtAmountCertified is the centavo amount expressed as a display string
 	// (e.g. "1500.00"). Converted to int64 centavos on POST.
 	WhtAmountCertified string

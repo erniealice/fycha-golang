@@ -8,10 +8,10 @@ import (
 	"log"
 	"strconv"
 
-	fycha "github.com/erniealice/fycha-golang"
-	drshared "github.com/erniealice/fycha-golang/views/depreciation_run/shared"
 	espynahttp "github.com/erniealice/espyna-golang/contrib/http"
 	"github.com/erniealice/espyna-golang/tableparams"
+	fycha "github.com/erniealice/fycha-golang"
+	drshared "github.com/erniealice/fycha-golang/views/depreciation_run/shared"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/route"
 	"github.com/erniealice/pyeza-golang/types"

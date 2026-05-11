@@ -30,7 +30,7 @@ type CategoryDepreciationRunAssetRow struct {
 	AssetID       string
 	AssetName     string
 	Currency      string
-	BookValue     int64  // centavos
+	BookValue     int64 // centavos
 	PendingCount  int
 	NextAmount    int64  // centavos — next period projected
 	NextAmountFmt string // pre-formatted via types.FormatMoney (e.g. "PHP 50,000.00")
@@ -40,10 +40,10 @@ type CategoryDepreciationRunAssetRow struct {
 
 // CategoryDepreciationRunRequest is the POST payload for Surface C.
 type CategoryDepreciationRunRequest struct {
-	CategoryID   string
-	ScopeKind    string   // "CATEGORY" or "POLICY"
-	AsOfDate     string
-	AssetIDs     []string // selected asset IDs
+	CategoryID string
+	ScopeKind  string // "CATEGORY" or "POLICY"
+	AsOfDate   string
+	AssetIDs   []string // selected asset IDs
 }
 
 // CategoryDepreciationRunResult is the response from GenerateDepreciationRun (CATEGORY/POLICY scope).
@@ -76,15 +76,15 @@ type CategoryDepreciationRunDeps struct {
 
 // categoryRunFormData is the template context for the Surface C drawer.
 type categoryRunFormData struct {
-	FormAction   string
-	CategoryID   string
-	ScopeKind    string // "category" | "policy" — controls breadcrumb
-	AsOfDate     string
-	MaxAsOfDate  string
-	Rows         []CategoryDepreciationRunAssetRow
+	FormAction    string
+	CategoryID    string
+	ScopeKind     string // "category" | "policy" — controls breadcrumb
+	AsOfDate      string
+	MaxAsOfDate   string
+	Rows          []CategoryDepreciationRunAssetRow
 	EligibleCount int
-	Labels       fycha.DepreciationRunLabels
-	CommonLabels pyeza.CommonLabels
+	Labels        fycha.DepreciationRunLabels
+	CommonLabels  pyeza.CommonLabels
 }
 
 // NewCategoryDepreciationRunAction creates the Surface C per-category/per-policy depreciation-run drawer.
@@ -131,12 +131,12 @@ func handleCategoryRunGET(
 	}
 
 	data := &categoryRunFormData{
-		FormAction:  formAction,
-		CategoryID:  categoryID,
-		ScopeKind:   scopeKind,
-		AsOfDate:    asOfDate,
-		MaxAsOfDate: time.Now().Format("2006-01-02"),
-		Labels:      deps.Labels,
+		FormAction:   formAction,
+		CategoryID:   categoryID,
+		ScopeKind:    scopeKind,
+		AsOfDate:     asOfDate,
+		MaxAsOfDate:  time.Now().Format("2006-01-02"),
+		Labels:       deps.Labels,
 		CommonLabels: deps.CommonLabels,
 	}
 

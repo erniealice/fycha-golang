@@ -15,7 +15,6 @@ import (
 	assetdetail "github.com/erniealice/fycha-golang/views/asset/detail"
 	assetform "github.com/erniealice/fycha-golang/views/asset/form"
 	assetlist "github.com/erniealice/fycha-golang/views/asset/list"
-
 )
 
 // ModuleDeps holds all dependencies for the asset module.
@@ -69,25 +68,25 @@ type ModuleDeps struct {
 
 // Module holds all constructed asset views.
 type Module struct {
-	routes               fycha.AssetRoutes
-	Dashboard            view.View
-	List                 view.View
-	Table                view.View
-	Detail               view.View
-	TabAction            view.View
-	Add                  view.View
-	Edit                 view.View
-	Delete               view.View
-	BulkDelete           view.View
-	SetStatus            view.View
-	BulkSetStatus        view.View
-	AttachmentUpload     view.View
-	AttachmentDelete     view.View
+	routes           fycha.AssetRoutes
+	Dashboard        view.View
+	List             view.View
+	Table            view.View
+	Detail           view.View
+	TabAction        view.View
+	Add              view.View
+	Edit             view.View
+	Delete           view.View
+	BulkDelete       view.View
+	SetStatus        view.View
+	BulkSetStatus    view.View
+	AttachmentUpload view.View
+	AttachmentDelete view.View
 	// Surface A — per-asset depreciation-run drawer
-	DepreciationRun      view.View
+	DepreciationRun view.View
 	// Surface E — per-asset revaluation drawer + preview endpoint
-	Revaluation         view.View
-	RevaluationPreview  view.View
+	Revaluation        view.View
+	RevaluationPreview view.View
 }
 
 // NewModule creates an asset module with all views wired.
@@ -150,23 +149,23 @@ func NewModule(deps *ModuleDeps) *Module {
 	}
 
 	return &Module{
-		routes:              deps.Routes,
-		Dashboard:           assetdashboard.NewView(dashboardDeps),
-		List:                assetlist.NewView(listDeps),
-		Table:               assetlist.NewTableView(listDeps),
-		Detail:              assetdetail.NewView(detailDeps),
-		TabAction:           assetdetail.NewTabAction(detailDeps),
-		Add:                 assetaction.NewAddAction(actionDeps),
-		Edit:                assetaction.NewEditAction(actionDeps),
-		Delete:              assetaction.NewDeleteAction(actionDeps),
-		BulkDelete:          assetaction.NewBulkDeleteAction(actionDeps),
-		SetStatus:           assetaction.NewSetStatusAction(actionDeps),
-		BulkSetStatus:       assetaction.NewBulkSetStatusAction(actionDeps),
-		AttachmentUpload:    assetdetail.NewAttachmentUploadAction(detailDeps),
-		AttachmentDelete:    assetdetail.NewAttachmentDeleteAction(detailDeps),
-		DepreciationRun:     assetaction.NewDepreciationRunAction(depRunDeps),
-		Revaluation:         assetaction.NewRevaluationAction(revalDeps),
-		RevaluationPreview:  assetaction.NewRevaluationPreviewAction(revalDeps),
+		routes:             deps.Routes,
+		Dashboard:          assetdashboard.NewView(dashboardDeps),
+		List:               assetlist.NewView(listDeps),
+		Table:              assetlist.NewTableView(listDeps),
+		Detail:             assetdetail.NewView(detailDeps),
+		TabAction:          assetdetail.NewTabAction(detailDeps),
+		Add:                assetaction.NewAddAction(actionDeps),
+		Edit:               assetaction.NewEditAction(actionDeps),
+		Delete:             assetaction.NewDeleteAction(actionDeps),
+		BulkDelete:         assetaction.NewBulkDeleteAction(actionDeps),
+		SetStatus:          assetaction.NewSetStatusAction(actionDeps),
+		BulkSetStatus:      assetaction.NewBulkSetStatusAction(actionDeps),
+		AttachmentUpload:   assetdetail.NewAttachmentUploadAction(detailDeps),
+		AttachmentDelete:   assetdetail.NewAttachmentDeleteAction(detailDeps),
+		DepreciationRun:    assetaction.NewDepreciationRunAction(depRunDeps),
+		Revaluation:        assetaction.NewRevaluationAction(revalDeps),
+		RevaluationPreview: assetaction.NewRevaluationPreviewAction(revalDeps),
 	}
 }
 

@@ -9,6 +9,7 @@ func attachmentConfig(deps *Deps) *attachment.Config {
 	return &attachment.Config{
 		EntityType:       "journal_entry",
 		BucketName:       "attachments",
+		RefreshURL:       deps.Routes.TabActionURL,
 		UploadURL:        deps.Routes.AttachmentUploadURL,
 		DeleteURL:        deps.Routes.AttachmentDeleteURL,
 		Labels:           attachment.DefaultLabels(),

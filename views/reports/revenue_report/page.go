@@ -428,4 +428,3 @@ func buildFilterSheetURL(base, primary, rows, period, start, end string) string 
 	}
 	return base + "?" + params.Encode()
 }
-

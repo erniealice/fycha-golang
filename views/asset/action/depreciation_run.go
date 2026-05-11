@@ -47,7 +47,7 @@ type DepreciationCandidate struct {
 	BlockerReason      string
 	// BlockerKind is the machine-readable blocker kind string (e.g. "UNITS_REQUIRED").
 	// Used by the template to conditionally render UoP-specific messaging.
-	BlockerKind        string
+	BlockerKind string
 }
 
 // DepreciationRunRequest is the POST payload to GenerateDepreciationRun.
@@ -69,14 +69,14 @@ type DepreciationRunResult struct {
 
 // depreciationRunFormData is the template data for the Surface A drawer.
 type depreciationRunFormData struct {
-	FormAction   string
-	AssetID      string
-	AsOfDate     string
-	MaxAsOfDate  string
-	FragmentURL  string // HTMX inner-swap target URL
-	Candidates   []DepreciationCandidate
+	FormAction    string
+	AssetID       string
+	AsOfDate      string
+	MaxAsOfDate   string
+	FragmentURL   string // HTMX inner-swap target URL
+	Candidates    []DepreciationCandidate
 	EligibleCount int
-	Labels       fycha.DepreciationRunLabels
+	Labels        fycha.DepreciationRunLabels
 }
 
 // NewDepreciationRunAction creates the Surface A per-asset depreciation-run drawer.

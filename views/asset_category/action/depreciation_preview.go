@@ -23,7 +23,7 @@ type PreviewCandidateRow struct {
 	AssetID       string
 	AssetName     string
 	Currency      string
-	BookValue     int64  // centavos — current
+	BookValue     int64 // centavos — current
 	PendingCount  int
 	NextAmount    int64  // centavos — next period projected
 	NextAmountFmt string // pre-formatted via types.FormatMoney (e.g. "PHP 50,000.00")

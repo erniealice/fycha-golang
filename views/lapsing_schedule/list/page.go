@@ -45,12 +45,12 @@ type CandidateRow struct {
 
 // ViewDeps holds all dependencies for the lapsing-schedule list page.
 type ViewDeps struct {
-	Routes               fycha.LapsingScheduleRoutes
-	AssetRoutes          fycha.AssetRoutes
+	Routes                fycha.LapsingScheduleRoutes
+	AssetRoutes           fycha.AssetRoutes
 	DepreciationRunRoutes fycha.DepreciationRunRoutes
-	Labels               fycha.DepreciationRunLabels
-	CommonLabels         pyeza.CommonLabels
-	TableLabels          types.TableLabels
+	Labels                fycha.DepreciationRunLabels
+	CommonLabels          pyeza.CommonLabels
+	TableLabels           types.TableLabels
 
 	// ListCandidates fetches all workspace-scoped depreciation candidates for the
 	// given as_of_date + pagination cursor. Block.go wires this to espyna.

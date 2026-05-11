@@ -16,8 +16,8 @@ import (
 	topref "github.com/erniealice/espyna-golang/reference"
 
 	assetpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset"
-	attachmentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/document/attachment"
 	commonpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/common"
+	attachmentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/document/attachment"
 
 	pyeza "github.com/erniealice/pyeza-golang"
 	pyezatypes "github.com/erniealice/pyeza-golang/types"
@@ -73,8 +73,8 @@ func wireAssetModule(
 		Labels:       w.assetLabels,
 		TableLabels:  ctx.Table,
 		// Depreciation Run + Revaluation labels (Surface A / E)
-		DepreciationRunLabels:   w.depreciationRunLabels,
-		AssetRevaluationLabels:  w.assetRevaluationLabels,
+		DepreciationRunLabels:  w.depreciationRunLabels,
+		AssetRevaluationLabels: w.assetRevaluationLabels,
 		// Depreciation run routes + toast URL (Surface A)
 		DepreciationRunRoutes:   w.depreciationRunRoutes,
 		AssetDepreciationRunURL: cfg.assetDepreciationRunURL,

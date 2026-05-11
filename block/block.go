@@ -43,12 +43,12 @@ import (
 	equitymod "github.com/erniealice/fycha-golang/views/equity"
 	expensesmod "github.com/erniealice/fycha-golang/views/expenses"
 	financialmod "github.com/erniealice/fycha-golang/views/financial"
+	forexratemod "github.com/erniealice/fycha-golang/views/forex_rate"
 	ledgermod "github.com/erniealice/fycha-golang/views/ledger"
 	loansmod "github.com/erniealice/fycha-golang/views/loans"
 	payrollmod "github.com/erniealice/fycha-golang/views/payroll"
 	reportmod "github.com/erniealice/fycha-golang/views/reports"
 	cashbookview "github.com/erniealice/fycha-golang/views/reports/cash_book"
-	forexratemod "github.com/erniealice/fycha-golang/views/forex_rate"
 	taxratemod "github.com/erniealice/fycha-golang/views/tax_rate"
 	withholdingcertmod "github.com/erniealice/fycha-golang/views/withholding_certificate"
 )

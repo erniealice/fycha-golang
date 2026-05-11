@@ -309,4 +309,3 @@ func entryOutcomeCell(l fycha.DepreciationRunLabels, outcome string) (label, var
 		return outcome, "info"
 	}
 }
-

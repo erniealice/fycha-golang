@@ -35,7 +35,7 @@ type RevaluationDeps struct {
 // RevaluationRequest is the POST payload to RevalueAsset.
 type RevaluationRequest struct {
 	AssetID         string
-	NewFairValue    int64  // centavos
+	NewFairValue    int64 // centavos
 	AppraiserName   string
 	ValuationMethod string
 	Notes           string
@@ -62,11 +62,11 @@ type RevaluationPreview struct {
 
 // revaluationFormData is the template data for the Surface E drawer.
 type revaluationFormData struct {
-	FormAction          string
-	PreviewURL          string
-	AssetID             string
-	Preview             *RevaluationPreview
-	Labels              fycha.AssetRevaluationLabels
+	FormAction string
+	PreviewURL string
+	AssetID    string
+	Preview    *RevaluationPreview
+	Labels     fycha.AssetRevaluationLabels
 }
 
 // NewRevaluationAction creates the Surface E per-asset revaluation drawer.
@@ -200,4 +200,3 @@ func handleRevaluationPOST(ctx context.Context, viewCtx *view.ViewContext, deps 
 		},
 	}
 }
-

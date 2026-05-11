@@ -329,4 +329,3 @@ func mockISSections(sl fycha.IncomeStatementSectionLabels) []ISStatementSection 
 		},
 	}
 }
-

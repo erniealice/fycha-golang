@@ -9,9 +9,9 @@ import (
 	"net/http"
 	"strconv"
 
+	withholdingcertificatepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/withholding_certificate"
 	fycha "github.com/erniealice/fycha-golang"
 	"github.com/erniealice/fycha-golang/views/withholding_certificate/form"
-	withholdingcertificatepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/withholding_certificate"
 	"github.com/erniealice/pyeza-golang/view"
 )
 

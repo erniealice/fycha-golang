@@ -232,4 +232,3 @@ func depositStatusVariant(status string) string {
 		return "default"
 	}
 }
-

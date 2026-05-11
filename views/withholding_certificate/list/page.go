@@ -143,7 +143,7 @@ func protoToRow(wc *withholdingcertificatepb.WithholdingCertificate) Withholding
 		CertificateNumber:  wc.GetCertificateNumber(),
 		RevenueID:          wc.GetRevenueId(),
 		PeriodYear:         wc.GetCertificatePeriod(), // CertificatePeriod encodes period info
-		PeriodQuarter:      "",                         // Derived from CertificatePeriod in Phase 5
+		PeriodQuarter:      "",                        // Derived from CertificatePeriod in Phase 5
 		WhtAmountCertified: fmt.Sprintf("%.2f", float64(wc.GetActualAmount())/100.0),
 		Status:             statusString(wc.GetStatus()),
 		DateIssued:         wc.GetIssuedDate(),

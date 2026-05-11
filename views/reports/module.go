@@ -9,18 +9,18 @@ import (
 	"github.com/erniealice/pyeza-golang/view"
 
 	fycha "github.com/erniealice/fycha-golang"
+	collectionsummaryreport "github.com/erniealice/fycha-golang/views/reports/collection_summary_report"
 	costsales "github.com/erniealice/fycha-golang/views/reports/cost_of_sales"
 	dashboardview "github.com/erniealice/fycha-golang/views/reports/dashboard"
+	disbursementreport "github.com/erniealice/fycha-golang/views/reports/disbursement_report"
+	expenditurereport "github.com/erniealice/fycha-golang/views/reports/expenditure_report"
 	expensesview "github.com/erniealice/fycha-golang/views/reports/expenses"
 	grossprofit "github.com/erniealice/fycha-golang/views/reports/gross_profit"
 	netprofit "github.com/erniealice/fycha-golang/views/reports/net_profit"
-	revenue "github.com/erniealice/fycha-golang/views/reports/revenue"
-	disbursementreport "github.com/erniealice/fycha-golang/views/reports/disbursement_report"
-	expenditurereport "github.com/erniealice/fycha-golang/views/reports/expenditure_report"
-	revenuereport "github.com/erniealice/fycha-golang/views/reports/revenue_report"
-	receivablesagingreport "github.com/erniealice/fycha-golang/views/reports/receivables_aging_report"
 	payablesagingreport "github.com/erniealice/fycha-golang/views/reports/payables_aging_report"
-	collectionsummaryreport "github.com/erniealice/fycha-golang/views/reports/collection_summary_report"
+	receivablesagingreport "github.com/erniealice/fycha-golang/views/reports/receivables_aging_report"
+	revenue "github.com/erniealice/fycha-golang/views/reports/revenue"
+	revenuereport "github.com/erniealice/fycha-golang/views/reports/revenue_report"
 )
 
 // routeRegistrarFull extends view.RouteRegistrar with HandleFunc support.
@@ -56,19 +56,19 @@ type ModuleDeps struct {
 
 // Module holds all constructed report views.
 type Module struct {
-	routes              fycha.ReportsRoutes
-	Dashboard           view.View
-	Revenue             view.View
-	CostOfSales         view.View
-	GrossProfit         view.View
-	Expenses            view.View
-	NetProfit           view.View
-	RevenueReport       view.View
-	RevenueReportExport http.HandlerFunc
-	ExpenditureReport       view.View
-	ExpenditureReportExport http.HandlerFunc
-	DisbursementReport       view.View
-	DisbursementReportExport http.HandlerFunc
+	routes                        fycha.ReportsRoutes
+	Dashboard                     view.View
+	Revenue                       view.View
+	CostOfSales                   view.View
+	GrossProfit                   view.View
+	Expenses                      view.View
+	NetProfit                     view.View
+	RevenueReport                 view.View
+	RevenueReportExport           http.HandlerFunc
+	ExpenditureReport             view.View
+	ExpenditureReportExport       http.HandlerFunc
+	DisbursementReport            view.View
+	DisbursementReportExport      http.HandlerFunc
 	ReceivablesAgingReport        view.View
 	ReceivablesAgingReportExport  http.HandlerFunc
 	PayablesAgingReport           view.View

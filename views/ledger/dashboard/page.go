@@ -26,14 +26,14 @@ type Request struct {
 // Response is the view-side response shape; mirrors espyna's
 // dashboard.GetLedgerDashboardPageDataResponse.
 type Response struct {
-	TotalAssets       int64
-	TotalLiabilities  int64
-	TotalEquity       int64
-	NetIncomeMTD      int64
-	UnpostedJournals  int64
-	BalanceByType     map[string]int64
-	UnpostedTop       []*journalentrypb.JournalEntry
-	RecentEntries     []*journalentrypb.JournalEntry
+	TotalAssets      int64
+	TotalLiabilities int64
+	TotalEquity      int64
+	NetIncomeMTD     int64
+	UnpostedJournals int64
+	BalanceByType    map[string]int64
+	UnpostedTop      []*journalentrypb.JournalEntry
+	RecentEntries    []*journalentrypb.JournalEntry
 }
 
 // Deps holds view dependencies.

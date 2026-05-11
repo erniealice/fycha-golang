@@ -121,16 +121,16 @@ type Module struct {
 	TrialBalance  view.View
 
 	// Journal Entry views (Phase 3)
-	JournalList              view.View
-	JournalDetail            view.View
-	JournalTabAction         view.View
-	JournalAdd               view.View
-	JournalEdit              view.View
-	JournalPost              view.View
-	JournalReverse           view.View
-	JournalDelete            view.View
-	JournalAttachmentUpload  view.View
-	JournalAttachmentDelete  view.View
+	JournalList             view.View
+	JournalDetail           view.View
+	JournalTabAction        view.View
+	JournalAdd              view.View
+	JournalEdit             view.View
+	JournalPost             view.View
+	JournalReverse          view.View
+	JournalDelete           view.View
+	JournalAttachmentUpload view.View
+	JournalAttachmentDelete view.View
 
 	// FiscalPeriod views (Phase 3)
 	FiscalPeriodList  view.View

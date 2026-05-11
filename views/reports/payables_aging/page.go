@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 
+	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
 	fycha "github.com/erniealice/fycha-golang"
+	reports "github.com/erniealice/fycha-golang/views/reports"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
-	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
-	reports "github.com/erniealice/fycha-golang/views/reports"
 )
 
 // NewPayablesAgingView creates the payables aging report with typed service data.

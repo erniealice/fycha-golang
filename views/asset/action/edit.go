@@ -36,22 +36,22 @@ func NewEditAction(deps *Deps) view.View {
 					return fycha.HTMXError(deps.Labels.Actions.IDRequired)
 				}
 				return view.OK("asset-drawer-form", &assetform.Data{
-					FormAction:                  route.ResolveURL(deps.Routes.EditURL, "id", record.ID),
-					IsEdit:                      true,
-					ID:                          record.ID,
-					Name:                        record.Name,
-					AssetNumber:                 record.AssetNumber,
-					Description:                 record.Description,
-					CategoryID:                  record.AssetCategoryID,
-					LocationID:                  record.LocationID,
-					AcquisitionCost:             fmt.Sprintf("%.2f", record.AcquisitionCost),
-					SalvageValue:                fmt.Sprintf("%.2f", record.SalvageValue),
-					UsefulLifeMonths:            strconv.Itoa(record.UsefulLifeMonths),
-					DepreciationMethod:          record.DepreciationMethod,
-					Active:                      record.Active,
-					DepreciationFieldsLocked:    depLocked,
-					Labels:                      labelsFromDeps(deps),
-					CommonLabels:                nil,
+					FormAction:               route.ResolveURL(deps.Routes.EditURL, "id", record.ID),
+					IsEdit:                   true,
+					ID:                       record.ID,
+					Name:                     record.Name,
+					AssetNumber:              record.AssetNumber,
+					Description:              record.Description,
+					CategoryID:               record.AssetCategoryID,
+					LocationID:               record.LocationID,
+					AcquisitionCost:          fmt.Sprintf("%.2f", record.AcquisitionCost),
+					SalvageValue:             fmt.Sprintf("%.2f", record.SalvageValue),
+					UsefulLifeMonths:         strconv.Itoa(record.UsefulLifeMonths),
+					DepreciationMethod:       record.DepreciationMethod,
+					Active:                   record.Active,
+					DepreciationFieldsLocked: depLocked,
+					Labels:                   labelsFromDeps(deps),
+					CommonLabels:             nil,
 				})
 			}
 

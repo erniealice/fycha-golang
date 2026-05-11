@@ -38,17 +38,17 @@ type DepreciationRunWithEntries struct {
 // DepreciationSchedule row scoped to a run (used by selections, results, and
 // transactions tabs).
 type DepreciationRunEntryRow struct {
-	ID                  string
-	RunID               string
-	AssetID             string
-	AssetName           string
-	PeriodStartDate     string // YYYY-MM-DD
-	DepreciationAmount  int64  // centavos
-	Currency            string
-	Outcome             string // "created" | "skipped" | "errored"
-	ErrorMessage        string
-	AssetTransactionID  string // populated when outcome=created
-	IsPosted            bool
+	ID                 string
+	RunID              string
+	AssetID            string
+	AssetName          string
+	PeriodStartDate    string // YYYY-MM-DD
+	DepreciationAmount int64  // centavos
+	Currency           string
+	Outcome            string // "created" | "skipped" | "errored"
+	ErrorMessage       string
+	AssetTransactionID string // populated when outcome=created
+	IsPosted           bool
 }
 
 // AssetTransactionRow is the view-layer representation of an asset_transaction

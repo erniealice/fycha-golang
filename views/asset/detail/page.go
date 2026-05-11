@@ -68,10 +68,10 @@ type AssetActions struct {
 
 // AssetAction is a single CTA button in the page pillar.
 type AssetAction struct {
-	URL      string
-	Label    string
-	TestID   string
-	Variant  string // "primary" or "secondary"
+	URL     string
+	Label   string
+	TestID  string
+	Variant string // "primary" or "secondary"
 }
 
 // resolveAssetActions derives the page-pillar actions for a given asset.
@@ -420,7 +420,7 @@ func getMockAsset(id string) MockAssetDetail {
 			UsefulLifeMonths: "60", DepreciationMethod: "Straight Line",
 			DepreciationMethodKey: "straight_line",
 			BookValue:             "₱42,500.00", Status: "active",
-			MeasurementModel:      "COST",
+			MeasurementModel: "COST",
 			TransactionHistory: []TransactionRow{
 				{Date: "2026-02-15", Type: "Maintenance", Description: "Battery replacement", Amount: "₱3,500.00", Reference: "MNT-003"},
 				{Date: "2026-01-10", Type: "Maintenance", Description: "Screen hinge repair", Amount: "₱8,200.00", Reference: "MNT-002"},
@@ -437,7 +437,7 @@ func getMockAsset(id string) MockAssetDetail {
 			UsefulLifeMonths: "120", DepreciationMethod: "Straight Line",
 			DepreciationMethodKey: "straight_line",
 			BookValue:             "₱18,750.00", Status: "active",
-			MeasurementModel:      "COST",
+			MeasurementModel: "COST",
 			TransactionHistory: []TransactionRow{
 				{Date: "2026-01-20", Type: "Maintenance", Description: "Hydraulic pump replacement", Amount: "₱4,800.00", Reference: "MNT-004"},
 				{Date: "2024-03-01", Type: "Acquisition", Description: "Initial purchase", Amount: "₱25,000.00", Reference: "PO-2024-0201"},
@@ -452,7 +452,7 @@ func getMockAsset(id string) MockAssetDetail {
 			UsefulLifeMonths: "36", DepreciationMethod: "Straight Line",
 			DepreciationMethodKey: "straight_line",
 			BookValue:             "₱6,000.00", Status: "active",
-			MeasurementModel:      "COST",
+			MeasurementModel: "COST",
 			TransactionHistory: []TransactionRow{
 				{Date: "2025-06-15", Type: "Acquisition", Description: "Initial purchase", Amount: "₱12,000.00", Reference: "PO-2025-0089"},
 			},
@@ -472,6 +472,6 @@ func getMockAsset(id string) MockAssetDetail {
 		UsefulLifeMonths: "—", DepreciationMethod: "—",
 		DepreciationMethodKey: "straight_line",
 		BookValue:             "₱0.00", Status: "active",
-		MeasurementModel:      "COST",
+		MeasurementModel: "COST",
 	}
 }

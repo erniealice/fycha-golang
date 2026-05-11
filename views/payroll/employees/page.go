@@ -188,4 +188,3 @@ func payFrequencyLabel(l fycha.PayrollLabels, freq string) string {
 		return freq
 	}
 }
-

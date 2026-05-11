@@ -52,26 +52,26 @@ type ReportsRoutes struct {
 // DefaultReportsRoutes returns a ReportsRoutes populated from package-level consts.
 func DefaultReportsRoutes() ReportsRoutes {
 	return ReportsRoutes{
-		DashboardURL:           ReportsDashboardURL,
-		RevenueURL:             ReportsRevenueURL,
-		CostOfSalesURL:         ReportsCostOfSalesURL,
-		GrossProfitURL:         ReportsGrossProfitURL,
-		ExpensesURL:            ReportsExpensesURL,
-		NetProfitURL:           ReportsNetProfitURL,
-		IncomeStatementURL:     ReportsIncomeStatementURL,
-		BalanceSheetURL:        ReportsBalanceSheetURL,
-		CashFlowURL:            ReportsCashFlowURL,
-		EquityChangesURL:       ReportsEquityChangesURL,
-		RevenueReportURL:       ReportsRevenueReportURL,
-		RevenueReportExportURL: ReportsRevenueReportExportURL,
-		ExpenditureReportURL:       ReportsExpenditureReportURL,
-		ExpenditureReportExportURL: ReportsExpenditureReportExportURL,
-		DisbursementReportURL:       ReportsDisbursementReportURL,
-		DisbursementReportExportURL: ReportsDisbursementReportExportURL,
-		ReceivablesAgingReportURL:       ReportsReceivablesAgingReportURL,
-		ReceivablesAgingReportExportURL: ReportsReceivablesAgingReportExportURL,
-		PayablesAgingReportURL:          ReportsPayablesAgingReportURL,
-		PayablesAgingReportExportURL:    ReportsPayablesAgingReportExportURL,
+		DashboardURL:                     ReportsDashboardURL,
+		RevenueURL:                       ReportsRevenueURL,
+		CostOfSalesURL:                   ReportsCostOfSalesURL,
+		GrossProfitURL:                   ReportsGrossProfitURL,
+		ExpensesURL:                      ReportsExpensesURL,
+		NetProfitURL:                     ReportsNetProfitURL,
+		IncomeStatementURL:               ReportsIncomeStatementURL,
+		BalanceSheetURL:                  ReportsBalanceSheetURL,
+		CashFlowURL:                      ReportsCashFlowURL,
+		EquityChangesURL:                 ReportsEquityChangesURL,
+		RevenueReportURL:                 ReportsRevenueReportURL,
+		RevenueReportExportURL:           ReportsRevenueReportExportURL,
+		ExpenditureReportURL:             ReportsExpenditureReportURL,
+		ExpenditureReportExportURL:       ReportsExpenditureReportExportURL,
+		DisbursementReportURL:            ReportsDisbursementReportURL,
+		DisbursementReportExportURL:      ReportsDisbursementReportExportURL,
+		ReceivablesAgingReportURL:        ReportsReceivablesAgingReportURL,
+		ReceivablesAgingReportExportURL:  ReportsReceivablesAgingReportExportURL,
+		PayablesAgingReportURL:           ReportsPayablesAgingReportURL,
+		PayablesAgingReportExportURL:     ReportsPayablesAgingReportExportURL,
 		CollectionSummaryReportURL:       ReportsCollectionSummaryReportURL,
 		CollectionSummaryReportExportURL: ReportsCollectionSummaryReportExportURL,
 	}
@@ -80,26 +80,26 @@ func DefaultReportsRoutes() ReportsRoutes {
 // RouteMap returns a map of dot-notation keys to route paths.
 func (r ReportsRoutes) RouteMap() map[string]string {
 	return map[string]string{
-		"reports.dashboard":             r.DashboardURL,
-		"reports.revenue":               r.RevenueURL,
-		"reports.cost_of_sales":         r.CostOfSalesURL,
-		"reports.gross_profit":          r.GrossProfitURL,
-		"reports.expenses":              r.ExpensesURL,
-		"reports.net_profit":            r.NetProfitURL,
-		"reports.income_statement":      r.IncomeStatementURL,
-		"reports.balance_sheet":         r.BalanceSheetURL,
-		"reports.cash_flow":             r.CashFlowURL,
-		"reports.equity_changes":        r.EquityChangesURL,
-		"reports.revenue_report":        r.RevenueReportURL,
-		"reports.revenue_report_export": r.RevenueReportExportURL,
-		"reports.expenditure_report":        r.ExpenditureReportURL,
-		"reports.expenditure_report_export": r.ExpenditureReportExportURL,
-		"reports.disbursement_report":        r.DisbursementReportURL,
-		"reports.disbursement_report_export": r.DisbursementReportExportURL,
-		"reports.receivables_aging_report":        r.ReceivablesAgingReportURL,
-		"reports.receivables_aging_report_export": r.ReceivablesAgingReportExportURL,
-		"reports.payables_aging_report":           r.PayablesAgingReportURL,
-		"reports.payables_aging_report_export":    r.PayablesAgingReportExportURL,
+		"reports.dashboard":                        r.DashboardURL,
+		"reports.revenue":                          r.RevenueURL,
+		"reports.cost_of_sales":                    r.CostOfSalesURL,
+		"reports.gross_profit":                     r.GrossProfitURL,
+		"reports.expenses":                         r.ExpensesURL,
+		"reports.net_profit":                       r.NetProfitURL,
+		"reports.income_statement":                 r.IncomeStatementURL,
+		"reports.balance_sheet":                    r.BalanceSheetURL,
+		"reports.cash_flow":                        r.CashFlowURL,
+		"reports.equity_changes":                   r.EquityChangesURL,
+		"reports.revenue_report":                   r.RevenueReportURL,
+		"reports.revenue_report_export":            r.RevenueReportExportURL,
+		"reports.expenditure_report":               r.ExpenditureReportURL,
+		"reports.expenditure_report_export":        r.ExpenditureReportExportURL,
+		"reports.disbursement_report":              r.DisbursementReportURL,
+		"reports.disbursement_report_export":       r.DisbursementReportExportURL,
+		"reports.receivables_aging_report":         r.ReceivablesAgingReportURL,
+		"reports.receivables_aging_report_export":  r.ReceivablesAgingReportExportURL,
+		"reports.payables_aging_report":            r.PayablesAgingReportURL,
+		"reports.payables_aging_report_export":     r.PayablesAgingReportExportURL,
 		"reports.collection_summary_report":        r.CollectionSummaryReportURL,
 		"reports.collection_summary_report_export": r.CollectionSummaryReportExportURL,
 	}
@@ -132,9 +132,9 @@ type AssetRoutes struct {
 	DepreciationPoliciesURL string `json:"depreciation_policies_url"`
 
 	// Depreciation-run drawer routes (Surface A)
-	DepreciationRunURL     string `json:"depreciation_run_url"`
-	RevaluationURL         string `json:"revaluation_url"`
-	RevaluationPreviewURL  string `json:"revaluation_preview_url"`
+	DepreciationRunURL    string `json:"depreciation_run_url"`
+	RevaluationURL        string `json:"revaluation_url"`
+	RevaluationPreviewURL string `json:"revaluation_preview_url"`
 }
 
 // DefaultAssetRoutes returns an AssetRoutes populated from package-level consts.
@@ -185,9 +185,9 @@ func (r AssetRoutes) RouteMap() map[string]string {
 		"asset.lapsing_schedule":      r.LapsingScheduleURL,
 		"asset.depreciation_policies": r.DepreciationPoliciesURL,
 
-		"asset.depreciation_run":     r.DepreciationRunURL,
-		"asset.revaluation":          r.RevaluationURL,
-		"asset.revaluation_preview":  r.RevaluationPreviewURL,
+		"asset.depreciation_run":    r.DepreciationRunURL,
+		"asset.revaluation":         r.RevaluationURL,
+		"asset.revaluation_preview": r.RevaluationPreviewURL,
 	}
 }
 
@@ -756,9 +756,9 @@ func DefaultDepreciationRunRoutes() DepreciationRunRoutes {
 // RouteMap returns a map of dot-notation keys to route paths.
 func (r DepreciationRunRoutes) RouteMap() map[string]string {
 	return map[string]string{
-		"depreciation_run.list":             r.ListURL,
-		"depreciation_run.list_table":       r.ListTableURL,
-		"depreciation_run.detail":           r.DetailURL,
+		"depreciation_run.list":              r.ListURL,
+		"depreciation_run.list_table":        r.ListTableURL,
+		"depreciation_run.detail":            r.DetailURL,
 		"depreciation_run.detail_tab_action": r.DetailTabActionURL,
 	}
 }

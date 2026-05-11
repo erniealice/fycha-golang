@@ -12,23 +12,23 @@ package block
 import (
 	"context"
 
-	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
-	accountpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/account"
-	journalentrypb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_entry"
 	assetpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset"
 	assetcategorypb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset_category"
-	deprunpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/depreciation_run"
-	depschpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/depreciation"
 	revaluationpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset_revaluation"
-	taxratepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/tax/tax_rate"
-	forexratepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/finance/forex_rate"
-	withholdinpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/withholding_certificate"
+	depschpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/depreciation"
+	deprunpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/depreciation_run"
 	workspacepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/entity/workspace"
+	forexratepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/finance/forex_rate"
+	accountpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/account"
+	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
+	journalentrypb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_entry"
+	taxratepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/tax/tax_rate"
+	withholdinpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/withholding_certificate"
 
-	ledgerdashboard "github.com/erniealice/fycha-golang/views/ledger/dashboard"
 	equitydashboard "github.com/erniealice/fycha-golang/views/equity/dashboard"
-	payrolldashboard "github.com/erniealice/fycha-golang/views/payroll/dashboard"
+	ledgerdashboard "github.com/erniealice/fycha-golang/views/ledger/dashboard"
 	loansdashboard "github.com/erniealice/fycha-golang/views/loans/dashboard"
+	payrolldashboard "github.com/erniealice/fycha-golang/views/payroll/dashboard"
 )
 
 // UseCases declares everything fycha's Block() needs from outside.
@@ -44,17 +44,17 @@ type UseCases struct {
 	Workspace WorkspaceUseCases
 
 	// Asset domain groups
-	Asset      AssetUseCases
-	DepRun     DepreciationRunUseCases
+	Asset       AssetUseCases
+	DepRun      DepreciationRunUseCases
 	Revaluation RevaluationUseCases
 
 	// Ledger domain groups
-	Ledger      LedgerUseCases
+	Ledger       LedgerUseCases
 	FiscalPeriod FiscalPeriodUseCases
 
 	// Other accounting groups
-	Tax     TaxUseCases
-	Finance FinanceUseCases
+	Tax      TaxUseCases
+	Finance  FinanceUseCases
 	Treasury TreasuryUseCases
 
 	// Dashboard closures — typed; service-admin builds these from espyna's
@@ -97,8 +97,8 @@ type DepreciationRunUseCases struct {
 
 // RevaluationUseCases — asset revaluation sub-domain operations.
 type RevaluationUseCases struct {
-	Revalue  func(context.Context, *revaluationpb.RevalueAssetUseCaseRequest) (*revaluationpb.RevalueAssetUseCaseResponse, error)
-	Preview  func(context.Context, *revaluationpb.PreviewRevaluationUseCaseRequest) (*revaluationpb.PreviewRevaluationUseCaseResponse, error)
+	Revalue func(context.Context, *revaluationpb.RevalueAssetUseCaseRequest) (*revaluationpb.RevalueAssetUseCaseResponse, error)
+	Preview func(context.Context, *revaluationpb.PreviewRevaluationUseCaseRequest) (*revaluationpb.PreviewRevaluationUseCaseResponse, error)
 }
 
 // LedgerUseCases — Chart of Accounts + Journal Entry operations.

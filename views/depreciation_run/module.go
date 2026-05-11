@@ -6,9 +6,9 @@ import (
 	"context"
 
 	fycha "github.com/erniealice/fycha-golang"
-	drshared "github.com/erniealice/fycha-golang/views/depreciation_run/shared"
 	depreciationrundetail "github.com/erniealice/fycha-golang/views/depreciation_run/detail"
 	depreciationrunlist "github.com/erniealice/fycha-golang/views/depreciation_run/list"
+	drshared "github.com/erniealice/fycha-golang/views/depreciation_run/shared"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -64,12 +64,12 @@ type ModuleDeps struct {
 
 // Module holds all constructed depreciation-run views.
 type Module struct {
-	routes    fycha.DepreciationRunRoutes
+	routes fycha.DepreciationRunRoutes
 	// Surface D.
-	List      view.View
-	Table     view.View
-	Detail    view.View
-	TabView   view.View
+	List    view.View
+	Table   view.View
+	Detail  view.View
+	TabView view.View
 }
 
 // NewModule constructs the depreciation-run module from the given deps.

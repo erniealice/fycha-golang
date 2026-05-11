@@ -352,4 +352,3 @@ func runStatusVariant(status string) string {
 		return "default"
 	}
 }
-

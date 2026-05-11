@@ -1,23 +1,23 @@
 package fycha
 
 const (
-	ReportsBaseURL                = "/app/reports/"
-	ReportsDashboardURL           = "/app/reports/dashboard"
-	ReportsRevenueURL             = "/app/reports/revenue"
-	ReportsCostOfSalesURL         = "/app/reports/cost-of-sales"
-	ReportsGrossProfitURL         = "/app/reports/gross-profit"
-	ReportsExpensesURL            = "/app/reports/expenses"
-	ReportsNetProfitURL           = "/app/reports/net-profit"
-	ReportsRevenueReportURL       = "/app/reports/revenue-report"
-	ReportsRevenueReportExportURL = "/app/reports/revenue-report/export"
-	ReportsExpenditureReportURL       = "/app/reports/expenditure-report"
-	ReportsExpenditureReportExportURL = "/app/reports/expenditure-report/export"
-	ReportsDisbursementReportURL       = "/app/reports/disbursement-report"
-	ReportsDisbursementReportExportURL = "/app/reports/disbursement-report/export"
-	ReportsReceivablesAgingReportURL       = "/app/reports/receivables-aging"
-	ReportsReceivablesAgingReportExportURL = "/app/reports/receivables-aging/export"
-	ReportsPayablesAgingReportURL          = "/app/suppliers/reports/payables-aging"
-	ReportsPayablesAgingReportExportURL    = "/app/suppliers/reports/payables-aging/export"
+	ReportsBaseURL                          = "/app/reports/"
+	ReportsDashboardURL                     = "/app/reports/dashboard"
+	ReportsRevenueURL                       = "/app/reports/revenue"
+	ReportsCostOfSalesURL                   = "/app/reports/cost-of-sales"
+	ReportsGrossProfitURL                   = "/app/reports/gross-profit"
+	ReportsExpensesURL                      = "/app/reports/expenses"
+	ReportsNetProfitURL                     = "/app/reports/net-profit"
+	ReportsRevenueReportURL                 = "/app/reports/revenue-report"
+	ReportsRevenueReportExportURL           = "/app/reports/revenue-report/export"
+	ReportsExpenditureReportURL             = "/app/reports/expenditure-report"
+	ReportsExpenditureReportExportURL       = "/app/reports/expenditure-report/export"
+	ReportsDisbursementReportURL            = "/app/reports/disbursement-report"
+	ReportsDisbursementReportExportURL      = "/app/reports/disbursement-report/export"
+	ReportsReceivablesAgingReportURL        = "/app/reports/receivables-aging"
+	ReportsReceivablesAgingReportExportURL  = "/app/reports/receivables-aging/export"
+	ReportsPayablesAgingReportURL           = "/app/suppliers/reports/payables-aging"
+	ReportsPayablesAgingReportExportURL     = "/app/suppliers/reports/payables-aging/export"
 	ReportsCollectionSummaryReportURL       = "/app/reports/collection-summary"
 	ReportsCollectionSummaryReportExportURL = "/app/reports/collection-summary/export"
 
@@ -47,25 +47,25 @@ const (
 	AssetDepreciationPoliciesURL = "/app/assets/settings/depreciation-policies"
 
 	// Asset depreciation-run drawer routes (Surface A + E)
-	AssetDepreciationRunURL      = "/action/asset/depreciation-run/{asset_id}"
-	AssetRevaluationURL          = "/action/asset/revaluation/{asset_id}"
-	AssetRevaluationPreviewURL   = "/action/asset/revaluation-preview/{asset_id}"
+	AssetDepreciationRunURL    = "/action/asset/depreciation-run/{asset_id}"
+	AssetRevaluationURL        = "/action/asset/revaluation/{asset_id}"
+	AssetRevaluationPreviewURL = "/action/asset/revaluation-preview/{asset_id}"
 
 	// Asset category / policy depreciation drawer routes (Surface C + F)
-	AssetCategoryDepreciationRunURL    = "/action/asset-category/depreciation-run/{category_id}"
-	AssetPolicyDepreciationRunURL      = "/action/asset-policy/depreciation-run/{category_id}"
-	AssetPolicyDepreciationPreviewURL  = "/action/asset-policy/depreciation-preview/{category_id}"
+	AssetCategoryDepreciationRunURL   = "/action/asset-category/depreciation-run/{category_id}"
+	AssetPolicyDepreciationRunURL     = "/action/asset-policy/depreciation-run/{category_id}"
+	AssetPolicyDepreciationPreviewURL = "/action/asset-policy/depreciation-preview/{category_id}"
 
 	// Lapsing schedule page routes (Surface B)
-	LapsingScheduleListURL              = "/app/assets/lapsing-schedule/list"
-	LapsingScheduleBulkRunSelectedURL   = "/action/lapsing-schedule/bulk-run-selected"
+	LapsingScheduleListURL               = "/app/assets/lapsing-schedule/list"
+	LapsingScheduleBulkRunSelectedURL    = "/action/lapsing-schedule/bulk-run-selected"
 	LapsingScheduleBulkRunAllMatchingURL = "/action/lapsing-schedule/bulk-run-all-matching"
-	AssetListBulkRunSelectedURL         = "/action/asset/bulk-run-selected"
+	AssetListBulkRunSelectedURL          = "/action/asset/bulk-run-selected"
 
 	// Depreciation run history page routes (Surface D)
-	DepreciationRunListURL          = "/app/assets/depreciation-runs/list/{status}"
-	DepreciationRunListTableURL     = "/action/depreciation-run/table/{status}"
-	DepreciationRunDetailURL        = "/app/assets/depreciation-runs/detail/{run_id}"
+	DepreciationRunListURL            = "/app/assets/depreciation-runs/list/{status}"
+	DepreciationRunListTableURL       = "/action/depreciation-run/table/{status}"
+	DepreciationRunDetailURL          = "/app/assets/depreciation-runs/detail/{run_id}"
 	DepreciationRunDetailTabActionURL = "/action/depreciation-run/detail/{run_id}/tab/{tab}"
 
 	// Depreciation policies page route (Surface F — replaces mock)
@@ -84,16 +84,16 @@ const (
 	AccountDeleteURL    = "/action/ledger/account/delete"
 
 	// Ledger — Journal Entries
-	JournalListURL                    = "/app/ledger/journals/list/{status}"
-	JournalDetailURL                  = "/app/ledger/journals/detail/{id}"
-	JournalTabActionURL               = "/action/ledger/journal/{id}/tab/{tab}"
-	JournalAttachmentUploadURL        = "/action/ledger/journal/{id}/attachments/upload"
-	JournalAttachmentDeleteURL        = "/action/ledger/journal/{id}/attachments/delete"
-	JournalAddURL                     = "/action/ledger/journal/add"
-	JournalEditURL                    = "/action/ledger/journal/edit/{id}"
-	JournalPostURL                    = "/action/ledger/journal/post/{id}"
-	JournalReverseURL                 = "/action/ledger/journal/reverse/{id}"
-	JournalDeleteURL                  = "/action/ledger/journal/delete"
+	JournalListURL             = "/app/ledger/journals/list/{status}"
+	JournalDetailURL           = "/app/ledger/journals/detail/{id}"
+	JournalTabActionURL        = "/action/ledger/journal/{id}/tab/{tab}"
+	JournalAttachmentUploadURL = "/action/ledger/journal/{id}/attachments/upload"
+	JournalAttachmentDeleteURL = "/action/ledger/journal/{id}/attachments/delete"
+	JournalAddURL              = "/action/ledger/journal/add"
+	JournalEditURL             = "/action/ledger/journal/edit/{id}"
+	JournalPostURL             = "/action/ledger/journal/post/{id}"
+	JournalReverseURL          = "/action/ledger/journal/reverse/{id}"
+	JournalDeleteURL           = "/action/ledger/journal/delete"
 
 	// Ledger — Accounting Statements (internal tools)
 	LedgerGeneralLedgerURL = "/app/ledger/reports/general-ledger"
@@ -161,12 +161,12 @@ const (
 	ForexRateDetailURL = "/app/finance/forex-rates/detail/{id}"
 
 	// Treasury — Withholding Certificates (full CRUD)
-	WithholdingCertificateListURL        = "/app/treasury/withholding-certificates/list/{status}"
-	WithholdingCertificateDetailURL      = "/app/treasury/withholding-certificates/detail/{id}"
-	WithholdingCertificateTableURL       = "/action/withholding-certificate/table/{status}"
-	WithholdingCertificateAddURL         = "/action/withholding-certificate/add"
-	WithholdingCertificateEditURL        = "/action/withholding-certificate/edit/{id}"
-	WithholdingCertificateDeleteURL      = "/action/withholding-certificate/delete"
-	WithholdingCertificateBulkDeleteURL  = "/action/withholding-certificate/bulk-delete"
-	WithholdingCertificateSetStatusURL   = "/action/withholding-certificate/set-status"
+	WithholdingCertificateListURL       = "/app/treasury/withholding-certificates/list/{status}"
+	WithholdingCertificateDetailURL     = "/app/treasury/withholding-certificates/detail/{id}"
+	WithholdingCertificateTableURL      = "/action/withholding-certificate/table/{status}"
+	WithholdingCertificateAddURL        = "/action/withholding-certificate/add"
+	WithholdingCertificateEditURL       = "/action/withholding-certificate/edit/{id}"
+	WithholdingCertificateDeleteURL     = "/action/withholding-certificate/delete"
+	WithholdingCertificateBulkDeleteURL = "/action/withholding-certificate/bulk-delete"
+	WithholdingCertificateSetStatusURL  = "/action/withholding-certificate/set-status"
 )

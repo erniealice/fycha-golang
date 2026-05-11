@@ -12,7 +12,6 @@ import (
 	fycha "github.com/erniealice/fycha-golang"
 )
 
-
 // MockPrepayment represents a prepayment record for mock data display.
 type MockPrepayment struct {
 	ID                 string
@@ -288,4 +287,3 @@ func prepaymentStatusVariant(status string) string {
 		return "default"
 	}
 }
-

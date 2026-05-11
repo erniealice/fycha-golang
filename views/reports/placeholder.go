@@ -3,8 +3,8 @@ package reports
 import (
 	"context"
 	"fmt"
-	"strings"
 	"strconv"
+	"strings"
 	"unicode"
 
 	pyeza "github.com/erniealice/pyeza-golang"
@@ -109,4 +109,3 @@ func ParseCurrency(s string) float64 {
 	v, _ := strconv.ParseFloat(clean, 64)
 	return v
 }
-

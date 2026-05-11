@@ -251,4 +251,3 @@ func TestBuildTableRows_PermDeniedNotInUse_DisabledWithNoPermissionTooltip(t *te
 		t.Errorf("DisabledTooltip = %q, want NoPermission tooltip %q", deleteAction.DisabledTooltip, l.Actions.NoPermission)
 	}
 }
-

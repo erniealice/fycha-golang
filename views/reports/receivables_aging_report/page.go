@@ -230,16 +230,16 @@ func buildTable(resp *agingpb.ReceivablesAgingResponse, l fycha.ReceivablesAging
 	}
 
 	table := &types.TableConfig{
-		ID:      "receivablesAgingTable",
-		Columns: columns,
-		ShowSearch:      false,
-		ShowFilters:     false,
-		ShowSort:        false,
-		ShowColumns:     false,
-		ShowExport:      true,
-		ShowEntries:     true,
-		ShowDensity:     true,
-		Labels:          tableLabels,
+		ID:          "receivablesAgingTable",
+		Columns:     columns,
+		ShowSearch:  false,
+		ShowFilters: false,
+		ShowSort:    false,
+		ShowColumns: false,
+		ShowExport:  true,
+		ShowEntries: true,
+		ShowDensity: true,
+		Labels:      tableLabels,
 		EmptyState: types.TableEmptyState{
 			Title:   l.EmptyTitle,
 			Message: l.EmptyMessage,
@@ -331,4 +331,3 @@ func buildFilterSheetURL(base, asOfDate, rows string) string {
 	params.Set("rows", rows)
 	return base + "?" + params.Encode()
 }
-

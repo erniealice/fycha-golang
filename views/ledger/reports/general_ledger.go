@@ -356,4 +356,3 @@ func mockGLSection(accountID, startDate, endDate string) *GLAccountSection {
 		Lines:          lines,
 	}
 }
-
