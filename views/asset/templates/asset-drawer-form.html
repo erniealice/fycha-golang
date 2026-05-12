@@ -148,14 +148,14 @@ Labels: all text via .Labels.* — no English literals.
             class="btn btn-secondary"
             data-sheet-close
         >
-            {{if .CommonLabels}}{{.CommonLabels}}{{end}}
+            {{.CommonLabels.Buttons.Cancel}}
         </button>
         <button
             type="submit"
             class="btn btn-primary"
             data-testid="asset-edit-submit-btn"
         >
-            {{if .IsEdit}}{{.Labels.Name}}{{else}}{{.Labels.Name}}{{end}}
+            {{if .IsEdit}}{{.CommonLabels.Buttons.Update}}{{else}}{{.CommonLabels.Buttons.Save}}{{end}}
         </button>
     </div>
 </form>
