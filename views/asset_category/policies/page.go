@@ -173,15 +173,17 @@ func buildTableRows(
 				TestID:   "depreciation-policy-action-preview",
 			},
 			{
-				Type:            "run",
-				Label:           l.ActionRun,
-				Action:          "run",
-				HxGet:           runURL,
-				HxTarget:        "#sheetContent",
-				HxSwap:          "innerHTML",
-				OnClick:         "lf.Sheet.open()",
-				Disabled:        !perms.Can("asset", "depreciate"),
-				DisabledTooltip: "",
+				Type:     "run",
+				Label:    l.ActionRun,
+				Action:   "run",
+				HxGet:    runURL,
+				HxTarget: "#sheetContent",
+				HxSwap:   "innerHTML",
+				OnClick:  "lf.Sheet.open()",
+				// 2026-05-14 permission-gates P3: re-key from non-catalog
+				// `asset:depreciate` to catalog `depreciation_schedule:create`.
+				Disabled:        !perms.Can("depreciation_schedule", "create"),
+				DisabledTooltip: fmt.Sprintf(deps.CommonLabels.Errors.MissingPermission, "depreciation_schedule:create"),
 				TestID:          "depreciation-policy-action-run",
 			},
 		}

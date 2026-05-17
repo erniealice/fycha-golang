@@ -72,6 +72,13 @@ type PageData struct {
 // NewView creates the full-page lapsing-schedule list view.
 func NewView(deps *ViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates P2a: view-package is `lapsing_schedule`,
+		// permission entity is `depreciation_schedule`.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("depreciation_schedule", "list") {
+			return view.Forbidden("depreciation_schedule:list")
+		}
+
 		asOfDate, asOfDateMax := resolveAsOfDate(viewCtx.Request.URL.Query().Get("as_of_date"))
 		cursor := viewCtx.Request.URL.Query().Get("cursor")
 
@@ -109,6 +116,13 @@ func NewView(deps *ViewDeps) view.View {
 // NewTableView returns only the table-card HTML for HTMX inner-swap on AsOfDate change.
 func NewTableView(deps *ViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates P2a: inherit the same gate as full page.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("depreciation_schedule", "list") {
+			return view.Forbidden("depreciation_schedule:list")
+		}
+		_ = perms
+
 		asOfDate, _ := resolveAsOfDate(viewCtx.Request.URL.Query().Get("as_of_date"))
 		cursor := viewCtx.Request.URL.Query().Get("cursor")
 
@@ -168,8 +182,17 @@ func buildTableConfig(
 			ExtraParamsJSON: `{"selection_mode":"all_matching","as_of_date":"` + asOfDate + `"}`,
 		},
 	}
-	if !perms.Can("asset", "depreciate") {
-		bulkCfg.Actions = nil
+	// 2026-05-14 permission-gates P3: re-key from non-catalog `asset:depreciate`
+	// to catalog `depreciation_schedule:create`. P2b: render disabled-with-tooltip
+	// instead of removing the actions outright (per plan §"Pyeza primitive
+	// contract" — surfaces stay visible so users know what perm to request).
+	canBulkRun := perms.Can("depreciation_schedule", "create")
+	if !canBulkRun {
+		bulkTooltip := fmt.Sprintf(deps.CommonLabels.Errors.MissingPermission, "depreciation_schedule:create")
+		for i := range bulkCfg.Actions {
+			bulkCfg.Actions[i].Disabled = true
+			bulkCfg.Actions[i].DisabledTooltip = bulkTooltip
+		}
 	}
 
 	sp := &types.ServerPagination{
@@ -255,8 +278,9 @@ func buildTableRows(
 		}
 
 		// Actions: per-row [Run] opens Surface A drawer via HTMX.
+		// 2026-05-14 permission-gates P3: re-key to catalog verb.
 		actions := []types.TableAction{}
-		canRun := r.CanRun && perms.Can("asset", "depreciate")
+		canRun := r.CanRun && perms.Can("depreciation_schedule", "create")
 		if drawerURL != "" {
 			actions = append(actions, types.TableAction{
 				Type:            "run",

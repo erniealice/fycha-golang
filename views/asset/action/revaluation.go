@@ -72,6 +72,13 @@ type revaluationFormData struct {
 // NewRevaluationAction creates the Surface E per-asset revaluation drawer.
 func NewRevaluationAction(deps *RevaluationDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates: gate GET drawer + POST submit on
+		// asset_revaluation:create (catalog verb).
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("asset_revaluation", "create") {
+			return fycha.HTMXError(deps.Labels.Errors.PermissionDenied)
+		}
+
 		assetID := viewCtx.Request.PathValue("asset_id")
 		if assetID == "" {
 			assetID = viewCtx.Request.PathValue("id")
@@ -87,6 +94,13 @@ func NewRevaluationAction(deps *RevaluationDeps) view.View {
 // NewRevaluationPreviewAction creates the HTMX preview partial endpoint.
 func NewRevaluationPreviewAction(deps *RevaluationDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates: preview is read-only, gate on
+		// asset_revaluation:read.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("asset_revaluation", "read") {
+			return fycha.HTMXError(deps.Labels.Errors.PermissionDenied)
+		}
+
 		assetID := viewCtx.Request.PathValue("asset_id")
 		if assetID == "" {
 			assetID = viewCtx.Request.PathValue("id")

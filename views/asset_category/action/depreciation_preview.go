@@ -55,6 +55,13 @@ type DepreciationPreviewPageData struct {
 // GET only — no POST route is registered for this handler.
 func NewDepreciationPreviewView(deps *DepreciationPreviewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates: preview is read-only, gate on
+		// depreciation_schedule:read.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("depreciation_schedule", "read") {
+			return fycha.HTMXError(deps.Labels.Errors.PermissionDenied)
+		}
+
 		categoryID := viewCtx.Request.PathValue("category_id")
 		if categoryID == "" {
 			return view.Error(fmt.Errorf("category_id is required"))

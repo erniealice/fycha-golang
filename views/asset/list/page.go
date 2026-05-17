@@ -55,12 +55,18 @@ type PageData struct {
 // NewView creates the asset list view (full page).
 func NewView(deps *ListViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates P2a: reject direct-URL access when the
+		// user lacks asset:list — sidebar visibility is not a security boundary.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("asset", "list") {
+			return view.Forbidden("asset:list")
+		}
+
 		status := viewCtx.Request.PathValue("status")
 		if status == "" {
 			status = "active"
 		}
 
-		perms := view.GetUserPermissions(ctx)
 		tableConfig := buildTableConfig(ctx, deps, status, perms)
 
 		pageData := &PageData{
@@ -97,12 +103,18 @@ func NewView(deps *ListViewDeps) view.View {
 // Used as the refresh target after CRUD operations.
 func NewTableView(deps *ListViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates P2a: refresh-target partial inherits the
+		// same gate as the full page.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("asset", "list") {
+			return view.Forbidden("asset:list")
+		}
+
 		status := viewCtx.Request.PathValue("status")
 		if status == "" {
 			status = "active"
 		}
 
-		perms := view.GetUserPermissions(ctx)
 		tableConfig := buildTableConfig(ctx, deps, status, perms)
 		return view.OK("table-card", tableConfig)
 	})
@@ -142,7 +154,9 @@ func buildTableConfig(ctx context.Context, deps *ListViewDeps, status string, pe
 	types.ApplyColumnStyles(columns, rows)
 
 	bulkCfg := fycha.MapBulkConfig(deps.CommonLabels)
-	bulkCfg.Actions = buildBulkActions(l, deps.CommonLabels, status, deps.Routes)
+	// 2026-05-14 permission-gates P2b: pass perms through so bulk actions
+	// render disabled-with-tooltip when the user lacks asset:update / :delete.
+	bulkCfg.Actions = buildBulkActions(l, deps.CommonLabels, status, deps.Routes, perms)
 
 	refreshURL := route.ResolveURL(deps.Routes.TableURL, "status", status)
 
@@ -336,7 +350,15 @@ func statusVariant(status string) string {
 	}
 }
 
-func buildBulkActions(l fycha.AssetLabels, common pyeza.CommonLabels, status string, routes fycha.AssetRoutes) []types.BulkAction {
+func buildBulkActions(l fycha.AssetLabels, common pyeza.CommonLabels, status string, routes fycha.AssetRoutes, perms *types.UserPermissions) []types.BulkAction {
+	// 2026-05-14 permission-gates P2b: pyeza.BulkAction now exposes
+	// Disabled + DisabledTooltip. Bulk activate/deactivate keys on
+	// asset:update; bulk delete keys on asset:delete.
+	canUpdate := perms.Can("asset", "update")
+	canDelete := perms.Can("asset", "delete")
+	updateTooltip := fmt.Sprintf(common.Errors.MissingPermission, "asset:update")
+	deleteTooltip := fmt.Sprintf(common.Errors.MissingPermission, "asset:delete")
+
 	actions := []types.BulkAction{}
 
 	switch status {
@@ -350,6 +372,8 @@ func buildBulkActions(l fycha.AssetLabels, common pyeza.CommonLabels, status str
 			ConfirmTitle:    l.Actions.Deactivate,
 			ConfirmMessage:  l.Actions.ConfirmBulkDeactivate,
 			ExtraParamsJSON: `{"target_status":"inactive"}`,
+			Disabled:        !canUpdate,
+			DisabledTooltip: updateTooltip,
 		})
 	case "inactive":
 		actions = append(actions, types.BulkAction{
@@ -361,6 +385,8 @@ func buildBulkActions(l fycha.AssetLabels, common pyeza.CommonLabels, status str
 			ConfirmTitle:    l.Actions.Activate,
 			ConfirmMessage:  l.Actions.ConfirmBulkActivate,
 			ExtraParamsJSON: `{"target_status":"active"}`,
+			Disabled:        !canUpdate,
+			DisabledTooltip: updateTooltip,
 		})
 	}
 
@@ -373,6 +399,8 @@ func buildBulkActions(l fycha.AssetLabels, common pyeza.CommonLabels, status str
 		ConfirmTitle:     common.Bulk.Delete,
 		ConfirmMessage:   l.Actions.ConfirmBulkDelete,
 		RequiresDataAttr: "deletable",
+		Disabled:         !canDelete,
+		DisabledTooltip:  deleteTooltip,
 	})
 
 	return actions

@@ -80,6 +80,12 @@ type PageData struct {
 // NewView creates the account detail view (full page).
 func NewView(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates P2a.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("account", "read") {
+			return view.Forbidden("account:read")
+		}
+
 		id := viewCtx.Request.PathValue("id")
 
 		activeTab := viewCtx.Request.URL.Query().Get("tab")
@@ -87,7 +93,6 @@ func NewView(deps *Deps) view.View {
 			activeTab = "entries"
 		}
 
-		perms := view.GetUserPermissions(ctx)
 		pageData := buildPageData(ctx, deps, id, activeTab, viewCtx, perms)
 
 		// KB help content
@@ -107,13 +112,18 @@ func NewView(deps *Deps) view.View {
 // NewTabAction creates the tab action view (partial — returns only the tab content).
 func NewTabAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates P2a: HTMX tab partials re-check perms.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("account", "read") {
+			return view.Forbidden("account:read")
+		}
+
 		id := viewCtx.Request.PathValue("id")
 		tab := viewCtx.Request.PathValue("tab")
 		if tab == "" {
 			tab = "entries"
 		}
 
-		perms := view.GetUserPermissions(ctx)
 		pageData := buildPageData(ctx, deps, id, tab, viewCtx, perms)
 
 		templateName := "account-tab-" + tab

@@ -59,6 +59,13 @@ type AccountRow struct {
 // NewView creates the account list view (full page).
 func NewView(deps *ListViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates P2a: reject direct-URL access without
+		// account:list.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("account", "list") {
+			return view.Forbidden("account:list")
+		}
+
 		element := viewCtx.Request.URL.Query().Get("tab")
 		if element == "" {
 			element = "all"
@@ -66,7 +73,6 @@ func NewView(deps *ListViewDeps) view.View {
 
 		accounts := fetchAccounts(ctx, deps)
 
-		perms := view.GetUserPermissions(ctx)
 		elementTabs := buildElementTabs(deps)
 		tableConfig := buildTableConfig(deps, element, accounts, perms)
 

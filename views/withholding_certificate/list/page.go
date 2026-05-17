@@ -60,13 +60,18 @@ type WithholdingCertificateRow struct {
 // NewView creates the withholding certificate list view (full page).
 func NewView(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates P2a.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("withholding_certificate", "list") {
+			return view.Forbidden("withholding_certificate:list")
+		}
+
 		status := viewCtx.Request.PathValue("status")
 		if status == "" {
 			status = "active"
 		}
 
 		rows := fetchCertificates(ctx, deps, status)
-		perms := view.GetUserPermissions(ctx)
 		statusTabs := buildStatusTabs(deps)
 		tableConfig := buildTableConfig(deps, rows, perms)
 
@@ -180,7 +185,12 @@ func buildTableConfig(deps *Deps, rows []WithholdingCertificateRow, perms *types
 	tableRows := []types.TableRow{}
 	canView := perms.Can("withholding_certificate", "read")
 	canCreate := perms.Can("withholding_certificate", "create")
+	// 2026-05-14 permission-gates P3: edit row action was incorrectly gated on
+	// `:create`. Add a distinct `:update` gate to keep the row affordances
+	// matched to the verb they actually represent.
+	canUpdate := perms.Can("withholding_certificate", "update")
 	canDelete := perms.Can("withholding_certificate", "delete")
+	_ = canCreate // create is used by PrimaryAction; keep variable defined for clarity.
 	for _, r := range rows {
 		actions := []types.TableAction{
 			{
@@ -196,7 +206,7 @@ func buildTableConfig(deps *Deps, rows []WithholdingCertificateRow, perms *types
 				Label:           l.Actions.Edit,
 				Action:          "edit",
 				Href:            deps.Routes.EditFor(r.ID),
-				Disabled:        !canCreate,
+				Disabled:        !canUpdate,
 				DisabledTooltip: l.Actions.NoPermission,
 			},
 			{

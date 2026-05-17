@@ -31,7 +31,8 @@ func NewAddAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("account", "create") {
-			return view.Error(fmt.Errorf("permission denied"))
+			// 2026-05-14 permission-gates P3: error-shape fix.
+			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		if viewCtx.Request.Method == http.MethodGet {
@@ -100,7 +101,8 @@ func NewEditAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("account", "update") {
-			return view.Error(fmt.Errorf("permission denied"))
+			// 2026-05-14 permission-gates P3: error-shape fix.
+			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		id := viewCtx.Request.PathValue("id")
@@ -166,7 +168,8 @@ func NewDeleteAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("account", "delete") {
-			return view.Error(fmt.Errorf("permission denied"))
+			// 2026-05-14 permission-gates P3: error-shape fix.
+			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		id := viewCtx.Request.URL.Query().Get("id")

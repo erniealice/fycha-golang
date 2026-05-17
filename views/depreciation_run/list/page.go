@@ -41,6 +41,14 @@ type PageData struct {
 // NewView creates the full-page depreciation-run list view.
 func NewView(deps *ListViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates P2a: view-package is `depreciation_run`,
+		// permission entity is `depreciation_schedule`.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("depreciation_schedule", "list") {
+			return view.Forbidden("depreciation_schedule:list")
+		}
+		_ = perms
+
 		status := viewCtx.Request.PathValue("status")
 		if status == "" {
 			status = "pending"
@@ -87,6 +95,13 @@ func NewView(deps *ListViewDeps) view.View {
 // NewTableView returns only the table-card HTML (used as HTMX refresh target).
 func NewTableView(deps *ListViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates P2a: inherit gate from full page.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("depreciation_schedule", "list") {
+			return view.Forbidden("depreciation_schedule:list")
+		}
+		_ = perms
+
 		status := viewCtx.Request.PathValue("status")
 		if status == "" {
 			status = "pending"
@@ -143,7 +158,11 @@ func buildTableConfig(
 	}
 
 	l := deps.Labels
-	tableRows := buildTableRows(rows, l, deps.Routes)
+	// 2026-05-14 permission-gates P2b: depreciation_run list previously did not
+	// load perms at all. Gate view-row actions on depreciation_schedule:read
+	// (view-package name vs permission-entity name diverges — see plan §C1).
+	perms := view.GetUserPermissions(ctx)
+	tableRows := buildTableRows(rows, l, deps.Routes, perms)
 	types.ApplyColumnStyles(columns, tableRows)
 
 	refreshURL := route.ResolveURL(deps.Routes.ListTableURL, "status", status)
@@ -203,7 +222,11 @@ func depreciationRunColumns(l fycha.DepreciationRunLabels) []types.TableColumn {
 	}
 }
 
-func buildTableRows(rows []drshared.DepreciationRunRow, l fycha.DepreciationRunLabels, routes fycha.DepreciationRunRoutes) []types.TableRow {
+func buildTableRows(rows []drshared.DepreciationRunRow, l fycha.DepreciationRunLabels, routes fycha.DepreciationRunRoutes, perms *types.UserPermissions) []types.TableRow {
+	// 2026-05-14 permission-gates P2b: row view action gated on
+	// depreciation_schedule:read (catalog entity name).
+	canRead := perms.Can("depreciation_schedule", "read")
+
 	tableRows := make([]types.TableRow, 0, len(rows))
 	for _, r := range rows {
 		detailURL := routes.DetailFor(r.ID)
@@ -230,7 +253,14 @@ func buildTableRows(rows []drshared.DepreciationRunRow, l fycha.DepreciationRunL
 		}
 
 		actions := []types.TableAction{
-			{Type: "view", Label: l.List.Columns.Actions, Action: "view", Href: detailURL},
+			{
+				Type:            "view",
+				Label:           l.List.Columns.Actions,
+				Action:          "view",
+				Href:            detailURL,
+				Disabled:        !canRead,
+				DisabledTooltip: l.Errors.PermissionDenied,
+			},
 		}
 
 		tableRows = append(tableRows, types.TableRow{

@@ -59,13 +59,18 @@ type ForexRateRow struct {
 // NewView creates the forex rate list view (full page).
 func NewView(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates P2a.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("forex_rate", "list") {
+			return view.Forbidden("forex_rate:list")
+		}
+
 		status := viewCtx.Request.PathValue("status")
 		if status == "" {
 			status = "active"
 		}
 
 		rows := fetchForexRates(ctx, deps, status)
-		perms := view.GetUserPermissions(ctx)
 		statusTabs := buildStatusTabs(deps)
 		tableConfig := buildTableConfig(deps, rows, perms)
 

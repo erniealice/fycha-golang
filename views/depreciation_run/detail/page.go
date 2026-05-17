@@ -33,6 +33,14 @@ type DetailViewDeps struct {
 // NewView creates the full-page depreciation-run detail view.
 func NewView(deps *DetailViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates P2a: view-package `depreciation_run`,
+		// permission entity `depreciation_schedule`.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("depreciation_schedule", "read") {
+			return view.Forbidden("depreciation_schedule:read")
+		}
+		_ = perms
+
 		id := viewCtx.Request.PathValue("run_id")
 
 		runWithEntries, err := deps.ReadDepreciationRun(ctx, id)
@@ -85,6 +93,13 @@ func NewView(deps *DetailViewDeps) view.View {
 // Called via HTMX when the user clicks a tab button.
 func NewTabView(deps *DetailViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates P2a: HTMX tab partial re-check.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("depreciation_schedule", "read") {
+			return view.Forbidden("depreciation_schedule:read")
+		}
+		_ = perms
+
 		id := viewCtx.Request.PathValue("run_id")
 		tab := viewCtx.Request.PathValue("tab")
 		if tab == "" {

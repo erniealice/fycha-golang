@@ -194,6 +194,13 @@ type PageData struct {
 // NewView creates the asset detail view (full page).
 func NewView(deps *DetailViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates P2a: reject direct-URL access without
+		// asset:read. Detail page leaks asset data otherwise.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("asset", "read") {
+			return view.Forbidden("asset:read")
+		}
+
 		id := viewCtx.Request.PathValue("id")
 
 		activeTab := viewCtx.Request.URL.Query().Get("tab")
@@ -201,7 +208,6 @@ func NewView(deps *DetailViewDeps) view.View {
 			activeTab = "info"
 		}
 
-		perms := view.GetUserPermissions(ctx)
 		pageData := buildPageData(deps, id, activeTab, viewCtx, perms)
 
 		// KB help content
@@ -221,13 +227,20 @@ func NewView(deps *DetailViewDeps) view.View {
 // NewTabAction creates the tab action view (partial -- returns only the tab content).
 func NewTabAction(deps *DetailViewDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates P2a: tab partials cross the HTMX swap
+		// boundary, so perms must be re-checked here even though the parent
+		// page already gated. asset:read is the tab-view gate.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("asset", "read") {
+			return view.Forbidden("asset:read")
+		}
+
 		id := viewCtx.Request.PathValue("id")
 		tab := viewCtx.Request.PathValue("tab")
 		if tab == "" {
 			tab = "info"
 		}
 
-		perms := view.GetUserPermissions(ctx)
 		pageData := buildPageData(deps, id, tab, viewCtx, perms)
 
 		// Return only the tab partial template

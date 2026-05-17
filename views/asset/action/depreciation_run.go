@@ -82,6 +82,15 @@ type depreciationRunFormData struct {
 // NewDepreciationRunAction creates the Surface A per-asset depreciation-run drawer.
 func NewDepreciationRunAction(deps *DepreciationRunDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates: gate both GET drawer-render AND POST
+		// submit on depreciation_schedule:create (catalog verb). The view
+		// package is named "depreciation_run" but the permission entity is
+		// "depreciation_schedule" — see plan §"naming asymmetry".
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("depreciation_schedule", "create") {
+			return fycha.HTMXError(deps.Labels.Errors.PermissionDenied)
+		}
+
 		assetID := viewCtx.Request.PathValue("asset_id")
 		if assetID == "" {
 			assetID = viewCtx.Request.PathValue("id")

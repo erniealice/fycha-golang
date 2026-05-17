@@ -1,0 +1,44 @@
+{{/* Full page — funding card detail */}}
+{{define "funding-card-detail"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* HTMX partial */}}
+{{define "funding-card-detail-content"}}
+<div class="page-content" data-page="funding-card-detail">
+  <div class="detail-header">
+    <h2 data-testid="fund-name">{{.FundName}}</h2>
+    <span class="badge">{{.FundKind}}</span>
+    <span class="text-muted">{{.FundCurrency}}</span>
+  </div>
+
+  <dl class="detail-list">
+    <dt>Allocation ID</dt>
+    <dd data-testid="funding-card-detail-allocation-id">{{.AllocationID}}</dd>
+    <dt>Allocated Limit</dt>
+    <dd data-testid="fund-allocation-amount">{{.AllocatedLimit}}</dd>
+    <dt>Mode</dt>
+    <dd>{{.AllocationMode}}</dd>
+    <dt>Status</dt>
+    <dd>{{.AllocationStatus}}</dd>
+  </dl>
+
+  <h3>Recent Transactions</h3>
+  <table class="table" data-testid="funding-card-transactions-table">
+    <thead>
+      <tr><th>Kind</th><th>Amount</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+      {{range .Transactions}}
+      <tr data-testid="funding-transaction-row-{{.ID}}">
+        <td>{{.Kind}}</td>
+        <td>{{.Amount}}</td>
+        <td>{{.Status}}</td>
+      </tr>
+      {{else}}
+      <tr><td colspan="3" class="text-center text-muted">No transactions yet.</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{end}}

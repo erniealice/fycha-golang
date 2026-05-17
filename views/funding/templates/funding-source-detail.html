@@ -1,0 +1,79 @@
+{{/* Full page — funding source detail */}}
+{{define "funding-source-detail"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* HTMX partial */}}
+{{define "funding-source-detail-content"}}
+<div class="page-content" data-page="funding-source-detail">
+  <div class="detail-header">
+    <h2 data-testid="fund-name">{{.FundName}}</h2>
+    <span class="badge">{{.FundKind}}</span>
+    <span class="text-muted">{{.FundCurrency}}</span>
+  </div>
+
+  {{/* Tab bar */}}
+  <nav class="tabs" role="tablist">
+    <a role="tab" {{if eq .ActiveTab "info"}}aria-selected="true"{{end}}
+       href="/app/funding/sources/{{.FundID}}?tab=info">Info</a>
+    <a role="tab" {{if eq .ActiveTab "allocations"}}aria-selected="true"{{end}}
+       href="/app/funding/sources/{{.FundID}}?tab=allocations">Allocations</a>
+    <a role="tab" {{if eq .ActiveTab "activity"}}aria-selected="true"{{end}}
+       href="/app/funding/sources/{{.FundID}}?tab=activity">Activity</a>
+  </nav>
+
+  {{if eq .ActiveTab "info"}}
+  <div class="tab-panel" data-testid="funding-source-tab-info">
+    <dl class="detail-list">
+      <dt>Authorized Limit</dt>
+      <dd data-testid="fund-allocation-amount">{{.AuthorizedLimit}}</dd>
+      <dt>Status</dt>
+      <dd>{{.FundStatus}}</dd>
+    </dl>
+  </div>
+  {{end}}
+
+  {{if eq .ActiveTab "allocations"}}
+  <div class="tab-panel" data-testid="funding-source-tab-allocations">
+    <table class="table">
+      <thead>
+        <tr><th>Workspace</th><th>Allocated Limit</th><th>Mode</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {{range .Allocations}}
+        <tr data-testid="funding-allocation-row-{{.ID}}">
+          <td>{{.WorkspaceID}}</td>
+          <td data-testid="fund-allocation-amount">{{.AllocatedLimit}}</td>
+          <td>{{.Mode}}</td>
+          <td>{{.Status}}</td>
+        </tr>
+        {{else}}
+        <tr><td colspan="4" class="text-center text-muted">No allocations yet.</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{end}}
+
+  {{if eq .ActiveTab "activity"}}
+  <div class="tab-panel" data-testid="funding-source-tab-activity">
+    <table class="table">
+      <thead>
+        <tr><th>Kind</th><th>Amount</th><th>Status</th></tr>
+      </thead>
+      <tbody>
+        {{range .Transactions}}
+        <tr data-testid="funding-transaction-row-{{.ID}}">
+          <td>{{.Kind}}</td>
+          <td>{{.Amount}}</td>
+          <td>{{.Status}}</td>
+        </tr>
+        {{else}}
+        <tr><td colspan="3" class="text-center text-muted">No activity yet.</td></tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+  {{end}}
+</div>
+{{end}}

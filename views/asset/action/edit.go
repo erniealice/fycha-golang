@@ -19,7 +19,8 @@ func NewEditAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("asset", "update") {
-			return view.Error(fmt.Errorf("permission denied"))
+			// 2026-05-14 permission-gates P3: error-shape fix.
+			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		id := viewCtx.Request.PathValue("id")

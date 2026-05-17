@@ -1,0 +1,32 @@
+{{/* Full page — funding card list */}}
+{{define "funding-card-list"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* HTMX partial */}}
+{{define "funding-card-list-content"}}
+<div class="page-content page-content--table" data-page="funding-card-list">
+  <table class="table" data-testid="funding-card-list-table">
+    <thead>
+      <tr>
+        <th>Fund Name</th>
+        <th>Allocated Limit</th>
+        <th>Mode</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Rows}}
+      <tr data-testid="funding-card-row-{{.AllocationID}}">
+        <td><a href="/app/funding/cards/{{.AllocationID}}" data-testid="fund-name">{{.FundName}}</a></td>
+        <td data-testid="fund-allocation-amount" class="text-right">{{.AllocatedLimit}}</td>
+        <td>{{.Mode}}</td>
+        <td>{{.Status}}</td>
+      </tr>
+      {{else}}
+      <tr><td colspan="4" class="text-center text-muted">No funding cards allocated to this workspace.</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{end}}

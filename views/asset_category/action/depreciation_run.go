@@ -93,6 +93,15 @@ type categoryRunFormData struct {
 // "scope" that block.go injects when registering the route.
 func NewCategoryDepreciationRunAction(deps *CategoryDepreciationRunDeps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		// 2026-05-14 permission-gates: mutating verb keyed on the
+		// depreciation_schedule entity (the verb that creates schedule rows).
+		// asset_category:read parent context is enforced by the page-level
+		// gate; here the action handler enforces the mutating verb.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("depreciation_schedule", "create") {
+			return fycha.HTMXError(deps.Labels.Errors.PermissionDenied)
+		}
+
 		categoryID := viewCtx.Request.PathValue("category_id")
 		if categoryID == "" {
 			return view.Error(fmt.Errorf("category_id path parameter is required"))

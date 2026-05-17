@@ -1,0 +1,118 @@
+{{/* Allocation drawer form stub */}}
+{{define "funding-allocation-form"}}
+<form hx-post="/action/fund-allocation/save"
+      hx-swap="none"
+      data-testid="funding-allocation-form">
+  <input type="hidden" name="fund_id" value="{{.FundID}}">
+  {{if .AllocationID}}<input type="hidden" name="allocation_id" value="{{.AllocationID}}">{{end}}
+  <div class="sheet-body">
+    <div class="form-row single">
+      <div class="form-group">
+        <label class="form-label" for="fa-allocated-limit">Allocated Limit</label>
+        <input type="number" id="fa-allocated-limit" name="allocated_limit"
+               class="form-control" placeholder="0.00"
+               data-testid="funding-allocation-form-limit">
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group">
+        <label class="form-label" for="fa-mode">Mode</label>
+        <select id="fa-mode" name="mode" class="form-control"
+                data-testid="funding-allocation-form-mode">
+          <option value="HARD_LIMIT">Hard Limit</option>
+          <option value="SOFT_LIMIT">Soft Limit</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div class="sheet-footer">
+    <button type="button" class="btn btn-ghost" data-sheet-close>Cancel</button>
+    <button type="submit" class="btn btn-primary">Save</button>
+  </div>
+</form>
+{{end}}
+
+{{/* Draw (charge) drawer form stub */}}
+{{define "funding-draw-form"}}
+<form hx-post="/action/fund-transaction/draw"
+      hx-swap="none"
+      data-testid="funding-draw-form">
+  <input type="hidden" name="allocation_id" value="{{.AllocationID}}">
+  <div class="sheet-body">
+    <div class="form-row single">
+      <div class="form-group">
+        <label class="form-label" for="draw-amount">Amount</label>
+        <input type="number" id="draw-amount" name="amount"
+               class="form-control" placeholder="0.00"
+               data-testid="funding-draw-form-amount">
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group">
+        <label class="form-label" for="draw-description">Description</label>
+        <input type="text" id="draw-description" name="description"
+               class="form-control"
+               data-testid="funding-draw-form-description">
+      </div>
+    </div>
+  </div>
+  <div class="sheet-footer">
+    <button type="button" class="btn btn-ghost" data-sheet-close>Cancel</button>
+    <button type="submit" class="btn btn-primary">Charge</button>
+  </div>
+</form>
+{{end}}
+
+{{/* Settlement drawer form stub */}}
+{{define "funding-settlement-form"}}
+<form hx-post="/action/fund-transaction/settlement"
+      hx-swap="none"
+      data-testid="funding-settlement-form">
+  <input type="hidden" name="allocation_id" value="{{.AllocationID}}">
+  <div class="sheet-body">
+    <div class="form-row single">
+      <div class="form-group">
+        <label class="form-label" for="settle-amount">Settlement Amount</label>
+        <input type="number" id="settle-amount" name="amount"
+               class="form-control" placeholder="0.00"
+               data-testid="funding-settlement-form-amount">
+      </div>
+    </div>
+  </div>
+  <div class="sheet-footer">
+    <button type="button" class="btn btn-ghost" data-sheet-close>Cancel</button>
+    <button type="submit" class="btn btn-primary">Settle</button>
+  </div>
+</form>
+{{end}}
+
+{{/* Transfer drawer form stub */}}
+{{define "funding-transfer-form"}}
+<form hx-post="/action/fund-transaction/transfer"
+      hx-swap="none"
+      data-testid="funding-transfer-form">
+  <input type="hidden" name="source_fund_id" value="{{.SourceFundID}}">
+  <div class="sheet-body">
+    <div class="form-row single">
+      <div class="form-group">
+        <label class="form-label" for="transfer-dest">Destination Fund ID</label>
+        <input type="text" id="transfer-dest" name="destination_fund_id"
+               class="form-control"
+               data-testid="funding-transfer-form-dest">
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group">
+        <label class="form-label" for="transfer-amount">Amount</label>
+        <input type="number" id="transfer-amount" name="amount"
+               class="form-control" placeholder="0.00"
+               data-testid="funding-transfer-form-amount">
+      </div>
+    </div>
+  </div>
+  <div class="sheet-footer">
+    <button type="button" class="btn btn-ghost" data-sheet-close>Cancel</button>
+    <button type="submit" class="btn btn-primary">Transfer</button>
+  </div>
+</form>
+{{end}}

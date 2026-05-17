@@ -3824,6 +3824,9 @@ type AssetRevaluationErrorLabels struct {
 	FormParseFailed    string `json:"formParseFailed"`
 	RevaluateFailed    string `json:"revaluateFailed"`
 	InvalidAmount      string `json:"invalidAmount"`
+	// 2026-05-14 permission-gates: AWS-style permission tooltip surface for the
+	// revaluation drawer. Emitted when the caller lacks asset_revaluation:*.
+	PermissionDenied string `json:"permissionDenied"`
 }
 
 // AssetRevaluationLabels holds all translatable strings for the Asset Revaluation drawer.
@@ -3868,6 +3871,7 @@ func DefaultAssetRevaluationLabels() AssetRevaluationLabels {
 			FormParseFailed:    "Form data could not be read.",
 			RevaluateFailed:    "Failed to record the revaluation.",
 			InvalidAmount:      "Invalid amount format. Use a number with up to 2 decimal places.",
+			PermissionDenied:   "You do not have permission to revalue this asset.",
 		},
 	}
 }

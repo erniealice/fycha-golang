@@ -2,7 +2,6 @@ package action
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/erniealice/pyeza-golang/view"
@@ -15,7 +14,8 @@ func NewDeleteAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("asset", "delete") {
-			return view.Error(fmt.Errorf("permission denied"))
+			// 2026-05-14 permission-gates P3: error-shape fix.
+			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		id := viewCtx.Request.URL.Query().Get("id")
@@ -54,7 +54,8 @@ func NewBulkDeleteAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("asset", "delete") {
-			return view.Error(fmt.Errorf("permission denied"))
+			// 2026-05-14 permission-gates P3: error-shape fix.
+			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		_ = viewCtx.Request.ParseMultipartForm(32 << 20)

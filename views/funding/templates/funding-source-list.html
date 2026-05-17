@@ -1,0 +1,34 @@
+{{/* Full page — funding source list */}}
+{{define "funding-source-list"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* HTMX partial */}}
+{{define "funding-source-list-content"}}
+<div class="page-content page-content--table" data-page="funding-source-list">
+  <table class="table" data-testid="funding-source-list-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Kind</th>
+        <th>Currency</th>
+        <th>Authorized Limit</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{range .Rows}}
+      <tr data-testid="funding-source-row-{{.ID}}">
+        <td><a href="/app/funding/sources/{{.ID}}" data-testid="fund-name">{{.Name}}</a></td>
+        <td><span class="badge">{{.Kind}}</span></td>
+        <td>{{.Currency}}</td>
+        <td class="text-right">{{.AuthorizedLimit}}</td>
+        <td>{{.Status}}</td>
+      </tr>
+      {{else}}
+      <tr><td colspan="5" class="text-center text-muted">No fund sources found.</td></tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+{{end}}

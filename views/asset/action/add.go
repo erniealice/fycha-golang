@@ -2,7 +2,6 @@ package action
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"net/http"
 	"strconv"
@@ -18,7 +17,10 @@ func NewAddAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("asset", "create") {
-			return view.Error(fmt.Errorf("permission denied"))
+			// 2026-05-14 permission-gates P3: error-shape — emit a proper
+			// HTMX error (HX-Error-Message header + 422) rather than the
+			// generic view.Error(...) which surfaces as a 500 page.
+			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		if viewCtx.Request.Method == http.MethodGet {

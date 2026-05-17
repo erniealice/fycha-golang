@@ -14,6 +14,7 @@ import (
 	"strings"
 
 	accountpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/account"
+	"github.com/erniealice/pyeza-golang/view"
 )
 
 const accountSearchLimit = 15
@@ -39,6 +40,15 @@ type AccountSearchDeps struct {
 func NewSearchAccountsHandler(deps *AccountSearchDeps) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		ctx := r.Context()
+
+		// 2026-05-14 permission-gates: gate autocomplete on account:list to
+		// prevent direct-curl leakage of account IDs/names.
+		perms := view.GetUserPermissions(ctx)
+		if !perms.Can("account", "list") {
+			writeAccountJSON(w, []AccountSearchOption{})
+			return
+		}
+
 		query := strings.TrimSpace(r.URL.Query().Get("q"))
 		queryLower := strings.ToLower(query)
 
