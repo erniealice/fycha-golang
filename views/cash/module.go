@@ -7,17 +7,17 @@ import (
 	"github.com/erniealice/pyeza-golang/view"
 
 	pettycashfundpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/petty_cash_fund"
-	securitydepositpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/security_deposit"
 	fycha "github.com/erniealice/fycha-golang"
 )
 
 // ModuleDeps holds all dependencies for the cash expansion module.
 // Use case fields are nil until Phase 4-8 treasury use cases are implemented in espyna.
+//
+// NOTE: Deposit-related fields were removed 2026-05-17 as part of the Plan B Advance Cash Events
+// rollout — the Deposits sidebar section was retired and the mock deposits view orphan-deleted.
+// Operators access UNSCHEDULED advances via Cash → Advances → filter. The proto-level
+// SecurityDeposit entity + use cases remain in espyna for future integrations.
 type ModuleDeps struct {
-	// SecurityDeposit use cases
-	CreateSecurityDeposit func(ctx context.Context, req *securitydepositpb.CreateSecurityDepositRequest) (*securitydepositpb.CreateSecurityDepositResponse, error)
-	ListSecurityDeposits  func(ctx context.Context, req *securitydepositpb.ListSecurityDepositsRequest) (*securitydepositpb.ListSecurityDepositsResponse, error)
-
 	// PettyCashFund use cases
 	CreatePettyCashFund func(ctx context.Context, req *pettycashfundpb.CreatePettyCashFundRequest) (*pettycashfundpb.CreatePettyCashFundResponse, error)
 	ListPettyCashFunds  func(ctx context.Context, req *pettycashfundpb.ListPettyCashFundsRequest) (*pettycashfundpb.ListPettyCashFundsResponse, error)
@@ -40,9 +40,6 @@ func NewModule(deps *ModuleDeps) *Module {
 // These routes extend the existing Cash app (active nav: "cash").
 // Routes render "Coming Soon" placeholders until view constructors are wired.
 func (m *Module) RegisterRoutes(r view.RouteRegistrar) {
-	// Deposits
-	r.GET(fycha.DepositListURL, comingSoonView("Deposits", "cash", "deposits"))
-
 	// Petty Cash
 	r.GET(fycha.PettyCashRegisterURL, comingSoonView("Petty Cash Register", "cash", "petty-cash-register"))
 	r.GET(fycha.PettyCashReplenishmentListURL, comingSoonView("Replenishments", "cash", "replenishments"))
