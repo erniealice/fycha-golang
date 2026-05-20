@@ -9,7 +9,7 @@ import (
 
 	fycha "github.com/erniealice/fycha-golang"
 
-	expreportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/expenditure_report"
+	dspb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/domain_specific"
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
@@ -17,12 +17,15 @@ import (
 )
 
 // Deps holds view dependencies.
+//
+// 20260521 Wave B P1.E.5 — DB replaced with the typed GetExpenditureReport
+// closure into the service-driven domain-specific use case.
 type Deps struct {
-	DB           fycha.DataSource
-	Labels       fycha.ReportsLabels
-	CommonLabels pyeza.CommonLabels
-	TableLabels  types.TableLabels
-	Routes       fycha.ReportsRoutes
+	GetExpenditureReport func(context.Context, *dspb.GetExpenditureReportRequest) (*dspb.GetExpenditureReportResponse, error)
+	Labels               fycha.ReportsLabels
+	CommonLabels         pyeza.CommonLabels
+	TableLabels          types.TableLabels
+	Routes               fycha.ReportsRoutes
 }
 
 // PageData holds the data for the expenditure report page.
@@ -104,7 +107,7 @@ func NewView(deps *Deps) view.View {
 		}
 
 		// Build proto request
-		req := &expreportpb.ExpenditureReportRequest{
+		req := &dspb.GetExpenditureReportRequest{
 			PrimaryDimension: primary,
 			RowDimension:     rows,
 		}
@@ -154,13 +157,20 @@ func NewView(deps *Deps) view.View {
 		}
 
 		// Call data source
-		resp, err := deps.DB.GetExpenditureReport(ctx, req)
+		var resp *dspb.GetExpenditureReportResponse
+		var err error
+		if deps.GetExpenditureReport != nil {
+			resp, err = deps.GetExpenditureReport(ctx, req)
+		}
 		if err != nil {
 			log.Printf("Failed to get expenditure report: %v", err)
-			resp = &expreportpb.ExpenditureReportResponse{
+			resp = nil
+		}
+		if resp == nil {
+			resp = &dspb.GetExpenditureReportResponse{
 				ColumnKeys: []string{},
-				Rows:       []*expreportpb.ExpenditureReportRow{},
-				Summary:    &expreportpb.ExpenditureReportSummary{},
+				Rows:       []*dspb.ExpenditureReportRow{},
+				Summary:    &dspb.ExpenditureReportSummary{},
 			}
 		}
 
@@ -262,9 +272,9 @@ type ExpenditureReportFilterSheetData struct {
 	RowOptions       []fycha.FilterOption
 }
 
-func buildSummary(s *expreportpb.ExpenditureReportSummary, l fycha.ExpenditureReportLabels) []fycha.SummaryMetric {
+func buildSummary(s *dspb.ExpenditureReportSummary, l fycha.ExpenditureReportLabels) []fycha.SummaryMetric {
 	if s == nil {
-		s = &expreportpb.ExpenditureReportSummary{}
+		s = &dspb.ExpenditureReportSummary{}
 	}
 	grandTotalCents := s.GetGrandTotal()
 	txnCount := s.GetTotalTransactions()
@@ -281,7 +291,7 @@ func buildSummary(s *expreportpb.ExpenditureReportSummary, l fycha.ExpenditureRe
 	}
 }
 
-func buildPivotTable(resp *expreportpb.ExpenditureReportResponse, l fycha.ExpenditureReportLabels, tableLabels types.TableLabels, primary, rowDim string) *types.TableConfig {
+func buildPivotTable(resp *dspb.GetExpenditureReportResponse, l fycha.ExpenditureReportLabels, tableLabels types.TableLabels, primary, rowDim string) *types.TableConfig {
 	columnKeys := resp.GetColumnKeys()
 
 	// Build dynamic columns
@@ -333,7 +343,7 @@ func buildPivotTable(resp *expreportpb.ExpenditureReportResponse, l fycha.Expend
 	currency := "PHP"
 	tableRows := make([]types.TableRow, 0, len(resp.GetRows()))
 	for i, row := range resp.GetRows() {
-		cellMap := make(map[string]*expreportpb.ExpenditureReportCell, len(row.GetCells()))
+		cellMap := make(map[string]*dspb.ExpenditureReportCell, len(row.GetCells()))
 		for _, c := range row.GetCells() {
 			cellMap[c.GetColumnKey()] = c
 		}
@@ -371,7 +381,7 @@ func buildPivotTable(resp *expreportpb.ExpenditureReportResponse, l fycha.Expend
 	// Add totals row from summary.column_totals
 	summary := resp.GetSummary()
 	if summary != nil && len(resp.GetRows()) > 0 {
-		colTotalMap := make(map[string]*expreportpb.ExpenditureReportCell, len(summary.GetColumnTotals()))
+		colTotalMap := make(map[string]*dspb.ExpenditureReportCell, len(summary.GetColumnTotals()))
 		for _, ct := range summary.GetColumnTotals() {
 			colTotalMap[ct.GetColumnKey()] = ct
 		}

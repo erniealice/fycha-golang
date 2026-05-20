@@ -9,7 +9,7 @@ import (
 
 	fycha "github.com/erniealice/fycha-golang"
 
-	collsumpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/reporting/collection_summary"
+	aragingpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/ar_aging"
 )
 
 // NewExportHandler creates an http.HandlerFunc for CSV export of the collection summary report.
@@ -44,7 +44,7 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 		collectionType := q.Get("collection-type")
 
 		// Build proto request
-		req := &collsumpb.CollectionSummaryRequest{
+		req := &aragingpb.GetCollectionSummaryRequest{
 			PrimaryDimension: primary,
 			RowDimension:     rows,
 		}
@@ -92,18 +92,22 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 			req.CollectionType = &collectionType
 		}
 
-		// Call data source
-		resp, err := deps.DB.GetCollectionSummaryReport(ctx, req)
+		// Call service-driven AR aging use case (Wave B P1.E.1).
+		if deps.GetCollectionSummaryReport == nil {
+			http.Error(w, "Failed to generate report", http.StatusInternalServerError)
+			return
+		}
+		resp, err := deps.GetCollectionSummaryReport(ctx, req)
 		if err != nil {
 			log.Printf("collection_summary_report export: failed to get collection summary report: %v", err)
 			http.Error(w, "Failed to generate report", http.StatusInternalServerError)
 			return
 		}
 		if resp == nil {
-			resp = &collsumpb.CollectionSummaryResponse{
+			resp = &aragingpb.GetCollectionSummaryResponse{
 				ColumnKeys: []string{},
-				Rows:       []*collsumpb.CollectionSummaryRow{},
-				Summary:    &collsumpb.CollectionSummarySummary{},
+				Rows:       []*aragingpb.CollectionSummaryRow{},
+				Summary:    &aragingpb.CollectionSummarySummary{},
 			}
 		}
 
@@ -131,7 +135,7 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 		// Write data rows
 		for _, row := range resp.GetRows() {
 			// Build cell map for quick lookup by column key
-			cellMap := make(map[string]*collsumpb.CollectionSummaryCell, len(row.GetCells()))
+			cellMap := make(map[string]*aragingpb.CollectionSummaryCell, len(row.GetCells()))
 			for _, c := range row.GetCells() {
 				cellMap[c.GetColumnKey()] = c
 			}
@@ -156,7 +160,7 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 		// Write totals row: "TOTAL", then column totals, then grand_total
 		summary := resp.GetSummary()
 		if summary != nil && len(resp.GetRows()) > 0 {
-			colTotalMap := make(map[string]*collsumpb.CollectionSummaryCell, len(summary.GetColumnTotals()))
+			colTotalMap := make(map[string]*aragingpb.CollectionSummaryCell, len(summary.GetColumnTotals()))
 			for _, ct := range summary.GetColumnTotals() {
 				colTotalMap[ct.GetColumnKey()] = ct
 			}

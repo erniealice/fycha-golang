@@ -13,8 +13,10 @@ import (
 	"github.com/erniealice/pyeza-golang/view"
 )
 
+// 20260521 Wave B P1.E.5 — DB replaced with the typed ListRevenue closure
+// into the service-driven domain-specific use case.
 type Deps struct {
-	DB           fycha.DataSource
+	ListRevenue  func(context.Context, *time.Time, *time.Time) ([]map[string]any, error)
 	Labels       fycha.ReportsLabels
 	CommonLabels pyeza.CommonLabels
 	TableLabels  types.TableLabels
@@ -64,10 +66,14 @@ func NewView(deps *Deps) view.View {
 			}
 		}
 
-		records, err := deps.DB.ListRevenue(ctx, &start, &end)
-		if err != nil {
-			log.Printf("Failed to list revenue: %v", err)
-			records = nil
+		var records []map[string]any
+		if deps.ListRevenue != nil {
+			var err error
+			records, err = deps.ListRevenue(ctx, &start, &end)
+			if err != nil {
+				log.Printf("Failed to list revenue: %v", err)
+				records = nil
+			}
 		}
 
 		// Build summary

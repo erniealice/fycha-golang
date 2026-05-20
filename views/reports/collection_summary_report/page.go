@@ -9,7 +9,7 @@ import (
 
 	fycha "github.com/erniealice/fycha-golang"
 
-	collsumpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/reporting/collection_summary"
+	aragingpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/ar_aging"
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
@@ -17,12 +17,17 @@ import (
 )
 
 // Deps holds view dependencies.
+//
+// 20260520 Wave B P1.E.1 — `DB fycha.DataSource` replaced with the typed
+// `GetCollectionSummaryReport` closure into the service-driven AR aging
+// use case (proto package `service.reporting.v1`). Nil-safe: when the
+// closure is nil the view renders an empty report instead of crashing.
 type Deps struct {
-	DB           fycha.DataSource
-	Labels       fycha.ReportsLabels
-	CommonLabels pyeza.CommonLabels
-	TableLabels  types.TableLabels
-	Routes       fycha.ReportsRoutes
+	Labels                     fycha.ReportsLabels
+	CommonLabels               pyeza.CommonLabels
+	TableLabels                types.TableLabels
+	Routes                     fycha.ReportsRoutes
+	GetCollectionSummaryReport func(context.Context, *aragingpb.GetCollectionSummaryRequest) (*aragingpb.GetCollectionSummaryResponse, error)
 }
 
 // PageData holds the data for the collection summary report page.
@@ -104,7 +109,7 @@ func NewView(deps *Deps) view.View {
 		}
 
 		// Build proto request
-		req := &collsumpb.CollectionSummaryRequest{
+		req := &aragingpb.GetCollectionSummaryRequest{
 			PrimaryDimension: primary,
 			RowDimension:     rows,
 		}
@@ -153,14 +158,21 @@ func NewView(deps *Deps) view.View {
 			req.CollectionType = &collectionType
 		}
 
-		// Call data source
-		resp, err := deps.DB.GetCollectionSummaryReport(ctx, req)
-		if err != nil {
-			log.Printf("Failed to get collection summary report: %v", err)
-			resp = &collsumpb.CollectionSummaryResponse{
+		// Call service-driven AR aging use case (Wave B P1.E.1).
+		var resp *aragingpb.GetCollectionSummaryResponse
+		if deps.GetCollectionSummaryReport != nil {
+			var err error
+			resp, err = deps.GetCollectionSummaryReport(ctx, req)
+			if err != nil {
+				log.Printf("Failed to get collection summary report: %v", err)
+				resp = nil
+			}
+		}
+		if resp == nil {
+			resp = &aragingpb.GetCollectionSummaryResponse{
 				ColumnKeys: []string{},
-				Rows:       []*collsumpb.CollectionSummaryRow{},
-				Summary:    &collsumpb.CollectionSummarySummary{},
+				Rows:       []*aragingpb.CollectionSummaryRow{},
+				Summary:    &aragingpb.CollectionSummarySummary{},
 			}
 		}
 
@@ -262,9 +274,9 @@ type CollectionSummaryFilterSheetData struct {
 	RowOptions       []fycha.FilterOption
 }
 
-func buildSummary(s *collsumpb.CollectionSummarySummary, l fycha.CollectionSummaryReportLabels) []fycha.SummaryMetric {
+func buildSummary(s *aragingpb.CollectionSummarySummary, l fycha.CollectionSummaryReportLabels) []fycha.SummaryMetric {
 	if s == nil {
-		s = &collsumpb.CollectionSummarySummary{}
+		s = &aragingpb.CollectionSummarySummary{}
 	}
 	grandTotalCents := s.GetGrandTotal()
 	txnCount := s.GetTotalTransactions()
@@ -281,7 +293,7 @@ func buildSummary(s *collsumpb.CollectionSummarySummary, l fycha.CollectionSumma
 	}
 }
 
-func buildPivotTable(resp *collsumpb.CollectionSummaryResponse, l fycha.CollectionSummaryReportLabels, tableLabels types.TableLabels, primary, rowDim string) *types.TableConfig {
+func buildPivotTable(resp *aragingpb.GetCollectionSummaryResponse, l fycha.CollectionSummaryReportLabels, tableLabels types.TableLabels, primary, rowDim string) *types.TableConfig {
 	columnKeys := resp.GetColumnKeys()
 
 	// Build dynamic columns: Name + per-column-key + Total
@@ -334,7 +346,7 @@ func buildPivotTable(resp *collsumpb.CollectionSummaryResponse, l fycha.Collecti
 	tableRows := make([]types.TableRow, 0, len(resp.GetRows()))
 	for i, row := range resp.GetRows() {
 		// Build cell map from row cells for quick lookup
-		cellMap := make(map[string]*collsumpb.CollectionSummaryCell, len(row.GetCells()))
+		cellMap := make(map[string]*aragingpb.CollectionSummaryCell, len(row.GetCells()))
 		for _, c := range row.GetCells() {
 			cellMap[c.GetColumnKey()] = c
 		}
@@ -372,7 +384,7 @@ func buildPivotTable(resp *collsumpb.CollectionSummaryResponse, l fycha.Collecti
 	// Add totals row from summary.column_totals
 	summary := resp.GetSummary()
 	if summary != nil && len(resp.GetRows()) > 0 {
-		colTotalMap := make(map[string]*collsumpb.CollectionSummaryCell, len(summary.GetColumnTotals()))
+		colTotalMap := make(map[string]*aragingpb.CollectionSummaryCell, len(summary.GetColumnTotals()))
 		for _, ct := range summary.GetColumnTotals() {
 			colTotalMap[ct.GetColumnKey()] = ct
 		}

@@ -9,7 +9,7 @@ import (
 
 	fycha "github.com/erniealice/fycha-golang"
 
-	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
+	gcfpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/gross_cashflow"
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
@@ -17,11 +17,16 @@ import (
 )
 
 // Deps holds view dependencies.
+//
+// 20260521 Wave B P1.E.3 — `DB fycha.DataSource` replaced with the typed
+// `GetGrossProfitReport` closure into the service-driven gross/cashflow
+// use case (proto package `service.reporting.v1`). Nil-safe: when the
+// closure is nil the view renders an empty report instead of crashing.
 type Deps struct {
-	DB           fycha.DataSource
-	Labels       fycha.ReportsLabels
-	CommonLabels pyeza.CommonLabels
-	TableLabels  types.TableLabels
+	GetGrossProfitReport func(context.Context, *gcfpb.GetGrossProfitRequest) (*gcfpb.GetGrossProfitResponse, error)
+	Labels               fycha.ReportsLabels
+	CommonLabels         pyeza.CommonLabels
+	TableLabels          types.TableLabels
 }
 
 // PageData holds the data for the gross profit report page.
@@ -96,7 +101,7 @@ func NewView(deps *Deps) view.View {
 		}
 
 		// Build proto request
-		req := &reportpb.GrossProfitReportRequest{}
+		req := &gcfpb.GetGrossProfitRequest{}
 		req.GroupBy = &groupBy
 
 		// Handle period granularity for monthly/quarterly group-by
@@ -148,13 +153,20 @@ func NewView(deps *Deps) view.View {
 			req.RevenueCategoryId = &categoryID
 		}
 
-		// Call data source
-		resp, err := deps.DB.GetGrossProfitReport(ctx, req)
-		if err != nil {
-			log.Printf("Failed to get gross profit report: %v", err)
-			resp = &reportpb.GrossProfitReportResponse{
-				LineItems: []*reportpb.GrossProfitLineItem{},
-				Summary:   &reportpb.GrossProfitSummary{},
+		// Call service-driven gross/cashflow use case (Wave B P1.E.3).
+		var resp *gcfpb.GetGrossProfitResponse
+		if deps.GetGrossProfitReport != nil {
+			var err error
+			resp, err = deps.GetGrossProfitReport(ctx, req)
+			if err != nil {
+				log.Printf("Failed to get gross profit report: %v", err)
+				resp = nil
+			}
+		}
+		if resp == nil {
+			resp = &gcfpb.GetGrossProfitResponse{
+				LineItems: []*gcfpb.GrossProfitLineItem{},
+				Summary:   &gcfpb.GrossProfitSummary{},
 			}
 		}
 
@@ -214,9 +226,9 @@ func NewView(deps *Deps) view.View {
 	})
 }
 
-func buildSummary(s *reportpb.GrossProfitSummary, l fycha.GrossProfitLabels) []fycha.SummaryMetric {
+func buildSummary(s *gcfpb.GrossProfitSummary, l fycha.GrossProfitLabels) []fycha.SummaryMetric {
 	if s == nil {
-		s = &reportpb.GrossProfitSummary{}
+		s = &gcfpb.GrossProfitSummary{}
 	}
 	marginVariant := "success"
 	if s.GetOverallMargin() < 15 {
@@ -235,7 +247,7 @@ func buildSummary(s *reportpb.GrossProfitSummary, l fycha.GrossProfitLabels) []f
 	}
 }
 
-func buildTable(items []*reportpb.GrossProfitLineItem, summary *reportpb.GrossProfitSummary, l fycha.GrossProfitLabels, tableLabels types.TableLabels, groupBy string) *types.TableConfig {
+func buildTable(items []*gcfpb.GrossProfitLineItem, summary *gcfpb.GrossProfitSummary, l fycha.GrossProfitLabels, tableLabels types.TableLabels, groupBy string) *types.TableConfig {
 	table := &types.TableConfig{
 		ID:          "grossProfitTable",
 		ShowSearch:  false,

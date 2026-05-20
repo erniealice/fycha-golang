@@ -4,16 +4,24 @@ import (
 	"context"
 	"fmt"
 
-	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
-	fycha "github.com/erniealice/fycha-golang"
+	apagingpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/ap_aging"
 	reports "github.com/erniealice/fycha-golang/views/reports"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
 )
 
+// SimpleFetcher is the typed closure consumed by the simple payables aging
+// view — service-driven AP aging use case (Wave B P1.E.2).
+type SimpleFetcher func(context.Context, *apagingpb.GetSimplePayablesAgingRequest) (*apagingpb.GetSimplePayablesAgingResponse, error)
+
 // NewPayablesAgingView creates the payables aging report with typed service data.
-func NewPayablesAgingView(db fycha.DataSource, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
+//
+// 20260521 Wave B P1.E.2 — `db fycha.DataSource` replaced with the typed
+// `GetSimplePayablesAgingReport` closure into the service-driven AP aging
+// use case. Nil-safe: when the closure is nil the view renders an empty
+// table.
+func NewPayablesAgingView(getSimple SimpleFetcher, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
 	return reports.NewReportView(reports.ReportConfig{
 		ActiveNav:    "supplier",
 		ActiveSubNav: "payables-aging",
@@ -24,7 +32,7 @@ func NewPayablesAgingView(db fycha.DataSource, commonLabels pyeza.CommonLabels, 
 		CommonLabels: commonLabels,
 		TableLabels:  tableLabels,
 		BuildData: func(ctx context.Context) ([]types.TableColumn, []types.TableRow, error) {
-			return fetchPayablesAging(ctx, db)
+			return fetchPayablesAging(ctx, getSimple)
 		},
 		BuildTotals: payablesAgingTotals,
 	})
@@ -60,7 +68,7 @@ func payablesAgingTotals(rows []types.TableRow) []types.TableCell {
 	}
 }
 
-func fetchPayablesAging(ctx context.Context, db fycha.DataSource) ([]types.TableColumn, []types.TableRow, error) {
+func fetchPayablesAging(ctx context.Context, getSimple SimpleFetcher) ([]types.TableColumn, []types.TableRow, error) {
 	columns := []types.TableColumn{
 		{Key: "supplier", Label: "Supplier"},
 		{Key: "current", Label: "Current", Align: "right"},
@@ -71,11 +79,11 @@ func fetchPayablesAging(ctx context.Context, db fycha.DataSource) ([]types.Table
 		{Key: "total", Label: "Total", Align: "right"},
 	}
 
-	if db == nil {
+	if getSimple == nil {
 		return columns, nil, nil
 	}
 
-	resp, err := db.GetSimplePayablesAgingReport(ctx, &reportpb.PayablesAgingReportRequest{})
+	resp, err := getSimple(ctx, &apagingpb.GetSimplePayablesAgingRequest{})
 	if err != nil {
 		return columns, nil, fmt.Errorf("payables aging query: %w", err)
 	}

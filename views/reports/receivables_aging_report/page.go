@@ -9,7 +9,7 @@ import (
 
 	fycha "github.com/erniealice/fycha-golang"
 
-	agingpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/receivables_aging"
+	aragingpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/ar_aging"
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
@@ -17,12 +17,17 @@ import (
 )
 
 // Deps holds view dependencies.
+//
+// 20260520 Wave B P1.E.1 — `DB fycha.DataSource` replaced with the typed
+// `GetReceivablesAgingReport` closure into the service-driven AR aging
+// use case (proto package `service.reporting.v1`). Nil-safe: when the
+// closure is nil the view renders an empty report instead of crashing.
 type Deps struct {
-	DB           fycha.DataSource
-	Labels       fycha.ReportsLabels
-	CommonLabels pyeza.CommonLabels
-	TableLabels  types.TableLabels
-	Routes       fycha.ReportsRoutes
+	Labels                    fycha.ReportsLabels
+	CommonLabels              pyeza.CommonLabels
+	TableLabels               types.TableLabels
+	Routes                    fycha.ReportsRoutes
+	GetReceivablesAgingReport func(context.Context, *aragingpb.GetReceivablesAgingRequest) (*aragingpb.GetReceivablesAgingResponse, error)
 }
 
 // PageData holds the data for the receivables aging report page.
@@ -86,7 +91,7 @@ func NewView(deps *Deps) view.View {
 		}
 
 		// Build proto request
-		req := &agingpb.ReceivablesAgingRequest{
+		req := &aragingpb.GetReceivablesAgingRequest{
 			AsOfDate:     &asOfDate,
 			RowDimension: rows,
 		}
@@ -102,14 +107,21 @@ func NewView(deps *Deps) view.View {
 			req.RevenueCategoryId = &revenueCategoryID
 		}
 
-		// Call data source
-		resp, err := deps.DB.GetReceivablesAgingReport(ctx, req)
-		if err != nil {
-			log.Printf("Failed to get receivables aging report: %v", err)
-			resp = &agingpb.ReceivablesAgingResponse{
+		// Call service-driven AR aging use case (Wave B P1.E.1).
+		var resp *aragingpb.GetReceivablesAgingResponse
+		if deps.GetReceivablesAgingReport != nil {
+			var err error
+			resp, err = deps.GetReceivablesAgingReport(ctx, req)
+			if err != nil {
+				log.Printf("Failed to get receivables aging report: %v", err)
+				resp = nil
+			}
+		}
+		if resp == nil {
+			resp = &aragingpb.GetReceivablesAgingResponse{
 				BucketLabels: []string{},
-				Rows:         []*agingpb.ReceivablesAgingRow{},
-				Summary:      &agingpb.ReceivablesAgingSummary{},
+				Rows:         []*aragingpb.ReceivablesAgingRow{},
+				Summary:      &aragingpb.ReceivablesAgingSummary{},
 			}
 		}
 
@@ -193,9 +205,9 @@ type FilterSheetData struct {
 	RowOptions   []fycha.FilterOption
 }
 
-func buildSummary(s *agingpb.ReceivablesAgingSummary, l fycha.ReceivablesAgingReportLabels) []fycha.SummaryMetric {
+func buildSummary(s *aragingpb.ReceivablesAgingSummary, l fycha.ReceivablesAgingReportLabels) []fycha.SummaryMetric {
 	if s == nil {
-		s = &agingpb.ReceivablesAgingSummary{}
+		s = &aragingpb.ReceivablesAgingSummary{}
 	}
 	invoiceCount := s.GetTotalInvoiceCount()
 
@@ -214,7 +226,7 @@ func buildSummary(s *agingpb.ReceivablesAgingSummary, l fycha.ReceivablesAgingRe
 	}
 }
 
-func buildTable(resp *agingpb.ReceivablesAgingResponse, l fycha.ReceivablesAgingReportLabels, tableLabels types.TableLabels, rowDim string) *types.TableConfig {
+func buildTable(resp *aragingpb.GetReceivablesAgingResponse, l fycha.ReceivablesAgingReportLabels, tableLabels types.TableLabels, rowDim string) *types.TableConfig {
 	// Fixed columns for aging buckets. The name column is listed first so that
 	// ApplyColumnStyles maps columns[i] to cells[i] correctly (cells[0] is the
 	// "name" type cell; columns[0] must correspond to it).
@@ -251,7 +263,7 @@ func buildTable(resp *agingpb.ReceivablesAgingResponse, l fycha.ReceivablesAging
 	for i, row := range resp.GetRows() {
 		b := row.GetBuckets()
 		if b == nil {
-			b = &agingpb.AgingBuckets{}
+			b = &aragingpb.AgingBuckets{}
 		}
 
 		rowCurrency := ""
@@ -296,7 +308,7 @@ func buildTable(resp *agingpb.ReceivablesAgingResponse, l fycha.ReceivablesAging
 	if summary != nil && len(resp.GetRows()) > 0 {
 		sb := summary.GetBuckets()
 		if sb == nil {
-			sb = &agingpb.AgingBuckets{}
+			sb = &aragingpb.AgingBuckets{}
 		}
 		table.TotalsRow = []types.TableCell{
 			{Value: "Total"},

@@ -9,7 +9,7 @@ import (
 
 	fycha "github.com/erniealice/fycha-golang"
 
-	payagingpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/payables_aging"
+	apagingpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/ap_aging"
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
@@ -17,12 +17,17 @@ import (
 )
 
 // Deps holds view dependencies.
+//
+// 20260521 Wave B P1.E.2 — `DB fycha.DataSource` replaced with the typed
+// `GetPayablesAgingReport` closure into the service-driven AP aging use
+// case (proto package `service.reporting.v1`). Nil-safe: when the closure
+// is nil the view renders an empty report instead of crashing.
 type Deps struct {
-	DB           fycha.DataSource
-	Labels       fycha.ReportsLabels
-	CommonLabels pyeza.CommonLabels
-	TableLabels  types.TableLabels
-	Routes       fycha.ReportsRoutes
+	GetPayablesAgingReport func(context.Context, *apagingpb.GetPayablesAgingRequest) (*apagingpb.GetPayablesAgingResponse, error)
+	Labels                 fycha.ReportsLabels
+	CommonLabels           pyeza.CommonLabels
+	TableLabels            types.TableLabels
+	Routes                 fycha.ReportsRoutes
 }
 
 // PageData holds the data for the payables aging report page.
@@ -87,7 +92,7 @@ func NewView(deps *Deps) view.View {
 		}
 
 		// Build proto request
-		req := &payagingpb.PayablesAgingRequest{
+		req := &apagingpb.GetPayablesAgingRequest{
 			AsOfDate:     &asOfDate,
 			RowDimension: rows,
 		}
@@ -103,14 +108,21 @@ func NewView(deps *Deps) view.View {
 			req.ExpenditureCategoryId = &expenditureCategoryID
 		}
 
-		// Call data source
-		resp, err := deps.DB.GetPayablesAgingReport(ctx, req)
-		if err != nil {
-			log.Printf("Failed to get payables aging report: %v", err)
-			resp = &payagingpb.PayablesAgingResponse{
+		// Call service-driven AP aging use case (Wave B P1.E.2).
+		var resp *apagingpb.GetPayablesAgingResponse
+		if deps.GetPayablesAgingReport != nil {
+			var err error
+			resp, err = deps.GetPayablesAgingReport(ctx, req)
+			if err != nil {
+				log.Printf("Failed to get payables aging report: %v", err)
+				resp = nil
+			}
+		}
+		if resp == nil {
+			resp = &apagingpb.GetPayablesAgingResponse{
 				BucketLabels: []string{},
-				Rows:         []*payagingpb.PayablesAgingRow{},
-				Summary:      &payagingpb.PayablesAgingSummary{},
+				Rows:         []*apagingpb.PayablesAgingRow{},
+				Summary:      &apagingpb.PayablesAgingSummary{},
 			}
 		}
 
@@ -194,9 +206,9 @@ type FilterSheetData struct {
 	RowOptions   []fycha.FilterOption
 }
 
-func buildSummary(s *payagingpb.PayablesAgingSummary, l fycha.PayablesAgingReportLabels) []fycha.SummaryMetric {
+func buildSummary(s *apagingpb.PayablesAgingSummary, l fycha.PayablesAgingReportLabels) []fycha.SummaryMetric {
 	if s == nil {
-		s = &payagingpb.PayablesAgingSummary{}
+		s = &apagingpb.PayablesAgingSummary{}
 	}
 	invoiceCount := s.GetTotalInvoiceCount()
 
@@ -216,7 +228,7 @@ func buildSummary(s *payagingpb.PayablesAgingSummary, l fycha.PayablesAgingRepor
 	}
 }
 
-func buildTable(resp *payagingpb.PayablesAgingResponse, l fycha.PayablesAgingReportLabels, tableLabels types.TableLabels, rowDim string) *types.TableConfig {
+func buildTable(resp *apagingpb.GetPayablesAgingResponse, l fycha.PayablesAgingReportLabels, tableLabels types.TableLabels, rowDim string) *types.TableConfig {
 	// Fixed columns for aging buckets. The name column is listed first so that
 	// ApplyColumnStyles maps columns[i] to cells[i] correctly (cells[0] is the
 	// "name" type cell; columns[0] must correspond to it).
@@ -253,7 +265,7 @@ func buildTable(resp *payagingpb.PayablesAgingResponse, l fycha.PayablesAgingRep
 	for i, row := range resp.GetRows() {
 		b := row.GetBuckets()
 		if b == nil {
-			b = &payagingpb.PayablesAgingBuckets{}
+			b = &apagingpb.PayablesAgingBuckets{}
 		}
 
 		rowCurrency := ""
@@ -298,7 +310,7 @@ func buildTable(resp *payagingpb.PayablesAgingResponse, l fycha.PayablesAgingRep
 	if summary != nil && len(resp.GetRows()) > 0 {
 		sb := summary.GetBuckets()
 		if sb == nil {
-			sb = &payagingpb.PayablesAgingBuckets{}
+			sb = &apagingpb.PayablesAgingBuckets{}
 		}
 		currency := "PHP"
 		table.TotalsRow = []types.TableCell{

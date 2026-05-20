@@ -1,8 +1,15 @@
 package reports
 
 import (
+	"context"
 	"log"
 	"net/http"
+	"time"
+
+	apagingpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/ap_aging"
+	aragingpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/ar_aging"
+	dspb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/domain_specific"
+	gcfpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/gross_cashflow"
 
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
@@ -46,12 +53,34 @@ func handleFunc(r view.RouteRegistrar, method, path string, handler http.Handler
 }
 
 // ModuleDeps holds all dependencies for the report module.
+//
+// 20260520-21 Wave B P1.E.1-P1.E.5 — every legacy `fycha.DataSource` method
+// for the 13 in-scope methods has been replaced with typed closures over
+// the new `service.reporting.v1` proto packages. The `DB` field has been
+// removed entirely; downstream view consumers receive the typed closures
+// they actually need rather than asserting through a duck interface.
+// Closures may be nil on mock builds — every view handles nil by
+// returning empty responses.
 type ModuleDeps struct {
 	Routes       fycha.ReportsRoutes
-	DB           fycha.DataSource
 	Labels       fycha.ReportsLabels
 	CommonLabels pyeza.CommonLabels
 	TableLabels  types.TableLabels
+
+	// Wave B P1.E.1 — service-driven AR aging closures.
+	GetReceivablesAgingReport  func(context.Context, *aragingpb.GetReceivablesAgingRequest) (*aragingpb.GetReceivablesAgingResponse, error)
+	GetCollectionSummaryReport func(context.Context, *aragingpb.GetCollectionSummaryRequest) (*aragingpb.GetCollectionSummaryResponse, error)
+	// Wave B P1.E.2 — service-driven AP aging closures.
+	GetPayablesAgingReport func(context.Context, *apagingpb.GetPayablesAgingRequest) (*apagingpb.GetPayablesAgingResponse, error)
+	// Wave B P1.E.3 — service-driven gross/cashflow closures (cash book
+	// gets wired separately in fycha block.go's Cash module).
+	GetGrossProfitReport func(context.Context, *gcfpb.GetGrossProfitRequest) (*gcfpb.GetGrossProfitResponse, error)
+	// Wave B P1.E.5 — service-driven domain-specific closures.
+	GetRevenueReport      func(context.Context, *dspb.GetRevenueReportRequest) (*dspb.GetRevenueReportResponse, error)
+	GetExpenditureReport  func(context.Context, *dspb.GetExpenditureReportRequest) (*dspb.GetExpenditureReportResponse, error)
+	GetDisbursementReport func(context.Context, *dspb.GetDisbursementReportRequest) (*dspb.GetDisbursementReportResponse, error)
+	ListRevenue           func(context.Context, *time.Time, *time.Time) ([]map[string]any, error)
+	ListExpenses          func(context.Context, *time.Time, *time.Time) ([]map[string]any, error)
 }
 
 // Module holds all constructed report views.
@@ -78,103 +107,110 @@ type Module struct {
 }
 
 func NewModule(deps *ModuleDeps) *Module {
-	viewDeps := &grossprofit.Deps{
-		DB:           deps.DB,
-		Labels:       deps.Labels,
-		CommonLabels: deps.CommonLabels,
-		TableLabels:  deps.TableLabels,
+	grossProfitDeps := &grossprofit.Deps{
+		GetGrossProfitReport: deps.GetGrossProfitReport,
+		Labels:               deps.Labels,
+		CommonLabels:         deps.CommonLabels,
+		TableLabels:          deps.TableLabels,
+	}
+	revenueReportDeps := &revenuereport.Deps{
+		GetRevenueReport: deps.GetRevenueReport,
+		Labels:           deps.Labels,
+		CommonLabels:     deps.CommonLabels,
+		TableLabels:      deps.TableLabels,
+		Routes:           deps.Routes,
+	}
+	expenditureReportDeps := &expenditurereport.Deps{
+		GetExpenditureReport: deps.GetExpenditureReport,
+		Labels:               deps.Labels,
+		CommonLabels:         deps.CommonLabels,
+		TableLabels:          deps.TableLabels,
+		Routes:               deps.Routes,
+	}
+	disbursementReportDeps := &disbursementreport.Deps{
+		GetDisbursementReport: deps.GetDisbursementReport,
+		Labels:                deps.Labels,
+		CommonLabels:          deps.CommonLabels,
+		TableLabels:           deps.TableLabels,
+		Routes:                deps.Routes,
+	}
+	payablesAgingReportDeps := &payablesagingreport.Deps{
+		GetPayablesAgingReport: deps.GetPayablesAgingReport,
+		Labels:                 deps.Labels,
+		CommonLabels:           deps.CommonLabels,
+		TableLabels:            deps.TableLabels,
+		Routes:                 deps.Routes,
 	}
 	return &Module{
-		routes:      deps.Routes,
-		Dashboard:   dashboardview.NewView(&dashboardview.Deps{Routes: deps.Routes, DB: deps.DB, Labels: deps.Labels, CommonLabels: deps.CommonLabels}),
-		Revenue:     revenue.NewView(&revenue.Deps{DB: deps.DB, Labels: deps.Labels, CommonLabels: deps.CommonLabels, TableLabels: deps.TableLabels}),
-		CostOfSales: costsales.NewView(&costsales.Deps{DB: deps.DB, Labels: deps.Labels, CommonLabels: deps.CommonLabels, TableLabels: deps.TableLabels}),
-		GrossProfit: grossprofit.NewView(viewDeps),
-		Expenses:    expensesview.NewView(&expensesview.Deps{DB: deps.DB, Labels: deps.Labels, CommonLabels: deps.CommonLabels, TableLabels: deps.TableLabels}),
-		NetProfit:   netprofit.NewView(&netprofit.Deps{DB: deps.DB, Labels: deps.Labels, CommonLabels: deps.CommonLabels, TableLabels: deps.TableLabels}),
-		RevenueReport: revenuereport.NewView(&revenuereport.Deps{
-			DB:           deps.DB,
+		routes: deps.Routes,
+		Dashboard: dashboardview.NewView(&dashboardview.Deps{
+			Routes:               deps.Routes,
+			GetGrossProfitReport: deps.GetGrossProfitReport,
+			ListExpenses:         deps.ListExpenses,
+			Labels:               deps.Labels,
+			CommonLabels:         deps.CommonLabels,
+		}),
+		Revenue: revenue.NewView(&revenue.Deps{
+			ListRevenue:  deps.ListRevenue,
 			Labels:       deps.Labels,
 			CommonLabels: deps.CommonLabels,
 			TableLabels:  deps.TableLabels,
-			Routes:       deps.Routes,
 		}),
-		RevenueReportExport: revenuereport.NewExportHandler(&revenuereport.Deps{
-			DB:           deps.DB,
+		CostOfSales: costsales.NewView(&costsales.Deps{
+			GetGrossProfitReport: deps.GetGrossProfitReport,
+			Labels:               deps.Labels,
+			CommonLabels:         deps.CommonLabels,
+			TableLabels:          deps.TableLabels,
+		}),
+		GrossProfit: grossprofit.NewView(grossProfitDeps),
+		Expenses: expensesview.NewView(&expensesview.Deps{
+			ListExpenses: deps.ListExpenses,
 			Labels:       deps.Labels,
 			CommonLabels: deps.CommonLabels,
 			TableLabels:  deps.TableLabels,
-			Routes:       deps.Routes,
 		}),
-		ExpenditureReport: expenditurereport.NewView(&expenditurereport.Deps{
-			DB:           deps.DB,
-			Labels:       deps.Labels,
-			CommonLabels: deps.CommonLabels,
-			TableLabels:  deps.TableLabels,
-			Routes:       deps.Routes,
+		NetProfit: netprofit.NewView(&netprofit.Deps{
+			GetGrossProfitReport: deps.GetGrossProfitReport,
+			ListExpenses:         deps.ListExpenses,
+			Labels:               deps.Labels,
+			CommonLabels:         deps.CommonLabels,
+			TableLabels:          deps.TableLabels,
 		}),
-		ExpenditureReportExport: expenditurereport.NewExportHandler(&expenditurereport.Deps{
-			DB:           deps.DB,
-			Labels:       deps.Labels,
-			CommonLabels: deps.CommonLabels,
-			TableLabels:  deps.TableLabels,
-			Routes:       deps.Routes,
-		}),
-		DisbursementReport: disbursementreport.NewView(&disbursementreport.Deps{
-			DB:           deps.DB,
-			Labels:       deps.Labels,
-			CommonLabels: deps.CommonLabels,
-			TableLabels:  deps.TableLabels,
-			Routes:       deps.Routes,
-		}),
-		DisbursementReportExport: disbursementreport.NewExportHandler(&disbursementreport.Deps{
-			DB:           deps.DB,
-			Labels:       deps.Labels,
-			CommonLabels: deps.CommonLabels,
-			TableLabels:  deps.TableLabels,
-			Routes:       deps.Routes,
-		}),
+		RevenueReport:                 revenuereport.NewView(revenueReportDeps),
+		RevenueReportExport:           revenuereport.NewExportHandler(revenueReportDeps),
+		ExpenditureReport:             expenditurereport.NewView(expenditureReportDeps),
+		ExpenditureReportExport:       expenditurereport.NewExportHandler(expenditureReportDeps),
+		DisbursementReport:            disbursementreport.NewView(disbursementReportDeps),
+		DisbursementReportExport:      disbursementreport.NewExportHandler(disbursementReportDeps),
 		ReceivablesAgingReport: receivablesagingreport.NewView(&receivablesagingreport.Deps{
-			DB:           deps.DB,
-			Labels:       deps.Labels,
-			CommonLabels: deps.CommonLabels,
-			TableLabels:  deps.TableLabels,
-			Routes:       deps.Routes,
+			Labels:                    deps.Labels,
+			CommonLabels:              deps.CommonLabels,
+			TableLabels:               deps.TableLabels,
+			Routes:                    deps.Routes,
+			GetReceivablesAgingReport: deps.GetReceivablesAgingReport,
 		}),
 		ReceivablesAgingReportExport: receivablesagingreport.NewExportHandler(&receivablesagingreport.Deps{
-			DB:           deps.DB,
-			Labels:       deps.Labels,
-			CommonLabels: deps.CommonLabels,
-			TableLabels:  deps.TableLabels,
-			Routes:       deps.Routes,
+			Labels:                    deps.Labels,
+			CommonLabels:              deps.CommonLabels,
+			TableLabels:               deps.TableLabels,
+			Routes:                    deps.Routes,
+			GetReceivablesAgingReport: deps.GetReceivablesAgingReport,
 		}),
-		PayablesAgingReport: payablesagingreport.NewView(&payablesagingreport.Deps{
-			DB:           deps.DB,
-			Labels:       deps.Labels,
-			CommonLabels: deps.CommonLabels,
-			TableLabels:  deps.TableLabels,
-			Routes:       deps.Routes,
-		}),
-		PayablesAgingReportExport: payablesagingreport.NewExportHandler(&payablesagingreport.Deps{
-			DB:           deps.DB,
-			Labels:       deps.Labels,
-			CommonLabels: deps.CommonLabels,
-			TableLabels:  deps.TableLabels,
-			Routes:       deps.Routes,
-		}),
+		PayablesAgingReport:       payablesagingreport.NewView(payablesAgingReportDeps),
+		PayablesAgingReportExport: payablesagingreport.NewExportHandler(payablesAgingReportDeps),
 		CollectionSummaryReport: collectionsummaryreport.NewView(&collectionsummaryreport.Deps{
-			DB:           deps.DB,
-			Labels:       deps.Labels,
-			CommonLabels: deps.CommonLabels,
-			TableLabels:  deps.TableLabels,
-			Routes:       deps.Routes,
+			Labels:                     deps.Labels,
+			CommonLabels:               deps.CommonLabels,
+			TableLabels:                deps.TableLabels,
+			Routes:                     deps.Routes,
+			GetCollectionSummaryReport: deps.GetCollectionSummaryReport,
 		}),
 		CollectionSummaryReportExport: collectionsummaryreport.NewExportHandler(&collectionsummaryreport.Deps{
-			DB:           deps.DB,
-			Labels:       deps.Labels,
-			CommonLabels: deps.CommonLabels,
-			TableLabels:  deps.TableLabels,
-			Routes:       deps.Routes,
+			Labels:                     deps.Labels,
+			CommonLabels:               deps.CommonLabels,
+			TableLabels:                deps.TableLabels,
+			Routes:                     deps.Routes,
+			GetCollectionSummaryReport: deps.GetCollectionSummaryReport,
 		}),
 	}
 }

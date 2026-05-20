@@ -11,6 +11,7 @@ package block
 
 import (
 	"context"
+	"time"
 
 	assetpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset"
 	assetcategorypb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset_category"
@@ -22,6 +23,11 @@ import (
 	accountpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/account"
 	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
 	journalentrypb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_entry"
+	apagingpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/ap_aging"
+	aragingpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/ar_aging"
+	dspb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/domain_specific"
+	gcfpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/gross_cashflow"
+	stmtspb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/statements"
 	taxratepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/tax/tax_rate"
 	withholdinpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/withholding_certificate"
 
@@ -57,6 +63,12 @@ type UseCases struct {
 	Finance  FinanceUseCases
 	Treasury TreasuryUseCases
 
+	// Reports — service-driven report use case closures. Populated in
+	// service-admin's buildFychaUseCases from
+	// `consumer.UseCases.Service.Reporting.<Group>.<UseCase>.Execute`.
+	// Each P1.E.* sub-candidate adds its own group struct here.
+	Reports ReportsUseCases
+
 	// Dashboard closures — typed; service-admin builds these from espyna's
 	// internal use cases and maps their internal response types to fycha's
 	// view-layer types. This removes the need for reflection in dashboard_wiring.go.
@@ -64,6 +76,93 @@ type UseCases struct {
 	GetEquityDashboardPageData  func(ctx context.Context, req *equitydashboard.Request) (*equitydashboard.Response, error)
 	GetPayrollDashboardPageData func(ctx context.Context, req *payrolldashboard.Request) (*payrolldashboard.Response, error)
 	GetLoanDashboardPageData    func(ctx context.Context, req *loansdashboard.Request) (*loansdashboard.Response, error)
+}
+
+// ReportsUseCases aggregates the service-driven report use case closures
+// the fycha report views need. Wave B P1.E.* sub-candidates each fill in
+// one of the sub-groups below.
+type ReportsUseCases struct {
+	// ARAging holds the AR-side reporting closures (Wave B P1.E.1).
+	ARAging ARAgingUseCases
+	// APAging holds the AP-side reporting closures (Wave B P1.E.2).
+	APAging APAgingUseCases
+	// GrossCashFlow holds the gross-profit + cash-book closures (Wave B P1.E.3).
+	GrossCashFlow GrossCashFlowUseCases
+	// DomainSpecific holds the revenue/expenditure/disbursement pivot
+	// closures + the Go-only ListRevenue/ListExpenses feeders (Wave B P1.E.5).
+	DomainSpecific DomainSpecificUseCases
+	// Statements holds the counterparty statement + balance closures
+	// (Wave B P1.E.4). The closures live on fycha's block UseCases for
+	// symmetry with the other report groups; the actual consumers are
+	// largely the entydad client/supplier detail/list views and the
+	// service-admin adapter wires entydad block UseCases from these.
+	Statements StatementsUseCases
+}
+
+// ARAgingUseCases — service-driven AR aging report closures consumed by
+// `views/reports/receivables_aging_report` and
+// `views/reports/collection_summary_report`. Migrated 2026-05-20 out of
+// `fycha.DataSource` into the proto-shaped service layer.
+type ARAgingUseCases struct {
+	GetReceivablesAgingReport  func(context.Context, *aragingpb.GetReceivablesAgingRequest) (*aragingpb.GetReceivablesAgingResponse, error)
+	GetCollectionSummaryReport func(context.Context, *aragingpb.GetCollectionSummaryRequest) (*aragingpb.GetCollectionSummaryResponse, error)
+}
+
+// APAgingUseCases — service-driven AP aging report closures consumed by
+// `views/reports/payables_aging_report` (parameterized) and
+// `views/reports/payables_aging` (simple). Migrated 2026-05-21 out of
+// `fycha.DataSource` into the proto-shaped service layer (Wave B P1.E.2).
+type APAgingUseCases struct {
+	GetPayablesAgingReport       func(context.Context, *apagingpb.GetPayablesAgingRequest) (*apagingpb.GetPayablesAgingResponse, error)
+	GetSimplePayablesAgingReport func(context.Context, *apagingpb.GetSimplePayablesAgingRequest) (*apagingpb.GetSimplePayablesAgingResponse, error)
+}
+
+// GrossCashFlowUseCases — service-driven gross-profit + cash-book closures
+// consumed by `views/reports/gross_profit`, `views/reports/cost_of_sales`,
+// `views/reports/net_profit`, `views/reports/dashboard`, and
+// `views/reports/cash_book`. Migrated 2026-05-21 out of `fycha.DataSource`
+// into the proto-shaped service layer (Wave B P1.E.3).
+type GrossCashFlowUseCases struct {
+	GetGrossProfitReport func(context.Context, *gcfpb.GetGrossProfitRequest) (*gcfpb.GetGrossProfitResponse, error)
+	GetCashBookReport    func(context.Context, *gcfpb.GetCashBookRequest) (*gcfpb.GetCashBookResponse, error)
+}
+
+// DomainSpecificUseCases — service-driven domain-specific report closures
+// consumed by `views/reports/revenue_report`, `views/reports/expenditure_report`,
+// `views/reports/disbursement_report`, plus the Go-only feeders consumed by
+// `views/reports/revenue`, `views/reports/expenses`, `views/reports/net_profit`,
+// and `views/reports/dashboard`. Migrated 2026-05-21 out of `fycha.DataSource`
+// into the proto-shaped service layer (Wave B P1.E.5).
+//
+// ListRevenue and ListExpenses retain the Go-only `[]map[string]any` shape
+// per Q-SDM-MAP-SHAPES — see
+// `packages/espyna-golang/internal/application/usecases/service/reporting/
+// domain_specific/list_revenue.go` for the rationale.
+type DomainSpecificUseCases struct {
+	GetRevenueReport      func(context.Context, *dspb.GetRevenueReportRequest) (*dspb.GetRevenueReportResponse, error)
+	GetExpenditureReport  func(context.Context, *dspb.GetExpenditureReportRequest) (*dspb.GetExpenditureReportResponse, error)
+	GetDisbursementReport func(context.Context, *dspb.GetDisbursementReportRequest) (*dspb.GetDisbursementReportResponse, error)
+	ListRevenue           func(context.Context, *time.Time, *time.Time) ([]map[string]any, error)
+	ListExpenses          func(context.Context, *time.Time, *time.Time) ([]map[string]any, error)
+}
+
+// StatementsUseCases — service-driven counterparty statement + balance
+// closures. Lives on the fycha block UseCases struct for symmetry with the
+// other report groups, but the consumers are largely under entydad
+// (client/supplier detail/list views). Migrated 2026-05-21 out of
+// `centymo/entydad.LedgerReportingService` into the proto-shaped service
+// layer (Wave B P1.E.4).
+//
+// **Map shim:** the legacy entydad views accept
+// `func(ctx) (map[string]int64, error)` for balances; the typed closures
+// here expose the new `[]BalanceRow` shape. Service-admin's adapter
+// constructs map-returning wrappers for entydad and exposes the typed
+// closures for any future fycha consumer.
+type StatementsUseCases struct {
+	GetClientStatement   func(context.Context, *stmtspb.GetClientStatementRequest) (*stmtspb.GetClientStatementResponse, error)
+	GetSupplierStatement func(context.Context, *stmtspb.GetSupplierStatementRequest) (*stmtspb.GetSupplierStatementResponse, error)
+	ListClientBalances   func(context.Context, *stmtspb.ListClientBalancesRequest) (*stmtspb.ListClientBalancesResponse, error)
+	ListSupplierBalances func(context.Context, *stmtspb.ListSupplierBalancesRequest) (*stmtspb.ListSupplierBalancesResponse, error)
 }
 
 // WorkspaceUseCases — subset needed by fycha (functional currency lookup).

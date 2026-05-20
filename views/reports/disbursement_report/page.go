@@ -9,7 +9,7 @@ import (
 
 	fycha "github.com/erniealice/fycha-golang"
 
-	disbreportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/reporting/disbursement_report"
+	dspb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/domain_specific"
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
@@ -17,12 +17,15 @@ import (
 )
 
 // Deps holds view dependencies.
+//
+// 20260521 Wave B P1.E.5 — DB replaced with the typed GetDisbursementReport
+// closure into the service-driven domain-specific use case.
 type Deps struct {
-	DB           fycha.DataSource
-	Labels       fycha.ReportsLabels
-	CommonLabels pyeza.CommonLabels
-	TableLabels  types.TableLabels
-	Routes       fycha.ReportsRoutes
+	GetDisbursementReport func(context.Context, *dspb.GetDisbursementReportRequest) (*dspb.GetDisbursementReportResponse, error)
+	Labels                fycha.ReportsLabels
+	CommonLabels          pyeza.CommonLabels
+	TableLabels           types.TableLabels
+	Routes                fycha.ReportsRoutes
 }
 
 // PageData holds the data for the disbursement report page.
@@ -104,7 +107,7 @@ func NewView(deps *Deps) view.View {
 		}
 
 		// Build proto request
-		req := &disbreportpb.DisbursementReportRequest{
+		req := &dspb.GetDisbursementReportRequest{
 			PrimaryDimension: primary,
 			RowDimension:     rows,
 		}
@@ -154,13 +157,20 @@ func NewView(deps *Deps) view.View {
 		}
 
 		// Call data source
-		resp, err := deps.DB.GetDisbursementReport(ctx, req)
+		var resp *dspb.GetDisbursementReportResponse
+		var err error
+		if deps.GetDisbursementReport != nil {
+			resp, err = deps.GetDisbursementReport(ctx, req)
+		}
 		if err != nil {
 			log.Printf("Failed to get disbursement report: %v", err)
-			resp = &disbreportpb.DisbursementReportResponse{
+			resp = nil
+		}
+		if resp == nil {
+			resp = &dspb.GetDisbursementReportResponse{
 				ColumnKeys: []string{},
-				Rows:       []*disbreportpb.DisbursementReportRow{},
-				Summary:    &disbreportpb.DisbursementReportSummary{},
+				Rows:       []*dspb.DisbursementReportRow{},
+				Summary:    &dspb.DisbursementReportSummary{},
 			}
 		}
 
@@ -262,9 +272,9 @@ type DisbursementReportFilterSheetData struct {
 	RowOptions       []fycha.FilterOption
 }
 
-func buildSummary(s *disbreportpb.DisbursementReportSummary, l fycha.DisbursementReportLabels) []fycha.SummaryMetric {
+func buildSummary(s *dspb.DisbursementReportSummary, l fycha.DisbursementReportLabels) []fycha.SummaryMetric {
 	if s == nil {
-		s = &disbreportpb.DisbursementReportSummary{}
+		s = &dspb.DisbursementReportSummary{}
 	}
 	grandTotalCents := s.GetGrandTotal()
 	txnCount := s.GetTotalTransactions()
@@ -281,7 +291,7 @@ func buildSummary(s *disbreportpb.DisbursementReportSummary, l fycha.Disbursemen
 	}
 }
 
-func buildPivotTable(resp *disbreportpb.DisbursementReportResponse, l fycha.DisbursementReportLabels, tableLabels types.TableLabels, primary, rowDim string) *types.TableConfig {
+func buildPivotTable(resp *dspb.GetDisbursementReportResponse, l fycha.DisbursementReportLabels, tableLabels types.TableLabels, primary, rowDim string) *types.TableConfig {
 	columnKeys := resp.GetColumnKeys()
 
 	// Build dynamic columns
@@ -333,7 +343,7 @@ func buildPivotTable(resp *disbreportpb.DisbursementReportResponse, l fycha.Disb
 	currency := "PHP"
 	tableRows := make([]types.TableRow, 0, len(resp.GetRows()))
 	for i, row := range resp.GetRows() {
-		cellMap := make(map[string]*disbreportpb.DisbursementReportCell, len(row.GetCells()))
+		cellMap := make(map[string]*dspb.DisbursementReportCell, len(row.GetCells()))
 		for _, c := range row.GetCells() {
 			cellMap[c.GetColumnKey()] = c
 		}
@@ -371,7 +381,7 @@ func buildPivotTable(resp *disbreportpb.DisbursementReportResponse, l fycha.Disb
 	// Add totals row from summary.column_totals
 	summary := resp.GetSummary()
 	if summary != nil && len(resp.GetRows()) > 0 {
-		colTotalMap := make(map[string]*disbreportpb.DisbursementReportCell, len(summary.GetColumnTotals()))
+		colTotalMap := make(map[string]*dspb.DisbursementReportCell, len(summary.GetColumnTotals()))
 		for _, ct := range summary.GetColumnTotals() {
 			colTotalMap[ct.GetColumnKey()] = ct
 		}

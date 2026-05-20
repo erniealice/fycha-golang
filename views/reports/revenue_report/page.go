@@ -9,7 +9,7 @@ import (
 
 	fycha "github.com/erniealice/fycha-golang"
 
-	revreportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/revenue_report"
+	dspb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/domain_specific"
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
@@ -17,12 +17,15 @@ import (
 )
 
 // Deps holds view dependencies.
+//
+// 20260521 Wave B P1.E.5 — DB replaced with the typed GetRevenueReport
+// closure into the service-driven domain-specific use case.
 type Deps struct {
-	DB           fycha.DataSource
-	Labels       fycha.ReportsLabels
-	CommonLabels pyeza.CommonLabels
-	TableLabels  types.TableLabels
-	Routes       fycha.ReportsRoutes
+	GetRevenueReport func(context.Context, *dspb.GetRevenueReportRequest) (*dspb.GetRevenueReportResponse, error)
+	Labels           fycha.ReportsLabels
+	CommonLabels     pyeza.CommonLabels
+	TableLabels      types.TableLabels
+	Routes           fycha.ReportsRoutes
 }
 
 // PageData holds the data for the revenue report page.
@@ -103,7 +106,7 @@ func NewView(deps *Deps) view.View {
 		}
 
 		// Build proto request
-		req := &revreportpb.RevenueReportRequest{
+		req := &dspb.GetRevenueReportRequest{
 			PrimaryDimension: primary,
 			RowDimension:     rows,
 		}
@@ -149,14 +152,21 @@ func NewView(deps *Deps) view.View {
 			req.RevenueCategoryId = &revenueCategoryID
 		}
 
-		// Call data source
-		resp, err := deps.DB.GetRevenueReport(ctx, req)
-		if err != nil {
-			log.Printf("Failed to get revenue report: %v", err)
-			resp = &revreportpb.RevenueReportResponse{
+		// Call service-driven domain-specific use case (Wave B P1.E.5).
+		var resp *dspb.GetRevenueReportResponse
+		if deps.GetRevenueReport != nil {
+			var err error
+			resp, err = deps.GetRevenueReport(ctx, req)
+			if err != nil {
+				log.Printf("Failed to get revenue report: %v", err)
+				resp = nil
+			}
+		}
+		if resp == nil {
+			resp = &dspb.GetRevenueReportResponse{
 				ColumnKeys: []string{},
-				Rows:       []*revreportpb.RevenueReportRow{},
-				Summary:    &revreportpb.RevenueReportSummary{},
+				Rows:       []*dspb.RevenueReportRow{},
+				Summary:    &dspb.RevenueReportSummary{},
 			}
 		}
 
@@ -258,9 +268,9 @@ type RevenueReportFilterSheetData struct {
 	RowOptions       []fycha.FilterOption
 }
 
-func buildSummary(s *revreportpb.RevenueReportSummary, l fycha.RevenueReportLabels) []fycha.SummaryMetric {
+func buildSummary(s *dspb.RevenueReportSummary, l fycha.RevenueReportLabels) []fycha.SummaryMetric {
 	if s == nil {
-		s = &revreportpb.RevenueReportSummary{}
+		s = &dspb.RevenueReportSummary{}
 	}
 	grandTotal := float64(s.GetGrandTotal()) / 100.0
 	txnCount := s.GetTotalTransactions()
@@ -277,7 +287,7 @@ func buildSummary(s *revreportpb.RevenueReportSummary, l fycha.RevenueReportLabe
 	}
 }
 
-func buildPivotTable(resp *revreportpb.RevenueReportResponse, l fycha.RevenueReportLabels, tableLabels types.TableLabels, primary, rowDim string) *types.TableConfig {
+func buildPivotTable(resp *dspb.GetRevenueReportResponse, l fycha.RevenueReportLabels, tableLabels types.TableLabels, primary, rowDim string) *types.TableConfig {
 	columnKeys := resp.GetColumnKeys()
 
 	// Build dynamic columns: Name + per-column-key + Total
@@ -334,7 +344,7 @@ func buildPivotTable(resp *revreportpb.RevenueReportResponse, l fycha.RevenueRep
 	rows := make([]types.TableRow, 0, len(resp.GetRows()))
 	for i, row := range resp.GetRows() {
 		// Build cell map from row cells for quick lookup
-		cellMap := make(map[string]*revreportpb.RevenueReportCell, len(row.GetCells()))
+		cellMap := make(map[string]*dspb.RevenueReportCell, len(row.GetCells()))
 		for _, c := range row.GetCells() {
 			cellMap[c.GetColumnKey()] = c
 		}
@@ -373,7 +383,7 @@ func buildPivotTable(resp *revreportpb.RevenueReportResponse, l fycha.RevenueRep
 	// Add totals row from summary.column_totals
 	summary := resp.GetSummary()
 	if summary != nil && len(resp.GetRows()) > 0 {
-		colTotalMap := make(map[string]*revreportpb.RevenueReportCell, len(summary.GetColumnTotals()))
+		colTotalMap := make(map[string]*dspb.RevenueReportCell, len(summary.GetColumnTotals()))
 		for _, ct := range summary.GetColumnTotals() {
 			colTotalMap[ct.GetColumnKey()] = ct
 		}

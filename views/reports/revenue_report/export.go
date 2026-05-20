@@ -9,7 +9,7 @@ import (
 
 	fycha "github.com/erniealice/fycha-golang"
 
-	revreportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/revenue_report"
+	dspb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/domain_specific"
 )
 
 // NewExportHandler creates an http.HandlerFunc for CSV export of the revenue report.
@@ -43,7 +43,7 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 		revenueCategoryID := q.Get("revenue-category-id")
 
 		// Build proto request
-		req := &revreportpb.RevenueReportRequest{
+		req := &dspb.GetRevenueReportRequest{
 			PrimaryDimension: primary,
 			RowDimension:     rows,
 		}
@@ -88,18 +88,22 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 			req.RevenueCategoryId = &revenueCategoryID
 		}
 
-		// Call data source
-		resp, err := deps.DB.GetRevenueReport(ctx, req)
-		if err != nil {
-			log.Printf("revenue_report export: failed to get revenue report: %v", err)
-			http.Error(w, "Failed to generate report", http.StatusInternalServerError)
-			return
+		// Call service-driven domain-specific use case (Wave B P1.E.5).
+		var resp *dspb.GetRevenueReportResponse
+		if deps.GetRevenueReport != nil {
+			var err error
+			resp, err = deps.GetRevenueReport(ctx, req)
+			if err != nil {
+				log.Printf("revenue_report export: failed to get revenue report: %v", err)
+				http.Error(w, "Failed to generate report", http.StatusInternalServerError)
+				return
+			}
 		}
 		if resp == nil {
-			resp = &revreportpb.RevenueReportResponse{
+			resp = &dspb.GetRevenueReportResponse{
 				ColumnKeys: []string{},
-				Rows:       []*revreportpb.RevenueReportRow{},
-				Summary:    &revreportpb.RevenueReportSummary{},
+				Rows:       []*dspb.RevenueReportRow{},
+				Summary:    &dspb.RevenueReportSummary{},
 			}
 		}
 
@@ -127,7 +131,7 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 		// Write data rows
 		for _, row := range resp.GetRows() {
 			// Build cell map for quick lookup by column key
-			cellMap := make(map[string]*revreportpb.RevenueReportCell, len(row.GetCells()))
+			cellMap := make(map[string]*dspb.RevenueReportCell, len(row.GetCells()))
 			for _, c := range row.GetCells() {
 				cellMap[c.GetColumnKey()] = c
 			}
@@ -152,7 +156,7 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 		// Write totals row: "TOTAL", then column totals, then grand_total
 		summary := resp.GetSummary()
 		if summary != nil && len(resp.GetRows()) > 0 {
-			colTotalMap := make(map[string]*revreportpb.RevenueReportCell, len(summary.GetColumnTotals()))
+			colTotalMap := make(map[string]*dspb.RevenueReportCell, len(summary.GetColumnTotals()))
 			for _, ct := range summary.GetColumnTotals() {
 				colTotalMap[ct.GetColumnKey()] = ct
 			}

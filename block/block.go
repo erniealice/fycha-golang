@@ -114,11 +114,12 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		}
 		useCases := cfg.useCases
 
-		// --- Type-assert LedgerReportingSvc (optional — nil-safe) ---
-		var ledgerReportingSvc fycha.DataSource
-		if ctx.LedgerReportingSvc != nil {
-			ledgerReportingSvc, _ = ctx.LedgerReportingSvc.(fycha.DataSource)
-		}
+		// 20260521 Wave B P1.E.1-P1.E.5 — fycha report views consume
+		// service-driven typed closures via `useCases.Reports.<Group>`
+		// instead of `ctx.LedgerReportingSvc`. The legacy
+		// `fycha.DataSource` duck interface no longer ships; the
+		// LedgerReportingSvc context field is retained on pyeza
+		// AppContext but unread by fycha.
 
 		// --- Type-assert attachment operations ---
 		uploadFile, _ := ctx.UploadFile.(func(context.Context, string, string, []byte, string) error)
@@ -238,10 +239,23 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		if cfg.wantReports() {
 			reportmod.NewModule(&reportmod.ModuleDeps{
 				Routes:       reportsRoutes,
-				DB:           ledgerReportingSvc,
 				Labels:       reportsLabels,
 				CommonLabels: ctx.Common,
 				TableLabels:  ctx.Table,
+				// 20260520-21 Wave B P1.E.1-P1.E.5 — every report view now
+				// consumes the service-driven use case via a typed closure
+				// instead of `fycha.DataSource`. The 13 in-scope methods
+				// are routed through their respective `Reports.<Group>`
+				// sub-aggregate on the typed block UseCases.
+				GetReceivablesAgingReport:  useCases.Reports.ARAging.GetReceivablesAgingReport,
+				GetCollectionSummaryReport: useCases.Reports.ARAging.GetCollectionSummaryReport,
+				GetPayablesAgingReport:     useCases.Reports.APAging.GetPayablesAgingReport,
+				GetGrossProfitReport:       useCases.Reports.GrossCashFlow.GetGrossProfitReport,
+				GetRevenueReport:           useCases.Reports.DomainSpecific.GetRevenueReport,
+				GetExpenditureReport:       useCases.Reports.DomainSpecific.GetExpenditureReport,
+				GetDisbursementReport:      useCases.Reports.DomainSpecific.GetDisbursementReport,
+				ListRevenue:                useCases.Reports.DomainSpecific.ListRevenue,
+				ListExpenses:               useCases.Reports.DomainSpecific.ListExpenses,
 			}).RegisterRoutes(ctx.Routes)
 		}
 
@@ -399,8 +413,12 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 				// TODO: wire when useCases.Treasury.SecurityDeposit / PettyCashFund are available
 			}).RegisterRoutes(ctx.Routes)
 
-			// Cash → Reports → Cash Book
-			ctx.Routes.GET(fycha.CashBookURL, cashbookview.NewCashBookView(ledgerReportingSvc, ctx.Common, ctx.Table))
+			// Cash → Reports → Cash Book — Wave B P1.E.3 service-driven closure.
+			ctx.Routes.GET(fycha.CashBookURL, cashbookview.NewCashBookView(
+				useCases.Reports.GrossCashFlow.GetCashBookReport,
+				ctx.Common,
+				ctx.Table,
+			))
 		}
 
 		// =====================================================================

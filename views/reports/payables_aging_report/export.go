@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	payagingpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/payables_aging"
+	apagingpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/ap_aging"
 )
 
 // NewExportHandler creates an http.HandlerFunc for CSV export of the payables aging report.
@@ -33,7 +33,7 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 		expenditureCategoryID := q.Get("expenditure-category-id")
 
 		// Build proto request
-		req := &payagingpb.PayablesAgingRequest{
+		req := &apagingpb.GetPayablesAgingRequest{
 			AsOfDate:     &asOfDate,
 			RowDimension: rows,
 		}
@@ -49,18 +49,22 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 			req.ExpenditureCategoryId = &expenditureCategoryID
 		}
 
-		// Call data source
-		resp, err := deps.DB.GetPayablesAgingReport(ctx, req)
-		if err != nil {
-			log.Printf("payables_aging_report export: failed to get report: %v", err)
-			http.Error(w, "Failed to generate report", http.StatusInternalServerError)
-			return
+		// Call service-driven AP aging use case (Wave B P1.E.2).
+		var resp *apagingpb.GetPayablesAgingResponse
+		if deps.GetPayablesAgingReport != nil {
+			var err error
+			resp, err = deps.GetPayablesAgingReport(ctx, req)
+			if err != nil {
+				log.Printf("payables_aging_report export: failed to get report: %v", err)
+				http.Error(w, "Failed to generate report", http.StatusInternalServerError)
+				return
+			}
 		}
 		if resp == nil {
-			resp = &payagingpb.PayablesAgingResponse{
+			resp = &apagingpb.GetPayablesAgingResponse{
 				BucketLabels: []string{},
-				Rows:         []*payagingpb.PayablesAgingRow{},
-				Summary:      &payagingpb.PayablesAgingSummary{},
+				Rows:         []*apagingpb.PayablesAgingRow{},
+				Summary:      &apagingpb.PayablesAgingSummary{},
 			}
 		}
 
@@ -113,7 +117,7 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 		for _, row := range resp.GetRows() {
 			b := row.GetBuckets()
 			if b == nil {
-				b = &payagingpb.PayablesAgingBuckets{}
+				b = &apagingpb.PayablesAgingBuckets{}
 			}
 
 			record := []string{
@@ -138,7 +142,7 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 		if summary != nil && len(resp.GetRows()) > 0 {
 			sb := summary.GetBuckets()
 			if sb == nil {
-				sb = &payagingpb.PayablesAgingBuckets{}
+				sb = &apagingpb.PayablesAgingBuckets{}
 			}
 
 			totalsRecord := []string{

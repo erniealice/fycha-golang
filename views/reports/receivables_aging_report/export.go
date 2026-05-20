@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 
-	agingpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/receivables_aging"
+	aragingpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/ar_aging"
 )
 
 // NewExportHandler creates an http.HandlerFunc for CSV export of the receivables aging report.
@@ -33,7 +33,7 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 		revenueCategoryID := q.Get("revenue-category-id")
 
 		// Build proto request
-		req := &agingpb.ReceivablesAgingRequest{
+		req := &aragingpb.GetReceivablesAgingRequest{
 			AsOfDate:     &asOfDate,
 			RowDimension: rows,
 		}
@@ -49,18 +49,22 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 			req.RevenueCategoryId = &revenueCategoryID
 		}
 
-		// Call data source
-		resp, err := deps.DB.GetReceivablesAgingReport(ctx, req)
+		// Call service-driven AR aging use case (Wave B P1.E.1).
+		if deps.GetReceivablesAgingReport == nil {
+			http.Error(w, "Failed to generate report", http.StatusInternalServerError)
+			return
+		}
+		resp, err := deps.GetReceivablesAgingReport(ctx, req)
 		if err != nil {
 			log.Printf("receivables_aging_report export: failed to get report: %v", err)
 			http.Error(w, "Failed to generate report", http.StatusInternalServerError)
 			return
 		}
 		if resp == nil {
-			resp = &agingpb.ReceivablesAgingResponse{
+			resp = &aragingpb.GetReceivablesAgingResponse{
 				BucketLabels: []string{},
-				Rows:         []*agingpb.ReceivablesAgingRow{},
-				Summary:      &agingpb.ReceivablesAgingSummary{},
+				Rows:         []*aragingpb.ReceivablesAgingRow{},
+				Summary:      &aragingpb.ReceivablesAgingSummary{},
 			}
 		}
 
@@ -113,7 +117,7 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 		for _, row := range resp.GetRows() {
 			b := row.GetBuckets()
 			if b == nil {
-				b = &agingpb.AgingBuckets{}
+				b = &aragingpb.AgingBuckets{}
 			}
 
 			record := []string{
@@ -138,7 +142,7 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 		if summary != nil && len(resp.GetRows()) > 0 {
 			sb := summary.GetBuckets()
 			if sb == nil {
-				sb = &agingpb.AgingBuckets{}
+				sb = &aragingpb.AgingBuckets{}
 			}
 
 			totalsRecord := []string{

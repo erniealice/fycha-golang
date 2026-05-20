@@ -6,7 +6,7 @@ import (
 	"log"
 	"strconv"
 
-	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
+	gcfpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/gross_cashflow"
 	fycha "github.com/erniealice/fycha-golang"
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
@@ -14,11 +14,13 @@ import (
 	"github.com/erniealice/pyeza-golang/view"
 )
 
+// 20260521 Wave B P1.E.3 — DB replaced with the typed GetGrossProfitReport
+// closure into the service-driven gross/cashflow use case.
 type Deps struct {
-	DB           fycha.DataSource
-	Labels       fycha.ReportsLabels
-	CommonLabels pyeza.CommonLabels
-	TableLabels  types.TableLabels
+	GetGrossProfitReport func(context.Context, *gcfpb.GetGrossProfitRequest) (*gcfpb.GetGrossProfitResponse, error)
+	Labels               fycha.ReportsLabels
+	CommonLabels         pyeza.CommonLabels
+	TableLabels          types.TableLabels
 }
 
 type PageData struct {
@@ -66,7 +68,7 @@ func NewView(deps *Deps) view.View {
 		}
 
 		// Build proto request with date filtering
-		req := &reportpb.GrossProfitReportRequest{}
+		req := &gcfpb.GetGrossProfitRequest{}
 		groupBy := "product"
 		req.GroupBy = &groupBy
 
@@ -88,18 +90,25 @@ func NewView(deps *Deps) view.View {
 			req.EndDate = &e
 		}
 
-		resp, err := deps.DB.GetGrossProfitReport(ctx, req)
-		if err != nil {
-			log.Printf("Failed to get cost of sales report: %v", err)
-			resp = &reportpb.GrossProfitReportResponse{
-				LineItems: []*reportpb.GrossProfitLineItem{},
-				Summary:   &reportpb.GrossProfitSummary{},
+		var resp *gcfpb.GetGrossProfitResponse
+		if deps.GetGrossProfitReport != nil {
+			var err error
+			resp, err = deps.GetGrossProfitReport(ctx, req)
+			if err != nil {
+				log.Printf("Failed to get cost of sales report: %v", err)
+				resp = nil
+			}
+		}
+		if resp == nil {
+			resp = &gcfpb.GetGrossProfitResponse{
+				LineItems: []*gcfpb.GrossProfitLineItem{},
+				Summary:   &gcfpb.GrossProfitSummary{},
 			}
 		}
 
 		s := resp.GetSummary()
 		if s == nil {
-			s = &reportpb.GrossProfitSummary{}
+			s = &gcfpb.GrossProfitSummary{}
 		}
 
 		cogsRatio := 0.0

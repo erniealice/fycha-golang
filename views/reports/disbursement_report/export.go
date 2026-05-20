@@ -8,7 +8,7 @@ import (
 
 	fycha "github.com/erniealice/fycha-golang"
 
-	disbreportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/reporting/disbursement_report"
+	dspb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/domain_specific"
 )
 
 // NewExportHandler returns an http.HandlerFunc that exports the disbursement report as CSV.
@@ -43,7 +43,7 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 		disbursementMethodID := q.Get("disbursement-method-id")
 
 		// Build proto request
-		req := &disbreportpb.DisbursementReportRequest{
+		req := &dspb.GetDisbursementReportRequest{
 			PrimaryDimension: primary,
 			RowDimension:     rows,
 		}
@@ -89,7 +89,11 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 			req.DisbursementMethodId = &disbursementMethodID
 		}
 
-		resp, err := deps.DB.GetDisbursementReport(ctx, req)
+		if deps.GetDisbursementReport == nil {
+			http.Error(w, "Failed to generate disbursement report", http.StatusInternalServerError)
+			return
+		}
+		resp, err := deps.GetDisbursementReport(ctx, req)
 		if err != nil {
 			http.Error(w, "Failed to generate disbursement report", http.StatusInternalServerError)
 			return
@@ -113,7 +117,7 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 
 		// Data rows
 		for _, row := range resp.GetRows() {
-			cellMap := make(map[string]*disbreportpb.DisbursementReportCell, len(row.GetCells()))
+			cellMap := make(map[string]*dspb.DisbursementReportCell, len(row.GetCells()))
 			for _, c := range row.GetCells() {
 				cellMap[c.GetColumnKey()] = c
 			}
@@ -134,7 +138,7 @@ func NewExportHandler(deps *Deps) http.HandlerFunc {
 		// Totals row
 		summary := resp.GetSummary()
 		if summary != nil && len(resp.GetRows()) > 0 {
-			colTotalMap := make(map[string]*disbreportpb.DisbursementReportCell, len(summary.GetColumnTotals()))
+			colTotalMap := make(map[string]*dspb.DisbursementReportCell, len(summary.GetColumnTotals()))
 			for _, ct := range summary.GetColumnTotals() {
 				colTotalMap[ct.GetColumnKey()] = ct
 			}

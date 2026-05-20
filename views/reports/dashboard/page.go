@@ -4,8 +4,9 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
-	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
+	gcfpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/gross_cashflow"
 	fycha "github.com/erniealice/fycha-golang"
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
@@ -13,11 +14,14 @@ import (
 	"github.com/erniealice/pyeza-golang/view"
 )
 
+// 20260521 Wave B P1.E.3 + P1.E.5 — DB replaced with typed closures into
+// the service-driven gross/cashflow + domain-specific use cases.
 type Deps struct {
-	Routes       fycha.ReportsRoutes
-	DB           fycha.DataSource
-	Labels       fycha.ReportsLabels
-	CommonLabels pyeza.CommonLabels
+	Routes               fycha.ReportsRoutes
+	GetGrossProfitReport func(context.Context, *gcfpb.GetGrossProfitRequest) (*gcfpb.GetGrossProfitResponse, error)
+	ListExpenses         func(context.Context, *time.Time, *time.Time) ([]map[string]any, error)
+	Labels               fycha.ReportsLabels
+	CommonLabels         pyeza.CommonLabels
 }
 
 type PageData struct {
@@ -39,28 +43,39 @@ func NewView(deps *Deps) view.View {
 		start, end := fycha.ParsePeriodPreset("thisMonth")
 
 		// Get gross profit data (contains revenue + COGS).
-		req := &reportpb.GrossProfitReportRequest{}
+		req := &gcfpb.GetGrossProfitRequest{}
 		startStr := start.Format("2006-01-02")
 		endStr := end.Format("2006-01-02")
 		req.StartDate = &startStr
 		req.EndDate = &endStr
 
-		resp, err := deps.DB.GetGrossProfitReport(ctx, req)
-		if err != nil {
-			log.Printf("Failed to get dashboard report: %v", err)
-			resp = &reportpb.GrossProfitReportResponse{
-				Summary: &reportpb.GrossProfitSummary{},
+		var resp *gcfpb.GetGrossProfitResponse
+		if deps.GetGrossProfitReport != nil {
+			var err error
+			resp, err = deps.GetGrossProfitReport(ctx, req)
+			if err != nil {
+				log.Printf("Failed to get dashboard report: %v", err)
+				resp = nil
+			}
+		}
+		if resp == nil {
+			resp = &gcfpb.GetGrossProfitResponse{
+				Summary: &gcfpb.GrossProfitSummary{},
 			}
 		}
 		s := resp.GetSummary()
 		if s == nil {
-			s = &reportpb.GrossProfitSummary{}
+			s = &gcfpb.GrossProfitSummary{}
 		}
 
 		// Get expenses total.
-		expenseRecords, err := deps.DB.ListExpenses(ctx, &start, &end)
-		if err != nil {
-			log.Printf("Failed to list expenses for dashboard: %v", err)
+		var expenseRecords []map[string]any
+		if deps.ListExpenses != nil {
+			var err error
+			expenseRecords, err = deps.ListExpenses(ctx, &start, &end)
+			if err != nil {
+				log.Printf("Failed to list expenses for dashboard: %v", err)
+			}
 		}
 		var totalExpenses float64
 		for _, r := range expenseRecords {

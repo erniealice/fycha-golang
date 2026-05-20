@@ -4,16 +4,23 @@ import (
 	"context"
 	"fmt"
 
-	reportpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/reporting/gross_profit"
-	fycha "github.com/erniealice/fycha-golang"
+	gcfpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/gross_cashflow"
 	reports "github.com/erniealice/fycha-golang/views/reports"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
 )
 
+// CashBookFetcher is the typed closure consumed by the cash book view —
+// service-driven gross/cashflow use case (Wave B P1.E.3).
+type CashBookFetcher func(context.Context, *gcfpb.GetCashBookRequest) (*gcfpb.GetCashBookResponse, error)
+
 // NewCashBookView creates the cash book report with typed service data.
-func NewCashBookView(db fycha.DataSource, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
+//
+// 20260521 Wave B P1.E.3 — `db fycha.DataSource` replaced with the typed
+// `GetCashBookReport` closure into the service-driven gross/cashflow use
+// case. Nil-safe: when the closure is nil the view renders an empty table.
+func NewCashBookView(getCashBook CashBookFetcher, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
 	return reports.NewReportView(reports.ReportConfig{
 		ActiveNav:    "cash",
 		ActiveSubNav: "cash-book",
@@ -24,12 +31,12 @@ func NewCashBookView(db fycha.DataSource, commonLabels pyeza.CommonLabels, table
 		CommonLabels: commonLabels,
 		TableLabels:  tableLabels,
 		BuildData: func(ctx context.Context) ([]types.TableColumn, []types.TableRow, error) {
-			return fetchCashBook(ctx, db)
+			return fetchCashBook(ctx, getCashBook)
 		},
 	})
 }
 
-func fetchCashBook(ctx context.Context, db fycha.DataSource) ([]types.TableColumn, []types.TableRow, error) {
+func fetchCashBook(ctx context.Context, getCashBook CashBookFetcher) ([]types.TableColumn, []types.TableRow, error) {
 	columns := []types.TableColumn{
 		{Key: "date", Label: "Date"},
 		{Key: "description", Label: "Description"},
@@ -38,11 +45,11 @@ func fetchCashBook(ctx context.Context, db fycha.DataSource) ([]types.TableColum
 		{Key: "amount", Label: "Amount", Align: "right"},
 	}
 
-	if db == nil {
+	if getCashBook == nil {
 		return columns, nil, nil
 	}
 
-	resp, err := db.GetCashBookReport(ctx, &reportpb.CashBookReportRequest{})
+	resp, err := getCashBook(ctx, &gcfpb.GetCashBookRequest{})
 	if err != nil || resp == nil {
 		return columns, nil, nil
 	}
