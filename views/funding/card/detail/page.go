@@ -53,14 +53,14 @@ func NewView(deps *Deps) view.View {
 
 		pd := &PageData{
 			PageData: types.PageData{
-				CacheVersion:   viewCtx.CacheVersion,
-				Title:          "Funding Card",
-				CurrentPath:    viewCtx.CurrentPath,
-				ActiveNav:      "funding",
-				ActiveSubNav:   "cards-active",
-				HeaderTitle:    "Funding Card",
-				HeaderIcon:     "icon-credit-card",
-				CommonLabels:   deps.CommonLabels,
+				CacheVersion: viewCtx.CacheVersion,
+				Title:        "Funding Card",
+				CurrentPath:  viewCtx.CurrentPath,
+				ActiveNav:    "funding",
+				ActiveSubNav: "cards-active",
+				HeaderTitle:  "Funding Card",
+				HeaderIcon:   "icon-credit-card",
+				CommonLabels: deps.CommonLabels,
 			},
 			AllocationID: allocationID,
 		}

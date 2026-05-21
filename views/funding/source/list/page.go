@@ -29,12 +29,12 @@ type PageData struct {
 
 // FundRow is the view-model for a single fund row.
 type FundRow struct {
-	ID             string
-	Name           string
-	Kind           string
-	Currency       string
+	ID              string
+	Name            string
+	Kind            string
+	Currency        string
 	AuthorizedLimit string
-	Status         string
+	Status          string
 }
 
 // NewView creates the fund source list view.

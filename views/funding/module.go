@@ -64,9 +64,9 @@ func NewModule(deps *ModuleDeps) *Module {
 			ListFunds:    deps.ListFunds,
 		}),
 		SourceDetail: sourcedetail.NewView(&sourcedetail.Deps{
-			CommonLabels:    deps.CommonLabels,
-			ReadFund:        deps.ReadFund,
-			ListAllocations: deps.ListAllocations,
+			CommonLabels:     deps.CommonLabels,
+			ReadFund:         deps.ReadFund,
+			ListAllocations:  deps.ListAllocations,
 			ListTransactions: deps.ListTransactions,
 		}),
 		CardList: cardlist.NewView(&cardlist.Deps{
