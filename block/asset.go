@@ -100,7 +100,7 @@ func wireAssetModule(
 			if w.newAttachmentID != nil {
 				return w.newAttachmentID()
 			}
-			return "" // CreateAsset use case generates IDs internally via IDService
+			return "" // CreateAsset use case generates IDs internally via IDGenerator
 		}
 		assetDeps.CreateAsset = func(fctx context.Context, a *assetform.Record) error {
 			_, err := useCases.Asset.Create(fctx, &assetpb.CreateAssetRequest{Data: recordToAsset(a)})
