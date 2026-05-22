@@ -28,9 +28,9 @@ const (
 	CashBookURL = "/cash/reports/cash-book"
 
 	// Asset routes
-	AssetDashboardURL        = "/assets/dashboard"
-	AssetListURL             = "/assets/list/{status}"
-	AssetDetailURL           = "/assets/detail/{id}"
+	AssetDashboardURL        = "/asset/dashboard"
+	AssetListURL             = "/asset/list/{status}"
+	AssetDetailURL           = "/asset/detail/{id}"
 	AssetTabActionURL        = "/action/asset/{id}/tab/{tab}"
 	AssetAttachmentUploadURL = "/action/asset/{id}/attachments/upload"
 	AssetAttachmentDeleteURL = "/action/asset/{id}/attachments/delete"
@@ -43,8 +43,8 @@ const (
 	AssetBulkSetStatusURL    = "/action/asset/bulk-set-status"
 
 	// Asset report/settings routes (legacy mock paths — kept for backwards compat)
-	AssetLapsingScheduleURL      = "/assets/reports/lapsing-schedule"
-	AssetDepreciationPoliciesURL = "/assets/settings/depreciation-policies"
+	AssetLapsingScheduleURL      = "/asset/reports/lapsing-schedule"
+	AssetDepreciationPoliciesURL = "/asset/settings/depreciation-policies"
 
 	// Asset depreciation-run drawer routes (Surface A + E)
 	AssetDepreciationRunURL    = "/action/asset/depreciation-run/{asset_id}"
@@ -57,19 +57,19 @@ const (
 	AssetPolicyDepreciationPreviewURL = "/action/asset-policy/depreciation-preview/{category_id}"
 
 	// Lapsing schedule page routes (Surface B)
-	LapsingScheduleListURL               = "/assets/lapsing-schedule/list"
+	LapsingScheduleListURL               = "/asset/lapsing-schedule/list"
 	LapsingScheduleBulkRunSelectedURL    = "/action/lapsing-schedule/bulk-run-selected"
 	LapsingScheduleBulkRunAllMatchingURL = "/action/lapsing-schedule/bulk-run-all-matching"
 	AssetListBulkRunSelectedURL          = "/action/asset/bulk-run-selected"
 
 	// Depreciation run history page routes (Surface D)
-	DepreciationRunListURL            = "/assets/depreciation-runs/list/{status}"
+	DepreciationRunListURL            = "/asset/depreciation-runs/list/{status}"
 	DepreciationRunListTableURL       = "/action/depreciation-run/table/{status}"
-	DepreciationRunDetailURL          = "/assets/depreciation-runs/detail/{run_id}"
+	DepreciationRunDetailURL          = "/asset/depreciation-runs/detail/{run_id}"
 	DepreciationRunDetailTabActionURL = "/action/depreciation-run/detail/{run_id}/tab/{tab}"
 
 	// Depreciation policies page route (Surface F — replaces mock)
-	DepreciationPoliciesURL = "/assets/settings/depreciation-policies"
+	DepreciationPoliciesURL = "/asset/settings/depreciation-policies"
 
 	// Ledger — Chart of Accounts
 	LedgerBaseURL       = "/ledger/"
