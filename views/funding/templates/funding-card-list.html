@@ -18,7 +18,7 @@
     <tbody>
       {{range .Rows}}
       <tr data-testid="funding-card-row-{{.AllocationID}}">
-        <td><a href="/app/funding/cards/{{.AllocationID}}" data-testid="fund-name">{{.FundName}}</a></td>
+        <td><a href='{{routeWith "fund.card.detail" "allocation_id" .AllocationID}}' data-testid="fund-name">{{.FundName}}</a></td>
         <td data-testid="fund-allocation-amount" class="text-right">{{.AllocatedLimit}}</td>
         <td>{{.Mode}}</td>
         <td>{{.Status}}</td>

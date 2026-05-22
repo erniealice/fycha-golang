@@ -15,11 +15,11 @@
   {{/* Tab bar */}}
   <nav class="tabs" role="tablist">
     <a role="tab" {{if eq .ActiveTab "info"}}aria-selected="true"{{end}}
-       href="/app/funding/sources/{{.FundID}}?tab=info">Info</a>
+       href='{{routeWith "fund.source.detail" "fund_id" .FundID}}?tab=info'>Info</a>
     <a role="tab" {{if eq .ActiveTab "allocations"}}aria-selected="true"{{end}}
-       href="/app/funding/sources/{{.FundID}}?tab=allocations">Allocations</a>
+       href='{{routeWith "fund.source.detail" "fund_id" .FundID}}?tab=allocations'>Allocations</a>
     <a role="tab" {{if eq .ActiveTab "activity"}}aria-selected="true"{{end}}
-       href="/app/funding/sources/{{.FundID}}?tab=activity">Activity</a>
+       href='{{routeWith "fund.source.detail" "fund_id" .FundID}}?tab=activity'>Activity</a>
   </nav>
 
   {{if eq .ActiveTab "info"}}

@@ -19,7 +19,7 @@
     <tbody>
       {{range .Rows}}
       <tr data-testid="funding-source-row-{{.ID}}">
-        <td><a href="/app/funding/sources/{{.ID}}" data-testid="fund-name">{{.Name}}</a></td>
+        <td><a href='{{routeWith "fund.source.detail" "fund_id" .ID}}' data-testid="fund-name">{{.Name}}</a></td>
         <td><span class="badge">{{.Kind}}</span></td>
         <td>{{.Currency}}</td>
         <td class="text-right">{{.AuthorizedLimit}}</td>
