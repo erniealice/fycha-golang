@@ -6,6 +6,7 @@ package reports
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	pyeza "github.com/erniealice/pyeza-golang"
@@ -62,6 +63,11 @@ type GeneralLedgerDeps struct {
 	// Returning nil, nil means "no data" (renders empty state, not error).
 	// Phase 3: set to nil → mock data is used automatically.
 	GetGeneralLedger func(ctx context.Context, accountID, startDate, endDate string) (*GLAccountSection, error)
+
+	// JournalDetailURLTemplate is the URL template for journal entry detail pages
+	// (e.g. "/app/ledger/journals/detail/{id}"). When empty, defaults to
+	// fycha.JournalDetailURL.
+	JournalDetailURLTemplate string
 }
 
 // GeneralLedgerPageData is the template data for the general-ledger page.
@@ -144,7 +150,7 @@ func NewGeneralLedgerView(deps *GeneralLedgerDeps) view.View {
 			}
 		}
 		if section == nil {
-			section = mockGLSection(accountID, startDate, endDate)
+			section = mockGLSection(accountID, startDate, endDate, deps.JournalDetailURLTemplate)
 		}
 
 		pageData.HasData = true
@@ -272,7 +278,11 @@ func buildGLTable(s *GLAccountSection, tableLabels types.TableLabels, labels fyc
 
 // mockGLSection returns a realistic demo General Ledger section for a cash account.
 // All debits and credits balance correctly within the period.
-func mockGLSection(accountID, startDate, endDate string) *GLAccountSection {
+func mockGLSection(accountID, startDate, endDate, journalDetailURLTmpl string) *GLAccountSection {
+	if journalDetailURLTmpl == "" {
+		journalDetailURLTmpl = fycha.JournalDetailURL
+	}
+	journalDetailBase := strings.Split(journalDetailURLTmpl, "{id}")[0]
 	openingBalance := 28400.00
 
 	type rawLine struct {
@@ -319,7 +329,7 @@ func mockGLSection(accountID, startDate, endDate string) *GLAccountSection {
 		lines = append(lines, GLLine{
 			Date:           rl.date,
 			EntryNumber:    rl.entryNum,
-			EntryDetailURL: fmt.Sprintf("/app/ledger/journals/detail/%s", rl.entryNum),
+			EntryDetailURL: journalDetailBase + rl.entryNum,
 			Description:    rl.description,
 			Debit:          rl.debit,
 			Credit:         rl.credit,
