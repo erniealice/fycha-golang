@@ -142,28 +142,37 @@
   {{if or .CanPost .CanReverse .CanDelete}}
   <div class="detail-actions">
     {{if .CanPost}}
-    <button class="btn btn-primary" data-testid="journal-post-btn"
-            hx-post="{{.PostURL}}" hx-swap="none"
-            hx-confirm="{{.Labels.Confirm.Post}}">
-      {{template "icon-check"}}
-      {{.Labels.Actions.Post}}
-    </button>
+    <form hx-post="{{.PostURL}}" hx-swap="none"
+          hx-confirm="{{.Labels.Confirm.Post}}"
+          style="display:inline">
+      {{actionForm .PostURL .WorkspaceID}}
+      <button type="submit" class="btn btn-primary" data-testid="journal-post-btn">
+        {{template "icon-check"}}
+        {{.Labels.Actions.Post}}
+      </button>
+    </form>
     {{end}}
     {{if .CanDelete}}
-    <button class="btn btn-danger" data-testid="journal-delete-btn"
-            hx-post="{{.DeleteURL}}?id={{.ID}}" hx-swap="none"
-            hx-confirm="{{.Labels.Confirm.Delete}}">
-      {{template "icon-trash"}}
-      {{.Labels.Actions.Delete}}
-    </button>
+    <form hx-post="{{.DeleteURL}}?id={{.ID}}" hx-swap="none"
+          hx-confirm="{{.Labels.Confirm.Delete}}"
+          style="display:inline">
+      {{actionForm .DeleteURL .WorkspaceID}}
+      <button type="submit" class="btn btn-danger" data-testid="journal-delete-btn">
+        {{template "icon-trash"}}
+        {{.Labels.Actions.Delete}}
+      </button>
+    </form>
     {{end}}
     {{if .CanReverse}}
-    <button class="btn btn-warning" data-testid="journal-void-btn"
-            hx-post="{{.ReverseURL}}" hx-swap="none"
-            hx-confirm="{{.Labels.Confirm.Reverse}}">
-      {{template "icon-rotate-ccw"}}
-      {{.Labels.Actions.Reverse}}
-    </button>
+    <form hx-post="{{.ReverseURL}}" hx-swap="none"
+          hx-confirm="{{.Labels.Confirm.Reverse}}"
+          style="display:inline">
+      {{actionForm .ReverseURL .WorkspaceID}}
+      <button type="submit" class="btn btn-warning" data-testid="journal-void-btn">
+        {{template "icon-rotate-ccw"}}
+        {{.Labels.Actions.Reverse}}
+      </button>
+    </form>
     {{end}}
   </div>
   {{end}}

@@ -12,6 +12,7 @@ Labels: all text via .Labels.* — no English literals.
     hx-on::after-request="lf.Sheet.handleResponse(event)"
     data-testid="asset-edit-form"
 >
+    {{actionForm .FormAction .WorkspaceID}}
     {{if .ID}}<input type="hidden" name="id" value="{{.ID}}">{{end}}
 
     <div class="sheet-body">

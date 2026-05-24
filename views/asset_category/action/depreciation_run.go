@@ -77,6 +77,7 @@ type CategoryDepreciationRunDeps struct {
 // categoryRunFormData is the template context for the Surface C drawer.
 type categoryRunFormData struct {
 	FormAction    string
+	WorkspaceID    string // injected by C1: populated by ViewAdapter.injectWorkspaceID for action_workspace_guard
 	CategoryID    string
 	ScopeKind     string // "category" | "policy" — controls breadcrumb
 	AsOfDate      string

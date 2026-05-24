@@ -63,6 +63,7 @@ type RevaluationPreview struct {
 // revaluationFormData is the template data for the Surface E drawer.
 type revaluationFormData struct {
 	FormAction string
+	WorkspaceID string // injected by C1: populated by ViewAdapter.injectWorkspaceID for action_workspace_guard
 	PreviewURL string
 	AssetID    string
 	Preview    *RevaluationPreview

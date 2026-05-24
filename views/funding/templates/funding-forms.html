@@ -3,6 +3,7 @@
 <form hx-post="/action/fund-allocation/save"
       hx-swap="none"
       data-testid="funding-allocation-form">
+    {{actionForm "/action/fund-allocation/save" .WorkspaceID}}
   <input type="hidden" name="fund_id" value="{{.FundID}}">
   {{if .AllocationID}}<input type="hidden" name="allocation_id" value="{{.AllocationID}}">{{end}}
   <div class="sheet-body">
@@ -37,6 +38,7 @@
 <form hx-post="/action/fund-transaction/draw"
       hx-swap="none"
       data-testid="funding-draw-form">
+    {{actionForm "/action/fund-transaction/draw" .WorkspaceID}}
   <input type="hidden" name="allocation_id" value="{{.AllocationID}}">
   <div class="sheet-body">
     <div class="form-row single">
@@ -68,6 +70,7 @@
 <form hx-post="/action/fund-transaction/settlement"
       hx-swap="none"
       data-testid="funding-settlement-form">
+    {{actionForm "/action/fund-transaction/settlement" .WorkspaceID}}
   <input type="hidden" name="allocation_id" value="{{.AllocationID}}">
   <div class="sheet-body">
     <div class="form-row single">
@@ -91,6 +94,7 @@
 <form hx-post="/action/fund-transaction/transfer"
       hx-swap="none"
       data-testid="funding-transfer-form">
+    {{actionForm "/action/fund-transaction/transfer" .WorkspaceID}}
   <input type="hidden" name="source_fund_id" value="{{.SourceFundID}}">
   <div class="sheet-body">
     <div class="form-row single">

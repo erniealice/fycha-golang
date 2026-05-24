@@ -103,14 +103,15 @@
           <span class="btn btn-ghost btn-sm" aria-disabled="true">{{$.Labels.AlreadyApplied}}</span>
           {{else}}
             {{if .ApplyURL}}
-            <button type="button"
-              class="btn btn-primary btn-sm"
-              hx-post="{{.ApplyURL}}"
-              hx-confirm="{{$.Labels.ConfirmApply}}"
-              hx-swap="none"
-              hx-on::after-request="lf.AccountTemplates.handleApplyResponse(event)">
-              {{$.Labels.ApplyTemplate}}
-            </button>
+            <form hx-post="{{.ApplyURL}}" hx-confirm="{{$.Labels.ConfirmApply}}" hx-swap="none"
+                  hx-on::after-request="lf.AccountTemplates.handleApplyResponse(event)"
+                  style="display:inline">
+              {{actionForm .ApplyURL $.WorkspaceID}}
+              <button type="submit"
+                class="btn btn-primary btn-sm">
+                {{$.Labels.ApplyTemplate}}
+              </button>
+            </form>
             {{end}}
           {{end}}
         {{else}}
@@ -175,13 +176,15 @@
 <div class="dialog-footer">
   <button type="button" class="btn btn-secondary" onclick="lf.Dialog.close()">{{.CommonLabels.Buttons.Cancel}}</button>
   {{if .ApplyURL}}
-  <button type="button"
-    class="btn btn-primary"
-    hx-post="{{.ApplyURL}}"
-    hx-swap="none"
-    hx-on::after-request="lf.AccountTemplates.handleApplyResponse(event); lf.Dialog.close();">
-    {{.Labels.ApplyTemplate}}
-  </button>
+  <form hx-post="{{.ApplyURL}}" hx-swap="none"
+        hx-on::after-request="lf.AccountTemplates.handleApplyResponse(event); lf.Dialog.close();"
+        style="display:inline">
+    {{actionForm .ApplyURL .WorkspaceID}}
+    <button type="submit"
+      class="btn btn-primary">
+      {{.Labels.ApplyTemplate}}
+    </button>
+  </form>
   {{end}}
 </div>
 {{end}}

@@ -67,6 +67,7 @@
           hx-post="{{.EditURL}}"
           hx-swap="none"
           hx-on::after-request="lf.handleInfoUpdate(event)">
+        {{actionForm .EditURL .WorkspaceID}}
         <input type="hidden" name="id" value="{{.ID}}">
 
         <div class="form-row single">

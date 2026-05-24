@@ -21,6 +21,7 @@ Data:
       hx-swap="none"
       hx-on::after-request="lf.Sheet.handleResponse(event)"
       data-testid="wht-cert-drawer-form">
+    {{actionForm .FormAction .WorkspaceID}}
     {{if .IsEdit}}<input type="hidden" name="id" value="{{.ID}}">{{end}}
 
     <div class="sheet-body">
