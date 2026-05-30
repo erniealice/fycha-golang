@@ -61,12 +61,12 @@
 <div class="tab-scroll">
     <h3 class="detail-section-title">{{.Labels.Detail.BasicInfo.Title}}</h3>
 
-    <div id="info-result" class="form-result form-result--hidden" aria-live="polite" aria-atomic="true"></div>
+    <div id="asset-info-result" class="form-result form-result--hidden" aria-live="polite" aria-atomic="true"></div>
 
-    <form id="info-edit-form"
+    <form id="asset-info-edit-form"
           hx-post="{{.EditURL}}"
           hx-swap="none"
-          hx-on::after-request="lf.handleInfoUpdate(event)">
+          hx-on::after-request="lf.ui.handleFormResult(event, {resultId: 'asset-info-result', successSource: 'header', successHeader: 'HX-Success-Message', hideMode: 'classList'})">
         {{actionForm .EditURL .WorkspaceID}}
         <input type="hidden" name="id" value="{{.ID}}">
 
@@ -109,23 +109,6 @@
         </div>
     </form>
 </div>
-
-<script>
-window.lf = window.lf || {};
-lf.handleInfoUpdate = function(evt) {
-    var el = document.getElementById('info-result');
-    if (!el) return;
-    if (evt.detail.successful) {
-        el.className = 'form-result form-result--success';
-        el.textContent = evt.detail.xhr.getResponseHeader('HX-Success-Message') || '';
-    } else {
-        var msg = evt.detail.xhr.getResponseHeader('HX-Error-Message') || '';
-        el.className = 'form-result form-result--error';
-        el.textContent = msg;
-    }
-    setTimeout(function() { el.classList.add('form-result--hidden'); }, 5000);
-};
-</script>
 {{end}}
 
 {{/* =============================================
