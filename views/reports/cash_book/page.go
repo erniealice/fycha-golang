@@ -70,7 +70,7 @@ func fetchCashBook(ctx context.Context, getCashBook CashBookFetcher) ([]types.Ta
 				{Value: row.Description},
 				{Value: row.Reference},
 				{Type: "badge", Value: row.TxType, Variant: variant},
-				types.MoneyCell(float64(row.Amount)/100, "PHP", true),
+				types.MoneyCell(float64(row.Amount), "PHP", true),
 			},
 		})
 	}
