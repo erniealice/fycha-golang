@@ -70,7 +70,7 @@
         <h4 class="card__title">{{.Labels.Detail.Info.Title}}</h4>
         {{if .CanEdit}}
         <a href="{{.EditURL}}" class="btn btn-secondary btn-sm" hx-get="{{.EditURL}}" hx-target="#sheetContent" hx-swap="innerHTML" hx-push-url="false"
-           hx-on::after-request="lf.ui.Sheet.open()">
+           data-hx-on="sheet-open">
           {{template "icon-edit"}}
           <span>{{.Labels.Actions.Edit}}</span>
         </a>

@@ -95,7 +95,7 @@
             hx-target="#dialogContent"
             hx-swap="innerHTML"
             hx-push-url="false"
-            hx-on::after-request="Dialog.open()">
+            data-hx-on="template-preview-open">
             {{$.Labels.Preview}}
           </button>
           {{end}}
@@ -104,7 +104,7 @@
           {{else}}
             {{if .ApplyURL}}
             <form hx-post="{{.ApplyURL}}" hx-confirm="{{$.Labels.ConfirmApply}}" hx-swap="none"
-                  hx-on::after-request="lf.fycha.ledger.AccountTemplates.handleApplyResponse(event)"
+                  data-hx-on="account-template-apply"
                   style="display:inline">
               {{actionForm .ApplyURL $.WorkspaceID}}
               <button type="submit"
@@ -177,7 +177,7 @@
   <button type="button" class="btn btn-secondary" data-dialog-close>{{.CommonLabels.Buttons.Cancel}}</button>
   {{if .ApplyURL}}
   <form hx-post="{{.ApplyURL}}" hx-swap="none"
-        hx-on::after-request="lf.fycha.ledger.AccountTemplates.handleApplyResponse(event); lf.ui.Dialog.close();"
+        data-hx-on="account-template-apply-dialog"
         style="display:inline">
     {{actionForm .ApplyURL .WorkspaceID}}
     <button type="submit"

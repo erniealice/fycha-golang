@@ -66,7 +66,11 @@
     <form id="asset-info-edit-form"
           hx-post="{{.EditURL}}"
           hx-swap="none"
-          hx-on::after-request="lf.ui.handleFormResult(event, {resultId: 'asset-info-result', successSource: 'header', successHeader: 'HX-Success-Message', hideMode: 'classList'})">
+          data-hx-on="form-result"
+          data-result-id="asset-info-result"
+          data-success-source="header"
+          data-success-header="HX-Success-Message"
+          data-hide-mode="classList">
         {{actionForm .EditURL .WorkspaceID}}
         <input type="hidden" name="id" value="{{.ID}}">
 

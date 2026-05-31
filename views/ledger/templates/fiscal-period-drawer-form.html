@@ -3,7 +3,7 @@ Fiscal period add drawer form -- loaded into #sheetContent via HTMX.
 Data: .FormAction, .Labels, .CommonLabels
 */}}
 {{define "fiscal-period-drawer-form"}}
-<form hx-post="{{.FormAction}}" hx-swap="none" hx-on::after-request="lf.ui.Sheet.handleResponse(event)">
+<form hx-post="{{.FormAction}}" hx-swap="none" data-hx-on="sheet-response">
     {{actionForm .FormAction .WorkspaceID}}
 
   <div class="sheet-body">

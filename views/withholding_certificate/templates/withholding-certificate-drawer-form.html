@@ -19,7 +19,7 @@ Data:
 {{define "withholding-certificate-drawer-form"}}
 <form hx-post="{{.FormAction}}"
       hx-swap="none"
-      hx-on::after-request="lf.ui.Sheet.handleResponse(event)"
+      data-hx-on="sheet-response"
       data-testid="wht-cert-drawer-form">
     {{actionForm .FormAction .WorkspaceID}}
     {{if .IsEdit}}<input type="hidden" name="id" value="{{.ID}}">{{end}}

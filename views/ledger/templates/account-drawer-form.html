@@ -7,7 +7,7 @@ Data: .Code, .Name, .Element, .Class, .ParentCode, .Group,
       .ID, .FormAction, .IsEdit, .Labels, .CommonLabels
 */}}
 {{define "account-drawer-form"}}
-<form hx-post="{{.FormAction}}" hx-swap="none" hx-on::after-request="lf.ui.Sheet.handleResponse(event)">
+<form hx-post="{{.FormAction}}" hx-swap="none" data-hx-on="sheet-response">
     {{actionForm .FormAction .WorkspaceID}}
   {{if .ID}}<input type="hidden" name="id" value="{{.ID}}">{{end}}
 

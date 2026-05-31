@@ -9,7 +9,7 @@ Labels: all text via .Labels.* — no English literals.
 <form
     hx-post="{{.FormAction}}"
     hx-swap="none"
-    hx-on::after-request="lf.ui.Sheet.handleResponse(event)"
+    data-hx-on="sheet-response"
     data-testid="asset-edit-form"
 >
     {{actionForm .FormAction .WorkspaceID}}

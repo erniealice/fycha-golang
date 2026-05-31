@@ -10,8 +10,7 @@
       hx-swap="innerHTML show:none"
       hx-push-url="true"
       hx-indicator=".page-content"
-      hx-on::before-request="lf.ui.Sheet.close()"
-      hx-on::after-settle="window.scrollTo(0,0)">
+      data-hx-on="report-filter">
 
     <div class="rr-filter-body">
 
@@ -178,7 +177,7 @@
            hx-swap="innerHTML show:none"
            hx-push-url="true"
            hx-indicator=".page-content"
-           hx-on::before-request="lf.ui.Sheet.close()">{{.Labels.Clear}}</a>
+           data-hx-on="sheet-close">{{.Labels.Clear}}</a>
     </div>
 </form>
 

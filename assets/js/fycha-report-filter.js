@@ -55,6 +55,22 @@
     e.target.closest('.groupby-option').classList.add('active');
   });
 
+  // ─── Report-filter htmx lifecycle delegation (CSP-prep, Plan-6) ───
+  // Replaces hx-on::before-request="lf.ui.Sheet.close()" and
+  // hx-on::after-settle="window.scrollTo(0,0)" on report-filter forms.
+  // Two lf.hxOn registrations against the same data-hx-on="report-filter" selector:
+  // one for beforeRequest (close sheet), one for afterSettle (scroll to top).
+  if (window.lf && typeof window.lf.hxOn === 'function') {
+    lf.hxOn('htmx:beforeRequest', '[data-hx-on="report-filter"]', function () {
+      if (window.lf.ui && window.lf.ui.Sheet && typeof window.lf.ui.Sheet.close === 'function') {
+        window.lf.ui.Sheet.close();
+      }
+    });
+    lf.hxOn('htmx:afterSettle', '[data-hx-on="report-filter"]', function () {
+      window.scrollTo(0, 0);
+    });
+  }
+
   // ─── Filter-Sheet Open (CSP-prep, Plan-6) ───
   // The "Filters" toolbar button (report-filter-btn / report-aging-toolbar-prefix /
   // report-dimension-toolbar-prefix) previously carried inline
