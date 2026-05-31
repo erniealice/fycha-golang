@@ -44,7 +44,7 @@
         {{if .CanEdit}}
         <a href="{{.EditURL}}" class="btn btn-secondary btn-sm"
            hx-get="{{.EditURL}}" hx-target="#sheetContent" hx-swap="innerHTML" hx-push-url="false"
-           hx-on::after-request="lf.Sheet.open()">
+           hx-on::after-request="lf.ui.Sheet.open()">
           {{template "icon-edit"}}
           <span>{{.Labels.Actions.Edit}}</span>
         </a>

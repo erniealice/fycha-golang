@@ -9,7 +9,7 @@
       hx-swap="innerHTML show:none"
       hx-push-url="true"
       hx-indicator=".page-content"
-      hx-on::before-request="lf.Sheet.close()"
+      hx-on::before-request="lf.ui.Sheet.close()"
       hx-on::after-settle="window.scrollTo(0,0)">
 
     <div class="rr-filter-body">
@@ -50,7 +50,7 @@
            hx-swap="innerHTML show:none"
            hx-push-url="true"
            hx-indicator=".page-content"
-           hx-on::before-request="lf.Sheet.close()">Clear</a>
+           hx-on::before-request="lf.ui.Sheet.close()">Clear</a>
     </div>
 </form>
 {{end}}

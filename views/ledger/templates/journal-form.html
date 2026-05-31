@@ -11,7 +11,7 @@ Balance check and running totals are computed client-side by journal-form.js.
 The "Post" submit button is disabled while the entry is unbalanced.
 */}}
 {{define "journal-drawer-form"}}
-<form id="journal-entry-form" hx-post="{{.FormAction}}" hx-swap="none" hx-on::after-request="lf.Sheet.handleResponse(event)">
+<form id="journal-entry-form" hx-post="{{.FormAction}}" hx-swap="none" hx-on::after-request="lf.ui.Sheet.handleResponse(event)">
     {{actionForm .FormAction .WorkspaceID}}
   {{if .ID}}<input type="hidden" name="id" value="{{.ID}}">{{end}}
 
@@ -135,7 +135,7 @@ The "Post" submit button is disabled while the entry is unbalanced.
 
   {{/* ---- Sheet footer ---- */}}
   <div class="sheet-footer">
-    <button type="button" class="btn btn-ghost" onclick="lf.Sheet.close()">{{.CommonLabels.Buttons.Cancel}}</button>
+    <button type="button" class="btn btn-ghost" onclick="lf.ui.Sheet.close()">{{.CommonLabels.Buttons.Cancel}}</button>
     <div class="sheet-footer__actions">
       <button type="submit" name="submit" value="draft" class="btn btn-secondary">
         {{.Labels.SaveDraft}}

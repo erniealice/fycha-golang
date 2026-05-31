@@ -169,7 +169,7 @@ func buildTableRows(
 				HxGet:    previewURL,
 				HxTarget: "#sheetContent",
 				HxSwap:   "innerHTML",
-				OnClick:  "lf.Sheet.open()",
+				OnClick:  "lf.ui.Sheet.open()",
 				TestID:   "depreciation-policy-action-preview",
 			},
 			{
@@ -179,7 +179,7 @@ func buildTableRows(
 				HxGet:    runURL,
 				HxTarget: "#sheetContent",
 				HxSwap:   "innerHTML",
-				OnClick:  "lf.Sheet.open()",
+				OnClick:  "lf.ui.Sheet.open()",
 				// 2026-05-14 permission-gates P3: re-key from non-catalog
 				// `asset:depreciate` to catalog `depreciation_schedule:create`.
 				Disabled:        !perms.Can("depreciation_schedule", "create"),

@@ -289,7 +289,7 @@ func buildTableRows(
 				HxGet:           drawerURL,
 				HxTarget:        "#sheetContent",
 				HxSwap:          "innerHTML",
-				OnClick:         "lf.Sheet.open()",
+				OnClick:         "lf.ui.Sheet.open()",
 				Disabled:        !canRun,
 				DisabledTooltip: l.Errors.PermissionDenied,
 				TestID:          "lapsing-schedule-list-row-action-run",
