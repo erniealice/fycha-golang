@@ -272,6 +272,7 @@ type CollectionSummaryFilterSheetData struct {
 	RowDimension     string
 	PrimaryOptions   []fycha.FilterOption
 	RowOptions       []fycha.FilterOption
+	Nonce            string // injected by ViewAdapter.injectPageData via reflection
 }
 
 func buildSummary(s *aragingpb.CollectionSummarySummary, l fycha.CollectionSummaryReportLabels) []fycha.SummaryMetric {

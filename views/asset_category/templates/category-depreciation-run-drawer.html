@@ -124,7 +124,7 @@ Selectors per flow.md:
     </div>
 </form>
 
-<script>
+<script nonce="{{.Nonce}}">
 (function () {
     var form = document.currentScript.previousElementSibling;
     while (form && form.tagName !== 'FORM') { form = form.previousElementSibling; }

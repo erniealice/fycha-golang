@@ -270,6 +270,7 @@ type ExpenditureReportFilterSheetData struct {
 	RowDimension     string
 	PrimaryOptions   []fycha.FilterOption
 	RowOptions       []fycha.FilterOption
+	Nonce            string // injected by ViewAdapter.injectPageData via reflection
 }
 
 func buildSummary(s *dspb.ExpenditureReportSummary, l fycha.ExpenditureReportLabels) []fycha.SummaryMetric {

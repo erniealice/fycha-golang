@@ -76,16 +76,17 @@ type CategoryDepreciationRunDeps struct {
 
 // categoryRunFormData is the template context for the Surface C drawer.
 type categoryRunFormData struct {
-	FormAction    string
-	WorkspaceID    string // injected by C1: populated by ViewAdapter.injectWorkspaceID for action_workspace_guard
-	CategoryID    string
-	ScopeKind     string // "category" | "policy" — controls breadcrumb
-	AsOfDate      string
-	MaxAsOfDate   string
-	Rows          []CategoryDepreciationRunAssetRow
+	FormAction   string
+	WorkspaceID  string // injected by C1: populated by ViewAdapter.injectWorkspaceID for action_workspace_guard
+	Nonce        string // injected by ViewAdapter.injectPageData via reflection
+	CategoryID   string
+	ScopeKind    string // "category" | "policy" — controls breadcrumb
+	AsOfDate     string
+	MaxAsOfDate  string
+	Rows         []CategoryDepreciationRunAssetRow
 	EligibleCount int
-	Labels        fycha.DepreciationRunLabels
-	CommonLabels  pyeza.CommonLabels
+	Labels       fycha.DepreciationRunLabels
+	CommonLabels pyeza.CommonLabels
 }
 
 // NewCategoryDepreciationRunAction creates the Surface C per-category/per-policy depreciation-run drawer.

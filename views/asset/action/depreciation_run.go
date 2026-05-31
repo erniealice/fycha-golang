@@ -70,7 +70,8 @@ type DepreciationRunResult struct {
 // depreciationRunFormData is the template data for the Surface A drawer.
 type depreciationRunFormData struct {
 	FormAction    string
-	WorkspaceID    string // injected by C1: populated by ViewAdapter.injectWorkspaceID for action_workspace_guard
+	WorkspaceID   string // injected by C1: populated by ViewAdapter.injectWorkspaceID for action_workspace_guard
+	Nonce         string // injected by ViewAdapter.injectPageData via reflection
 	AssetID       string
 	AsOfDate      string
 	MaxAsOfDate   string
