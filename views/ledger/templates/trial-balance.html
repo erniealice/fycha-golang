@@ -6,7 +6,8 @@
 {{/* Content-only partial — for HTMX navigation */}}
 {{define "trial-balance-content"}}
 <div class="page-content ledger-report-layout"
-     data-page-css="/assets/css/fycha/fycha-ledger-report.css?v={{.CacheVersion}}">
+     data-page-css="/assets/css/fycha/fycha-ledger-report.css?v={{.CacheVersion}}"
+     data-page-js="/assets/js/fycha/fycha-print.js?v={{.CacheVersion}}">
 
     {{/* ─── Filter Bar ─── */}}
     <div class="ledger-report-filters">
@@ -24,7 +25,7 @@
                 <div class="ledger-filter-actions ledger-filter-actions--inline">
                     <button type="submit" class="btn btn-primary">Generate</button>
                     {{if .HasData}}
-                    <button type="button" class="btn btn-ghost" onclick="window.print()" title="Print">
+                    <button type="button" class="btn btn-ghost" data-print-trigger title="Print">
                         <span class="btn-icon-wrap">{{template "icon-printer"}}</span>
                         Print
                     </button>

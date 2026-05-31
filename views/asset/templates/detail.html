@@ -5,7 +5,7 @@
 
 {{/* Content-only partial -- for HTMX navigation */}}
 {{define "asset-detail-content"}}
-<div class="page-content detail-layout" data-page-css="/assets/css/fycha/fycha-asset-detail.css?v={{.CacheVersion}}">
+<div class="page-content detail-layout" data-page-css="/assets/css/fycha/fycha-asset-detail.css?v={{.CacheVersion}}" data-page-js="/assets/js/fycha/fycha-print.js?v={{.CacheVersion}}">
 
     {{/* Page-pillar actions (resolved by resolveAssetActions in page.go) */}}
     {{if .AssetActions.Primary.URL}}
@@ -138,7 +138,7 @@
             <button
                 type="button"
                 class="btn btn-secondary btn-sm"
-                onclick="window.print()"
+                data-print-trigger
                 data-testid="asset-detail-lapsing-tab-print-worksheet"
                 data-print-hide
             >

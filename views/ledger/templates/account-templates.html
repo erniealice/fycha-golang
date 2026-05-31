@@ -174,7 +174,7 @@
   <p class="dialog-note">{{.Labels.SkipNote}}</p>
 </div>
 <div class="dialog-footer">
-  <button type="button" class="btn btn-secondary" onclick="lf.ui.Dialog.close()">{{.CommonLabels.Buttons.Cancel}}</button>
+  <button type="button" class="btn btn-secondary" data-dialog-close>{{.CommonLabels.Buttons.Cancel}}</button>
   {{if .ApplyURL}}
   <form hx-post="{{.ApplyURL}}" hx-swap="none"
         hx-on::after-request="lf.fycha.ledger.AccountTemplates.handleApplyResponse(event); lf.ui.Dialog.close();"

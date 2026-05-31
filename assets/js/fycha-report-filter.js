@@ -54,4 +54,23 @@
     });
     e.target.closest('.groupby-option').classList.add('active');
   });
+
+  // ─── Filter-Sheet Open (CSP-prep, Plan-6) ───
+  // The "Filters" toolbar button (report-filter-btn / report-aging-toolbar-prefix /
+  // report-dimension-toolbar-prefix) previously carried inline
+  // `onclick="lf.ui.Sheet.open('Filters')"`. Inline event-handler attributes
+  // cannot be nonced/hashed and block an enforcing `script-src 'self'`, so the
+  // sheet shell is now opened via document-level delegation. The title moved into
+  // a `data-sheet-title` attribute (html/template auto-escapes attribute context).
+  // The button's own `hx-get`/`hx-target`/`hx-swap` still loads the filter body
+  // into #sheetContent independently — same dual behavior as the inline handler.
+  // Mirrors the app-level home.js delegation idiom. The `data-sheet-close` path
+  // (footer Apply/Clear) is handled globally by pyeza sheet.js — no wiring here.
+  if (window.lf && typeof window.lf.on === 'function') {
+    lf.on('click', '[data-sheet-open]', function () {
+      if (window.lf.ui && window.lf.ui.Sheet && typeof window.lf.ui.Sheet.open === 'function') {
+        window.lf.ui.Sheet.open(this.getAttribute('data-sheet-title') || '');
+      }
+    });
+  }
 })();

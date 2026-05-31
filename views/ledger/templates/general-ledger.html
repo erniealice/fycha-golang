@@ -6,7 +6,8 @@
 {{/* Content-only partial for HTMX navigation */}}
 {{define "general-ledger-content"}}
 <div class="page-content ledger-report-layout"
-     data-page-css="/assets/css/fycha/fycha-ledger-report.css?v={{.CacheVersion}}">
+     data-page-css="/assets/css/fycha/fycha-ledger-report.css?v={{.CacheVersion}}"
+     data-page-js="/assets/js/fycha/fycha-print.js?v={{.CacheVersion}}">
 
     {{/* Filter Bar */}}
     <div class="ledger-report-filters">
@@ -53,7 +54,7 @@
                    hx-swap="innerHTML"
                    hx-push-url="true">{{.Labels.GeneralLedger.Clear}}</a>
                 {{if .HasData}}
-                <button type="button" class="btn btn-ghost btn-icon" onclick="window.print()" title="{{.Labels.GeneralLedger.Print}}">
+                <button type="button" class="btn btn-ghost btn-icon" data-print-trigger title="{{.Labels.GeneralLedger.Print}}">
                     {{template "icon-printer"}}
                     {{.Labels.GeneralLedger.Print}}
                 </button>
