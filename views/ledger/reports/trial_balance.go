@@ -146,7 +146,7 @@ func NewTrialBalanceView(deps *TrialBalanceDeps) view.View {
 			pageData.HasData = true
 			pageData.Groups = buildTBGroups(accounts)
 			pageData.Totals = buildTBTotals(pageData.Groups)
-			pageData.Table = buildTBTable(pageData.Groups, pageData.Totals, deps.TableLabels, rl)
+			pageData.Table = buildTBTable(pageData.Groups, pageData.Totals, deps.TableLabels, rl, deps.CommonLabels)
 		}
 
 		if viewCtx.IsHTMX {
@@ -229,7 +229,7 @@ func buildTBTotals(groups []TBElementGroup) TBTotals {
 // Table builder
 // ---------------------------------------------------------------------------
 
-func buildTBTable(groups []TBElementGroup, totals TBTotals, tableLabels types.TableLabels, rl fycha.TrialBalanceLabels) *types.TableConfig {
+func buildTBTable(groups []TBElementGroup, totals TBTotals, tableLabels types.TableLabels, rl fycha.TrialBalanceLabels, cl pyeza.CommonLabels) *types.TableConfig {
 	emptyTitle := rl.EmptyTitle
 	if emptyTitle == "" {
 		emptyTitle = "No accounts with balances"
@@ -242,11 +242,30 @@ func buildTBTable(groups []TBElementGroup, totals TBTotals, tableLabels types.Ta
 	if totalsLabel == "" {
 		totalsLabel = "TOTALS"
 	}
+	// "Code" is a genuinely-shared column name (common.json → columns.code);
+	// "Account Name" / "Debit Balance" / "Credit Balance" are statement-specific
+	// (report.json → trialBalance). All fall back to English if a tier is empty.
+	colCode := cl.Columns.Code
+	if colCode == "" {
+		colCode = "Code"
+	}
+	colName := rl.ColAccountName
+	if colName == "" {
+		colName = "Account Name"
+	}
+	colDebit := rl.ColDebitBalance
+	if colDebit == "" {
+		colDebit = "Debit Balance"
+	}
+	colCredit := rl.ColCreditBalance
+	if colCredit == "" {
+		colCredit = "Credit Balance"
+	}
 	columns := []types.TableColumn{
-		{Key: "code", Label: "Code", NoSort: true, WidthClass: "col-lg"},
-		{Key: "name", Label: "Account Name", NoSort: true},
-		{Key: "debit", Label: "Debit Balance", NoSort: true, WidthClass: "col-4xl", Align: "right"},
-		{Key: "credit", Label: "Credit Balance", NoSort: true, WidthClass: "col-4xl", Align: "right"},
+		{Key: "code", Label: colCode, NoSort: true, WidthClass: "col-lg"},
+		{Key: "name", Label: colName, NoSort: true},
+		{Key: "debit", Label: colDebit, NoSort: true, WidthClass: "col-4xl", Align: "right"},
+		{Key: "credit", Label: colCredit, NoSort: true, WidthClass: "col-4xl", Align: "right"},
 	}
 
 	rowGroups := make([]types.TableRowGroup, 0, len(groups))

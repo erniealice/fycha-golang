@@ -121,19 +121,19 @@ func fetchEntries(ctx context.Context, deps *Deps) []JournalRow {
 
 	rows := make([]JournalRow, 0, len(resp.GetJournalEntryList()))
 	for _, e := range resp.GetJournalEntryList() {
-		rows = append(rows, protoToRow(e))
+		rows = append(rows, protoToRow(deps.Labels.Source, e))
 	}
 	return rows
 }
 
-func protoToRow(e *jepb.JournalEntry) JournalRow {
+func protoToRow(sl fycha.JournalSourceTypeLabels, e *jepb.JournalEntry) JournalRow {
 	return JournalRow{
 		ID:          e.GetId(),
 		EntryNumber: e.GetEntryNumber(),
 		Description: e.GetDescription(),
 		EntryDate:   e.GetEntryDateString(),
 		Status:      statusString(e.GetStatus()),
-		SourceType:  sourceTypeLabel(e.GetSourceType()),
+		SourceType:  sourceTypeLabel(sl, e.GetSourceType()),
 		SourceID:    e.GetSourceId(),
 		TotalDebit:  fmt.Sprintf("%.2f", float64(e.GetTotalDebit())/100.0),
 		TotalCredit: fmt.Sprintf("%.2f", float64(e.GetTotalCredit())/100.0),
@@ -340,51 +340,51 @@ func statusLabel(l fycha.JournalLabels, status string) string {
 	}
 }
 
-func sourceTypeLabel(t jepb.JournalSourceType) string {
+func sourceTypeLabel(l fycha.JournalSourceTypeLabels, t jepb.JournalSourceType) string {
 	switch t {
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_MANUAL:
-		return "Manual"
+		return l.Manual
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_REVENUE:
-		return "Revenue"
+		return l.Revenue
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_EXPENDITURE:
-		return "Expenditure"
+		return l.Expenditure
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_COLLECTION:
-		return "Collection"
+		return l.Collection
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_DISBURSEMENT:
-		return "Disbursement"
+		return l.Disbursement
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_DEPRECIATION:
-		return "Depreciation"
+		return l.Depreciation
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_ASSET_ACQUISITION:
-		return "Asset Acquisition"
+		return l.AssetAcquisition
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_ASSET_DISPOSAL:
-		return "Asset Disposal"
+		return l.AssetDisposal
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_PREPAYMENT:
-		return "Prepayment"
+		return l.Prepayment
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_PREPAYMENT_AMORTIZATION:
-		return "Prepayment Amortization"
+		return l.PrepaymentAmortization
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_LOAN_RECEIPT:
-		return "Loan Receipt"
+		return l.LoanReceipt
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_LOAN_PAYMENT:
-		return "Loan Payment"
+		return l.LoanPayment
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_PETTY_CASH_REPLENISHMENT:
-		return "Petty Cash Replenishment"
+		return l.PettyCashReplenishment
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_BAD_DEBT_PROVISION:
-		return "Bad Debt Provision"
+		return l.BadDebtProvision
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_DEFERRED_REVENUE:
-		return "Deferred Revenue"
+		return l.DeferredRevenue
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_EQUITY_CONTRIBUTION:
-		return "Equity Contribution"
+		return l.EquityContribution
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_EQUITY_WITHDRAWAL:
-		return "Equity Withdrawal"
+		return l.EquityWithdrawal
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_EQUITY_DISTRIBUTION:
-		return "Equity Distribution"
+		return l.EquityDistribution
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_YEAR_END_CLOSE:
-		return "Year-End Close"
+		return l.YearEndClose
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_RECURRING:
-		return "Recurring"
+		return l.Recurring
 	case jepb.JournalSourceType_JOURNAL_SOURCE_TYPE_PAYROLL:
-		return "Payroll"
+		return l.Payroll
 	default:
-		return "Manual"
+		return l.Manual
 	}
 }

@@ -130,6 +130,11 @@ type TrialBalanceLabels struct {
 	DifferenceLabel string `json:"differenceLabel"`
 	AsOfPrefix      string `json:"asOfPrefix"`
 	GeneratePrompt  string `json:"generatePrompt"`
+	// Domain-specific table column headers (Code/Account-Name fall back to the
+	// shared common Columns block; these two are statement-specific).
+	ColAccountName   string `json:"colAccountName"`
+	ColDebitBalance  string `json:"colDebitBalance"`
+	ColCreditBalance string `json:"colCreditBalance"`
 }
 
 // IncomeStatementLabels holds translatable strings for the Income Statement page.
@@ -192,6 +197,11 @@ type BalanceSheetLabels struct {
 	TotalPrefix        string `json:"totalPrefix"`
 	TotalUpperPrefix   string `json:"totalUpperPrefix"`
 	TotalLiabAndEquity string `json:"totalLiabAndEquity"`
+	// Accounting-equation verification banner. Both carry three %s verbs
+	// (assets, liabilities/diff, equity/landE) — every business-type override
+	// MUST preserve all three %s placeholders or fmt.Sprintf renders EXTRA.
+	EquationVerified string `json:"equationVerified"`
+	EquationWarning  string `json:"equationWarning"`
 }
 
 // BalanceSheetSectionLabels holds the section and classification titles for the balance sheet.
@@ -1185,16 +1195,44 @@ func DefaultAccountLabels() AccountLabels {
 
 // JournalLabels holds all translatable strings for the Journal Entries module.
 type JournalLabels struct {
-	Page    JournalPageLabels    `json:"page"`
-	Tabs    JournalTabLabels     `json:"tabs"`
-	Buttons JournalButtonLabels  `json:"buttons"`
-	Columns JournalColumnLabels  `json:"columns"`
-	Empty   JournalEmptyLabels   `json:"empty"`
-	Actions JournalActionLabels  `json:"actions"`
-	Lines   JournalLineLabels    `json:"lines"`
-	Form    JournalFormLabels    `json:"form"`
-	Detail  JournalDetailLabels  `json:"detail"`
-	Confirm JournalConfirmLabels `json:"confirm"`
+	Page    JournalPageLabels       `json:"page"`
+	Tabs    JournalTabLabels        `json:"tabs"`
+	Buttons JournalButtonLabels     `json:"buttons"`
+	Columns JournalColumnLabels     `json:"columns"`
+	Empty   JournalEmptyLabels      `json:"empty"`
+	Actions JournalActionLabels     `json:"actions"`
+	Lines   JournalLineLabels       `json:"lines"`
+	Form    JournalFormLabels       `json:"form"`
+	Detail  JournalDetailLabels     `json:"detail"`
+	Confirm JournalConfirmLabels    `json:"confirm"`
+	Source  JournalSourceTypeLabels `json:"source"`
+}
+
+// JournalSourceTypeLabels maps JournalSourceType enum values to display strings.
+// Keys mirror the proto JournalSourceType enum; used by the journal list and
+// detail views to label the originating-transaction source.
+type JournalSourceTypeLabels struct {
+	Manual                 string `json:"manual"`
+	Revenue                string `json:"revenue"`
+	Expenditure            string `json:"expenditure"`
+	Collection             string `json:"collection"`
+	Disbursement           string `json:"disbursement"`
+	Depreciation           string `json:"depreciation"`
+	AssetAcquisition       string `json:"assetAcquisition"`
+	AssetDisposal          string `json:"assetDisposal"`
+	Prepayment             string `json:"prepayment"`
+	PrepaymentAmortization string `json:"prepaymentAmortization"`
+	LoanReceipt            string `json:"loanReceipt"`
+	LoanPayment            string `json:"loanPayment"`
+	PettyCashReplenishment string `json:"pettyCashReplenishment"`
+	BadDebtProvision       string `json:"badDebtProvision"`
+	DeferredRevenue        string `json:"deferredRevenue"`
+	EquityContribution     string `json:"equityContribution"`
+	EquityWithdrawal       string `json:"equityWithdrawal"`
+	EquityDistribution     string `json:"equityDistribution"`
+	YearEndClose           string `json:"yearEndClose"`
+	Recurring              string `json:"recurring"`
+	Payroll                string `json:"payroll"`
 }
 
 // JournalConfirmLabels holds confirmation dialog strings for journal actions.
@@ -1441,6 +1479,29 @@ func DefaultJournalLabels() JournalLabels {
 			Post:    "Are you sure you want to post this journal entry? This action cannot be undone.",
 			Delete:  "Are you sure you want to delete this journal entry? This action cannot be undone.",
 			Reverse: "Are you sure you want to reverse this journal entry? A reversing entry will be created.",
+		},
+		Source: JournalSourceTypeLabels{
+			Manual:                 "Manual",
+			Revenue:                "Revenue",
+			Expenditure:            "Expenditure",
+			Collection:             "Collection",
+			Disbursement:           "Disbursement",
+			Depreciation:           "Depreciation",
+			AssetAcquisition:       "Asset Acquisition",
+			AssetDisposal:          "Asset Disposal",
+			Prepayment:             "Prepayment",
+			PrepaymentAmortization: "Prepayment Amortization",
+			LoanReceipt:            "Loan Receipt",
+			LoanPayment:            "Loan Payment",
+			PettyCashReplenishment: "Petty Cash Replenishment",
+			BadDebtProvision:       "Bad Debt Provision",
+			DeferredRevenue:        "Deferred Revenue",
+			EquityContribution:     "Equity Contribution",
+			EquityWithdrawal:       "Equity Withdrawal",
+			EquityDistribution:     "Equity Distribution",
+			YearEndClose:           "Year-End Close",
+			Recurring:              "Recurring",
+			Payroll:                "Payroll",
 		},
 	}
 }
@@ -4389,8 +4450,33 @@ type FundingTransferFormLabels struct {
 
 // FundingSourceListLabels holds page-level strings for the fund source list view.
 type FundingSourceListLabels struct {
-	Title    string `json:"title"`
-	Subtitle string `json:"subtitle"`
+	Title    string                    `json:"title"`
+	Subtitle string                    `json:"subtitle"`
+	Kind     FundingSourceKindLabels   `json:"kind"`
+	Status   FundingSourceStatusLabels `json:"status"`
+}
+
+// FundingSourceKindLabels maps FundKind enum values to display strings for the
+// fund source list. Keys mirror the proto FundKind enum.
+type FundingSourceKindLabels struct {
+	CashOnHand  string `json:"cashOnHand"`
+	BankAccount string `json:"bankAccount"`
+	PettyCash   string `json:"pettyCash"`
+	CreditCard  string `json:"creditCard"`
+	CreditLine  string `json:"creditLine"`
+	PrepaidCard string `json:"prepaidCard"`
+	MobileMoney string `json:"mobileMoney"`
+	Unknown     string `json:"unknown"`
+}
+
+// FundingSourceStatusLabels maps FundStatus enum values to display strings for
+// the fund source list. Keys mirror the proto FundStatus enum.
+type FundingSourceStatusLabels struct {
+	Draft     string `json:"draft"`
+	Active    string `json:"active"`
+	Suspended string `json:"suspended"`
+	Archived  string `json:"archived"`
+	Unknown   string `json:"unknown"`
 }
 
 // DefaultFundingFormLabels returns FundingFormLabels with hardcoded English defaults.
@@ -4421,6 +4507,23 @@ func DefaultFundingFormLabels() FundingFormLabels {
 		Source: FundingSourceListLabels{
 			Title:    "Fund Sources",
 			Subtitle: "Funds you own and share with workspaces",
+			Kind: FundingSourceKindLabels{
+				CashOnHand:  "Cash on Hand",
+				BankAccount: "Bank Account",
+				PettyCash:   "Petty Cash",
+				CreditCard:  "Credit Card",
+				CreditLine:  "Credit Line",
+				PrepaidCard: "Prepaid Card",
+				MobileMoney: "Mobile Money",
+				Unknown:     "Unknown",
+			},
+			Status: FundingSourceStatusLabels{
+				Draft:     "Draft",
+				Active:    "Active",
+				Suspended: "Suspended",
+				Archived:  "Archived",
+				Unknown:   "Unknown",
+			},
 		},
 	}
 }

@@ -130,15 +130,28 @@ func NewBalanceSheetView(deps *BalanceSheetDeps) view.View {
 		landEFmt := cellLandE.Currency + " " + cellLandE.Value
 		diffFmt := cellDiff.Currency + " " + cellDiff.Value
 
+		// Equation banner format strings come from lyngua (report.json →
+		// balanceSheet.equationVerified / .equationWarning). Both carry three %s
+		// verbs; fall back to English defaults if a tier left them empty so
+		// fmt.Sprintf never renders %!(EXTRA ...).
+		verifiedFmt := deps.Labels.BalanceSheet.EquationVerified
+		if verifiedFmt == "" {
+			verifiedFmt = "A = L + E verified: %s = %s + %s"
+		}
+		warningFmt := deps.Labels.BalanceSheet.EquationWarning
+		if warningFmt == "" {
+			warningFmt = "Warning: Assets (%s) ≠ Liabilities + Equity (%s). Difference: %s"
+		}
+
 		var equationMsg string
 		if isBalanced {
-			equationMsg = fmt.Sprintf("A = L + E verified: %s = %s + %s",
+			equationMsg = fmt.Sprintf(verifiedFmt,
 				assetsFmt,
 				liabFmt,
 				equityFmt,
 			)
 		} else {
-			equationMsg = fmt.Sprintf("Warning: Assets (%s) ≠ Liabilities + Equity (%s). Difference: %s",
+			equationMsg = fmt.Sprintf(warningFmt,
 				assetsFmt,
 				landEFmt,
 				diffFmt,

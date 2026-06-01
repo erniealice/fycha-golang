@@ -82,47 +82,47 @@ func fetchFunds(ctx context.Context, deps *Deps) []FundRow {
 		rows = append(rows, FundRow{
 			ID:              f.GetId(),
 			Name:            f.GetName(),
-			Kind:            fundKindLabel(f.GetKind()),
+			Kind:            fundKindLabel(deps.Labels.Source.Kind, f.GetKind()),
 			Currency:        f.GetCurrency(),
 			AuthorizedLimit: fmt.Sprintf("%.2f", float64(f.GetAuthorizedLimit())/100.0),
-			Status:          fundStatusLabel(f.GetStatus()),
+			Status:          fundStatusLabel(deps.Labels.Source.Status, f.GetStatus()),
 		})
 	}
 	return rows
 }
 
-func fundKindLabel(k fundpb.FundKind) string {
+func fundKindLabel(l fycha.FundingSourceKindLabels, k fundpb.FundKind) string {
 	switch k {
 	case fundpb.FundKind_FUND_KIND_CASH_ON_HAND:
-		return "Cash on Hand"
+		return l.CashOnHand
 	case fundpb.FundKind_FUND_KIND_BANK_ACCOUNT:
-		return "Bank Account"
+		return l.BankAccount
 	case fundpb.FundKind_FUND_KIND_PETTY_CASH:
-		return "Petty Cash"
+		return l.PettyCash
 	case fundpb.FundKind_FUND_KIND_CREDIT_CARD:
-		return "Credit Card"
+		return l.CreditCard
 	case fundpb.FundKind_FUND_KIND_CREDIT_LINE:
-		return "Credit Line"
+		return l.CreditLine
 	case fundpb.FundKind_FUND_KIND_PREPAID_CARD:
-		return "Prepaid Card"
+		return l.PrepaidCard
 	case fundpb.FundKind_FUND_KIND_MOBILE_MONEY:
-		return "Mobile Money"
+		return l.MobileMoney
 	default:
-		return "Unknown"
+		return l.Unknown
 	}
 }
 
-func fundStatusLabel(s fundpb.FundStatus) string {
+func fundStatusLabel(l fycha.FundingSourceStatusLabels, s fundpb.FundStatus) string {
 	switch s {
 	case fundpb.FundStatus_FUND_STATUS_DRAFT:
-		return "Draft"
+		return l.Draft
 	case fundpb.FundStatus_FUND_STATUS_ACTIVE:
-		return "Active"
+		return l.Active
 	case fundpb.FundStatus_FUND_STATUS_SUSPENDED:
-		return "Suspended"
+		return l.Suspended
 	case fundpb.FundStatus_FUND_STATUS_ARCHIVED:
-		return "Archived"
+		return l.Archived
 	default:
-		return "Unknown"
+		return l.Unknown
 	}
 }
