@@ -20,15 +20,11 @@
 }
 
 /* ========================================
-   DETAIL INFO VALUE (fycha: var(--text-base) vs pyeza: 1rem)
+   DETAIL INFO VALUE
+   ========================================
+   .detail-info-value is loaded from pyeza detail-layout.css (app-shell <head>)
+   and is byte-identical to the prior local copy — do NOT redefine here.
    ======================================== */
-
-.detail-info-value {
-    font-size: var(--text-base);
-    font-weight: var(--font-weight-medium);
-    color: var(--text-primary);
-    font-family: var(--font-body);
-}
 
 /* ========================================
    FORM RESULT MESSAGES
