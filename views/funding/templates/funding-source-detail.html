@@ -35,7 +35,7 @@
 
   {{if eq .ActiveTab "allocations"}}
   <div class="tab-panel" data-testid="funding-source-tab-allocations">
-    <table class="table">
+    <table id="funding-source-allocations-table" class="table">
       <thead>
         <tr><th>Workspace</th><th>Allocated Limit</th><th>Mode</th><th>Status</th></tr>
       </thead>
@@ -57,7 +57,7 @@
 
   {{if eq .ActiveTab "activity"}}
   <div class="tab-panel" data-testid="funding-source-tab-activity">
-    <table class="table">
+    <table id="funding-source-activity-table" class="table">
       <thead>
         <tr><th>Kind</th><th>Amount</th><th>Status</th></tr>
       </thead>

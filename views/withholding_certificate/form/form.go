@@ -81,6 +81,9 @@ type StatusOption struct {
 	Value    string
 	Label    string
 	Selected bool
+	// Description must be present (even if empty) because form-group.html's
+	// select branch reads data-description="{{.Description}}" on every option.
+	Description string
 }
 
 // BuildStatusOptions constructs the status options for the select element.

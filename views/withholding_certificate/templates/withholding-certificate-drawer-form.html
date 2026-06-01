@@ -86,14 +86,13 @@ Data:
         {{/* ── Status ── */}}
         {{if .StatusOptions}}
         <div class="form-row single">
-            <div class="form-group" data-testid="wht-cert-status">
-                <label class="form-label">{{.Labels.Status}}</label>
-                <select name="status" class="form-control">
-                    {{range .StatusOptions}}
-                    <option value="{{.Value}}"{{if .Selected}} selected{{end}}>{{.Label}}</option>
-                    {{end}}
-                </select>
-            </div>
+            {{template "form-group" (dict
+                "Type" "select"
+                "Name" "status"
+                "Label" .Labels.Status
+                "Options" .StatusOptions
+                "TestId" "wht-cert-status"
+            )}}
         </div>
         {{end}}
     </div>
