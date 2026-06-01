@@ -5,6 +5,7 @@ package form
 import (
 	"context"
 
+	fycha "github.com/erniealice/fycha-golang"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -13,12 +14,14 @@ import (
 // Deps holds view dependencies.
 type Deps struct {
 	CommonLabels pyeza.CommonLabels
+	Labels       fycha.FundingFormLabels
 }
 
 // PageData holds data for the transfer form drawer.
 type PageData struct {
 	types.PageData
 	SourceFundID string
+	Labels       fycha.FundingFormLabels
 }
 
 // NewView creates the transfer drawer-form view.
@@ -28,12 +31,13 @@ func NewView(deps *Deps) view.View {
 		pd := &PageData{
 			PageData: types.PageData{
 				CacheVersion: viewCtx.CacheVersion,
-				Title:        "Transfer Between Funds",
+				Title:        deps.Labels.Transfer.Submit,
 				CurrentPath:  viewCtx.CurrentPath,
 				ActiveNav:    "funding",
 				CommonLabels: deps.CommonLabels,
 			},
 			SourceFundID: sourceFundID,
+			Labels:       deps.Labels,
 		}
 		return view.OK("funding-transfer-form", pd)
 	})

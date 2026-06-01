@@ -79,6 +79,9 @@ type IncomeStatementPageData struct {
 
 	// Statement body
 	Sections []ISStatementSection
+
+	// Labels for static template text
+	Labels fycha.ReportsLabels
 }
 
 // ---------------------------------------------------------------------------
@@ -162,6 +165,7 @@ func NewIncomeStatementView(deps *IncomeStatementDeps) view.View {
 			NetIncomeVariant: netIncomeVariant,
 			NetIncomeTrend:   "+12%",
 			Sections:         sections,
+			Labels:           deps.Labels,
 		}
 
 		if viewCtx.IsHTMX {

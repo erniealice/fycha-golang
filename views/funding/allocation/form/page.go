@@ -5,6 +5,7 @@ package form
 import (
 	"context"
 
+	fycha "github.com/erniealice/fycha-golang"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -13,6 +14,7 @@ import (
 // Deps holds view dependencies.
 type Deps struct {
 	CommonLabels pyeza.CommonLabels
+	Labels       fycha.FundingFormLabels
 }
 
 // PageData holds data for the allocation form drawer.
@@ -20,6 +22,7 @@ type PageData struct {
 	types.PageData
 	FundID       string
 	AllocationID string
+	Labels       fycha.FundingFormLabels
 }
 
 // NewView creates the allocation drawer-form view.
@@ -30,13 +33,14 @@ func NewView(deps *Deps) view.View {
 		pd := &PageData{
 			PageData: types.PageData{
 				CacheVersion: viewCtx.CacheVersion,
-				Title:        "Allocation",
+				Title:        deps.Labels.Allocation.AllocatedLimit,
 				CurrentPath:  viewCtx.CurrentPath,
 				ActiveNav:    "funding",
 				CommonLabels: deps.CommonLabels,
 			},
 			FundID:       fundID,
 			AllocationID: allocationID,
+			Labels:       deps.Labels,
 		}
 		return view.OK("funding-allocation-form", pd)
 	})

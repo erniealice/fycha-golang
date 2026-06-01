@@ -9,6 +9,7 @@ import (
 	fundpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/funding/fund"
 	fundallocationpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/funding/fund_allocation"
 	fundtransactionpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/funding/fund_transaction"
+	fycha "github.com/erniealice/fycha-golang"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -27,6 +28,9 @@ import (
 type ModuleDeps struct {
 	CommonLabels pyeza.CommonLabels
 	TableLabels  types.TableLabels
+	// Labels holds all translatable strings for the funding views.
+	// Defaults to DefaultFundingFormLabels() when zero-value.
+	Labels fycha.FundingFormLabels
 
 	// Route URLs for the 8 funding views. Each defaults to its /app/* constant
 	// when empty for backward compatibility during the P3–P11 parallel-mux window.
@@ -77,6 +81,11 @@ func NewModule(deps *ModuleDeps) *Module {
 	if deps == nil {
 		deps = &ModuleDeps{}
 	}
+	// Apply defaults so callers that don't set Labels still get valid text.
+	lbls := deps.Labels
+	if lbls.Source.Title == "" {
+		lbls = fycha.DefaultFundingFormLabels()
+	}
 	return &Module{
 		sourceListURL:     deps.SourceListURL,
 		sourceDetailURL:   deps.SourceDetailURL,
@@ -89,6 +98,7 @@ func NewModule(deps *ModuleDeps) *Module {
 		SourceList: sourcelist.NewView(&sourcelist.Deps{
 			CommonLabels: deps.CommonLabels,
 			TableLabels:  deps.TableLabels,
+			Labels:       lbls,
 			ListFunds:    deps.ListFunds,
 		}),
 		SourceDetail: sourcedetail.NewView(&sourcedetail.Deps{
@@ -110,15 +120,19 @@ func NewModule(deps *ModuleDeps) *Module {
 		}),
 		AllocationForm: allocationform.NewView(&allocationform.Deps{
 			CommonLabels: deps.CommonLabels,
+			Labels:       lbls,
 		}),
 		DrawForm: drawform.NewView(&drawform.Deps{
 			CommonLabels: deps.CommonLabels,
+			Labels:       lbls,
 		}),
 		SettlementForm: settlementform.NewView(&settlementform.Deps{
 			CommonLabels: deps.CommonLabels,
+			Labels:       lbls,
 		}),
 		TransferForm: transferform.NewView(&transferform.Deps{
 			CommonLabels: deps.CommonLabels,
+			Labels:       lbls,
 		}),
 	}
 }

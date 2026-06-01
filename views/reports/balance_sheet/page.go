@@ -76,6 +76,9 @@ type BalanceSheetPageData struct {
 
 	// Statement body
 	Sections []BSSection
+
+	// Labels for static template text
+	Labels fycha.ReportsLabels
 }
 
 // ---------------------------------------------------------------------------
@@ -163,6 +166,7 @@ func NewBalanceSheetView(deps *BalanceSheetDeps) view.View {
 			IsBalanced:       isBalanced,
 			EquationMessage:  equationMsg,
 			Sections:         sections,
+			Labels:           deps.Labels,
 		}
 
 		if viewCtx.IsHTMX {

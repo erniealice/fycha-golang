@@ -15,15 +15,15 @@
               hx-target="#main-content"
               hx-swap="innerHTML"
               hx-push-url="true">
-            <label for="bs-asof" class="report-asof-label">As of:</label>
+            <label for="bs-asof" class="report-asof-label">{{.Labels.BalanceSheet.AsOf}}</label>
             <input type="date" id="bs-asof" name="as_of"
                    value="{{.AsOfDate}}"
                    class="form-control form-control--sm report-asof-input" />
-            <button type="submit" class="btn btn-primary btn-sm">Generate</button>
+            <button type="submit" class="btn btn-primary btn-sm">{{.Labels.BalanceSheet.Generate}}</button>
         </form>
         <div class="report-header-actions">
-            <button type="button" class="btn btn-secondary btn-sm" disabled title="Export coming soon">
-                {{template "icon-download"}} Export
+            <button type="button" class="btn btn-secondary btn-sm" disabled title="{{.Labels.BalanceSheet.ExportSoon}}">
+                {{template "icon-download"}} {{.Labels.BalanceSheet.Export}}
             </button>
         </div>
     </div>
@@ -31,15 +31,15 @@
     {{/* ─── KPI Summary Bar ─── */}}
     <div class="report-summary-bar">
         <div class="summary-metric">
-            <span class="summary-label">Total Assets</span>
+            <span class="summary-label">{{.Labels.BalanceSheet.KpiTotalAssets}}</span>
             <span class="summary-value">{{.TotalAssets}}</span>
         </div>
         <div class="summary-metric">
-            <span class="summary-label">Total Liabilities</span>
+            <span class="summary-label">{{.Labels.BalanceSheet.KpiTotalLiabilities}}</span>
             <span class="summary-value">{{.TotalLiabilities}}</span>
         </div>
         <div class="summary-metric highlight">
-            <span class="summary-label">Total Equity</span>
+            <span class="summary-label">{{.Labels.BalanceSheet.KpiTotalEquity}}</span>
             <span class="summary-value">{{.TotalEquity}}</span>
         </div>
     </div>
@@ -60,17 +60,17 @@
     {{/* ─── Statement Body ─── */}}
     <div class="financial-statement-card">
         <div class="financial-statement-header">
-            <div class="financial-statement-title">Statement of Financial Position</div>
-            <div class="financial-statement-subtitle">As of {{.AsOfDate}}</div>
+            <div class="financial-statement-title">{{.Labels.BalanceSheet.StatementTitle}}</div>
+            <div class="financial-statement-subtitle">{{.Labels.BalanceSheet.AsOfPrefix}} {{.AsOfDate}}</div>
         </div>
 
         <div class="fs-table-scroll">
         <table id="balance-sheet-table" class="financial-statement-table fs-collapsible">
             <thead>
                 <tr class="fs-header-row">
-                    <th class="fs-col-code">Code</th>
-                    <th class="fs-col-name">Account</th>
-                    <th class="fs-col-amount">Amount</th>
+                    <th class="fs-col-code">{{.Labels.BalanceSheet.ColCode}}</th>
+                    <th class="fs-col-name">{{.Labels.BalanceSheet.ColAccount}}</th>
+                    <th class="fs-col-amount">{{.Labels.BalanceSheet.ColAmount}}</th>
                 </tr>
             </thead>
             {{range .Sections}}
@@ -101,7 +101,7 @@
                 {{/* Classification subtotal */}}
                 <tr class="fs-group-subtotal-row fs-section-body">
                     <td class="fs-col-code"></td>
-                    <td class="fs-col-name">Total {{.Title}}</td>
+                    <td class="fs-col-name">{{$.Labels.BalanceSheet.TotalPrefix}} {{.Title}}</td>
                     <td class="fs-col-amount">{{.Subtotal}}</td>
                 </tr>
                 {{end}}
@@ -118,7 +118,7 @@
                 {{/* Element total */}}
                 <tr class="fs-subtotal-row fs-section-body{{if .IsBold}} fs-bold-total{{end}}">
                     <td class="fs-col-code"></td>
-                    <td class="fs-col-name">TOTAL {{.Title}}</td>
+                    <td class="fs-col-name">{{$.Labels.BalanceSheet.TotalUpperPrefix}} {{.Title}}</td>
                     <td class="fs-col-amount">{{.Total}}</td>
                 </tr>
                 <tr class="fs-spacer-row fs-section-body"><td colspan="3"></td></tr>
@@ -130,7 +130,7 @@
             <tbody>
                 <tr class="fs-grand-total-row">
                     <td class="fs-col-code"></td>
-                    <td class="fs-col-name">TOTAL LIABILITIES + EQUITY</td>
+                    <td class="fs-col-name">{{.Labels.BalanceSheet.TotalLiabAndEquity}}</td>
                     <td class="fs-col-amount">{{.TotalLandE}}</td>
                 </tr>
             </tbody>

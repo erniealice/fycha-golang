@@ -21,11 +21,11 @@
             {{end}}
         </div>
         <div class="report-period-label">
-            Showing: <strong>{{.PeriodLabel}}</strong>
+            {{.Labels.IncomeStatement.Showing}} <strong>{{.PeriodLabel}}</strong>
         </div>
         <div class="report-header-actions">
-            <button type="button" class="btn btn-secondary btn-sm" disabled title="Export coming soon">
-                {{template "icon-download"}} Export
+            <button type="button" class="btn btn-secondary btn-sm" disabled title="{{.Labels.IncomeStatement.ExportSoon}}">
+                {{template "icon-download"}} {{.Labels.IncomeStatement.Export}}
             </button>
         </div>
     </div>
@@ -33,15 +33,15 @@
     {{/* ─── KPI Summary Bar ─── */}}
     <div class="report-summary-bar">
         <div class="summary-metric">
-            <span class="summary-label">Total Revenue</span>
+            <span class="summary-label">{{.Labels.IncomeStatement.KpiTotalRevenue}}</span>
             <span class="summary-value">{{.TotalRevenue}}</span>
         </div>
         <div class="summary-metric">
-            <span class="summary-label">Total Expenses</span>
+            <span class="summary-label">{{.Labels.IncomeStatement.KpiTotalExpenses}}</span>
             <span class="summary-value">{{.TotalExpenses}}</span>
         </div>
         <div class="summary-metric highlight">
-            <span class="summary-label">Net Income</span>
+            <span class="summary-label">{{.Labels.IncomeStatement.KpiNetIncome}}</span>
             <span class="summary-value badge {{.NetIncomeVariant}}">{{.NetIncome}}</span>
         </div>
     </div>
@@ -49,7 +49,7 @@
     {{/* ─── Statement Body ─── */}}
     <div class="financial-statement-card">
         <div class="financial-statement-header">
-            <div class="financial-statement-title">Income Statement (Profit &amp; Loss)</div>
+            <div class="financial-statement-title">{{.Labels.IncomeStatement.StatementTitle}}</div>
             <div class="financial-statement-subtitle">{{.PeriodLabel}}</div>
         </div>
 
@@ -57,11 +57,11 @@
         <table id="income-statement-table" class="financial-statement-table fs-collapsible">
             <thead>
                 <tr class="fs-header-row">
-                    <th class="fs-col-code">Code</th>
-                    <th class="fs-col-name">Account</th>
-                    <th class="fs-col-amount">This Period</th>
-                    <th class="fs-col-amount">Prior Period</th>
-                    <th class="fs-col-change">Change</th>
+                    <th class="fs-col-code">{{.Labels.IncomeStatement.ColCode}}</th>
+                    <th class="fs-col-name">{{.Labels.IncomeStatement.ColAccount}}</th>
+                    <th class="fs-col-amount">{{.Labels.IncomeStatement.ColThisPeriod}}</th>
+                    <th class="fs-col-amount">{{.Labels.IncomeStatement.ColPriorPeriod}}</th>
+                    <th class="fs-col-change">{{.Labels.IncomeStatement.ColChange}}</th>
                 </tr>
             </thead>
             {{range .Sections}}
@@ -105,7 +105,7 @@
                 {{/* Group subtotal */}}
                 <tr class="fs-group-subtotal-row fs-section-body">
                     <td class="fs-col-code"></td>
-                    <td class="fs-col-name">Subtotal: {{.Title}}</td>
+                    <td class="fs-col-name">{{$.Labels.IncomeStatement.SubtotalPrefix}} {{.Title}}</td>
                     <td class="fs-col-amount">{{.Subtotal}}</td>
                     <td class="fs-col-amount fs-prior-period"></td>
                     <td class="fs-col-change"></td>
@@ -116,7 +116,7 @@
                 {{if .Subtotal}}
                 <tr class="fs-subtotal-row fs-section-body{{if .Bold}} fs-bold-total{{end}}">
                     <td class="fs-col-code"></td>
-                    <td class="fs-col-name">{{if .Bold}}{{.Title}}{{else}}Total {{.Title}}{{end}}</td>
+                    <td class="fs-col-name">{{if .Bold}}{{.Title}}{{else}}{{$.Labels.IncomeStatement.TotalPrefix}} {{.Title}}{{end}}</td>
                     <td class="fs-col-amount">{{.Subtotal}}</td>
                     <td class="fs-col-amount fs-prior-period"></td>
                     <td class="fs-col-change"></td>

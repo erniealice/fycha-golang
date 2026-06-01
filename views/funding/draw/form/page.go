@@ -5,6 +5,7 @@ package form
 import (
 	"context"
 
+	fycha "github.com/erniealice/fycha-golang"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -13,12 +14,14 @@ import (
 // Deps holds view dependencies.
 type Deps struct {
 	CommonLabels pyeza.CommonLabels
+	Labels       fycha.FundingFormLabels
 }
 
 // PageData holds data for the draw form drawer.
 type PageData struct {
 	types.PageData
 	AllocationID string
+	Labels       fycha.FundingFormLabels
 }
 
 // NewView creates the draw drawer-form view.
@@ -28,12 +31,13 @@ func NewView(deps *Deps) view.View {
 		pd := &PageData{
 			PageData: types.PageData{
 				CacheVersion: viewCtx.CacheVersion,
-				Title:        "Charge to Card",
+				Title:        deps.Labels.Draw.Submit,
 				CurrentPath:  viewCtx.CurrentPath,
 				ActiveNav:    "funding",
 				CommonLabels: deps.CommonLabels,
 			},
 			AllocationID: allocationID,
+			Labels:       deps.Labels,
 		}
 		return view.OK("funding-draw-form", pd)
 	})

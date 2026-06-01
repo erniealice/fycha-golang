@@ -117,6 +117,19 @@ type TrialBalanceLabels struct {
 	Totals       string `json:"totals"`
 	EmptyTitle   string `json:"emptyTitle"`
 	EmptyMessage string `json:"emptyMessage"`
+	// Filter bar
+	FilterAsOfDate string `json:"filterAsOfDate"`
+	Generate       string `json:"generate"`
+	Print          string `json:"print"`
+	// Balance indicator
+	BalancedTitle   string `json:"balancedTitle"`
+	BalancedMessage string `json:"balancedMessage"`
+	UnbalancedTitle string `json:"unbalancedTitle"`
+	DebitsLabel     string `json:"debitsLabel"`
+	CreditsLabel    string `json:"creditsLabel"`
+	DifferenceLabel string `json:"differenceLabel"`
+	AsOfPrefix      string `json:"asOfPrefix"`
+	GeneratePrompt  string `json:"generatePrompt"`
 }
 
 // IncomeStatementLabels holds translatable strings for the Income Statement page.
@@ -124,6 +137,23 @@ type IncomeStatementLabels struct {
 	Title    string                       `json:"title"`
 	Subtitle string                       `json:"subtitle"`
 	Sections IncomeStatementSectionLabels `json:"sections"`
+	// Filter bar
+	Showing    string `json:"showing"`
+	Export     string `json:"export"`
+	ExportSoon string `json:"exportSoon"`
+	// KPI summary
+	KpiTotalRevenue  string `json:"kpiTotalRevenue"`
+	KpiTotalExpenses string `json:"kpiTotalExpenses"`
+	KpiNetIncome     string `json:"kpiNetIncome"`
+	// Statement body
+	StatementTitle string `json:"statementTitle"`
+	ColCode        string `json:"colCode"`
+	ColAccount     string `json:"colAccount"`
+	ColThisPeriod  string `json:"colThisPeriod"`
+	ColPriorPeriod string `json:"colPriorPeriod"`
+	ColChange      string `json:"colChange"`
+	SubtotalPrefix string `json:"subtotalPrefix"`
+	TotalPrefix    string `json:"totalPrefix"`
 }
 
 // IncomeStatementSectionLabels holds the section titles for the income statement.
@@ -144,6 +174,24 @@ type BalanceSheetLabels struct {
 	Title    string                    `json:"title"`
 	Subtitle string                    `json:"subtitle"`
 	Sections BalanceSheetSectionLabels `json:"sections"`
+	// Filter bar
+	AsOf       string `json:"asOf"`
+	Generate   string `json:"generate"`
+	Export     string `json:"export"`
+	ExportSoon string `json:"exportSoon"`
+	// KPI summary
+	KpiTotalAssets      string `json:"kpiTotalAssets"`
+	KpiTotalLiabilities string `json:"kpiTotalLiabilities"`
+	KpiTotalEquity      string `json:"kpiTotalEquity"`
+	// Statement body
+	StatementTitle     string `json:"statementTitle"`
+	AsOfPrefix         string `json:"asOfPrefix"`
+	ColCode            string `json:"colCode"`
+	ColAccount         string `json:"colAccount"`
+	ColAmount          string `json:"colAmount"`
+	TotalPrefix        string `json:"totalPrefix"`
+	TotalUpperPrefix   string `json:"totalUpperPrefix"`
+	TotalLiabAndEquity string `json:"totalLiabAndEquity"`
 }
 
 // BalanceSheetSectionLabels holds the section and classification titles for the balance sheet.
@@ -162,6 +210,25 @@ type CashFlowLabels struct {
 	Title    string                `json:"title"`
 	Subtitle string                `json:"subtitle"`
 	Sections CashFlowSectionLabels `json:"sections"`
+	// Filter bar
+	Showing    string `json:"showing"`
+	Export     string `json:"export"`
+	ExportSoon string `json:"exportSoon"`
+	// KPI summary
+	KpiOperating string `json:"kpiOperating"`
+	KpiNetChange string `json:"kpiNetChange"`
+	KpiEnding    string `json:"kpiEnding"`
+	// Statement body
+	StatementTitle        string `json:"statementTitle"`
+	ColDescription        string `json:"colDescription"`
+	ColAmount             string `json:"colAmount"`
+	NetChangeRow          string `json:"netChangeRow"`
+	CashBeginning         string `json:"cashBeginning"`
+	CashEnding            string `json:"cashEnding"`
+	Reconciliation        string `json:"reconciliation"`
+	TotalCashBalanceSheet string `json:"totalCashBalanceSheet"`
+	Verified              string `json:"verified"`
+	Mismatch              string `json:"mismatch"`
 }
 
 // CashFlowSectionLabels holds the activity section titles for the cash flow statement.
@@ -4271,6 +4338,89 @@ func DefaultWithholdingCertificateLabels() WithholdingCertificateLabels {
 			Status:             "Status",
 			DateIssued:         "Date Issued",
 			Notes:              "Notes",
+		},
+	}
+}
+
+// ---------------------------------------------------------------------------
+// FundingFormLabels (Funding > drawer forms)
+// Lyngua root key: "funding"
+// ---------------------------------------------------------------------------
+
+// FundingFormLabels holds all translatable strings for the four funding
+// drawer forms: allocation, draw (charge), settlement, and transfer.
+// The lyngua root key is "funding"; JSON lives in
+// packages/lyngua/translations/en/{general,professional}/funding.json.
+type FundingFormLabels struct {
+	Allocation FundingAllocationFormLabels `json:"allocation"`
+	Draw       FundingDrawFormLabels       `json:"draw"`
+	Settlement FundingSettlementFormLabels `json:"settlement"`
+	Transfer   FundingTransferFormLabels   `json:"transfer"`
+	Source     FundingSourceListLabels     `json:"source"`
+}
+
+// FundingAllocationFormLabels holds field/button labels for the allocation drawer.
+type FundingAllocationFormLabels struct {
+	AllocatedLimit string `json:"allocatedLimit"`
+	Mode           string `json:"mode"`
+	ModeHardLimit  string `json:"modeHardLimit"`
+	ModeSoftLimit  string `json:"modeSoftLimit"`
+}
+
+// FundingDrawFormLabels holds field/button labels for the draw (charge) drawer.
+type FundingDrawFormLabels struct {
+	Amount      string `json:"amount"`
+	Description string `json:"description"`
+	Submit      string `json:"submit"`
+}
+
+// FundingSettlementFormLabels holds field/button labels for the settlement drawer.
+type FundingSettlementFormLabels struct {
+	Amount string `json:"amount"`
+	Submit string `json:"submit"`
+}
+
+// FundingTransferFormLabels holds field/button labels for the transfer drawer.
+type FundingTransferFormLabels struct {
+	DestinationFundID string `json:"destinationFundId"`
+	Amount            string `json:"amount"`
+	Submit            string `json:"submit"`
+}
+
+// FundingSourceListLabels holds page-level strings for the fund source list view.
+type FundingSourceListLabels struct {
+	Title    string `json:"title"`
+	Subtitle string `json:"subtitle"`
+}
+
+// DefaultFundingFormLabels returns FundingFormLabels with hardcoded English defaults.
+// Consumer apps should override these via lyngua JSON files
+// (packages/lyngua/translations/en/{general,professional}/funding.json).
+func DefaultFundingFormLabels() FundingFormLabels {
+	return FundingFormLabels{
+		Allocation: FundingAllocationFormLabels{
+			AllocatedLimit: "Allocated Limit",
+			Mode:           "Mode",
+			ModeHardLimit:  "Hard Limit",
+			ModeSoftLimit:  "Soft Limit",
+		},
+		Draw: FundingDrawFormLabels{
+			Amount:      "Amount",
+			Description: "Description",
+			Submit:      "Charge",
+		},
+		Settlement: FundingSettlementFormLabels{
+			Amount: "Settlement Amount",
+			Submit: "Settle",
+		},
+		Transfer: FundingTransferFormLabels{
+			DestinationFundID: "Destination Fund ID",
+			Amount:            "Amount",
+			Submit:            "Transfer",
+		},
+		Source: FundingSourceListLabels{
+			Title:    "Fund Sources",
+			Subtitle: "Funds you own and share with workspaces",
 		},
 	}
 }

@@ -9,7 +9,7 @@
   <div class="sheet-body">
     <div class="form-row single">
       <div class="form-group">
-        <label class="form-label" for="fa-allocated-limit">Allocated Limit</label>
+        <label class="form-label" for="fa-allocated-limit">{{.Labels.Allocation.AllocatedLimit}}</label>
         <input type="number" id="fa-allocated-limit" name="allocated_limit"
                class="form-control" placeholder="0.00"
                data-testid="funding-allocation-form-limit">
@@ -17,18 +17,18 @@
     </div>
     <div class="form-row single">
       <div class="form-group">
-        <label class="form-label" for="fa-mode">Mode</label>
+        <label class="form-label" for="fa-mode">{{.Labels.Allocation.Mode}}</label>
         <select id="fa-mode" name="mode" class="form-control"
                 data-testid="funding-allocation-form-mode">
-          <option value="HARD_LIMIT">Hard Limit</option>
-          <option value="SOFT_LIMIT">Soft Limit</option>
+          <option value="HARD_LIMIT">{{.Labels.Allocation.ModeHardLimit}}</option>
+          <option value="SOFT_LIMIT">{{.Labels.Allocation.ModeSoftLimit}}</option>
         </select>
       </div>
     </div>
   </div>
   <div class="sheet-footer">
-    <button type="button" class="btn btn-ghost" data-sheet-close>Cancel</button>
-    <button type="submit" class="btn btn-primary">Save</button>
+    <button type="button" class="btn btn-ghost" data-sheet-close>{{.CommonLabels.Buttons.Cancel}}</button>
+    <button type="submit" class="btn btn-primary">{{.CommonLabels.Buttons.Save}}</button>
   </div>
 </form>
 {{end}}
@@ -43,7 +43,7 @@
   <div class="sheet-body">
     <div class="form-row single">
       <div class="form-group">
-        <label class="form-label" for="draw-amount">Amount</label>
+        <label class="form-label" for="draw-amount">{{.Labels.Draw.Amount}}</label>
         <input type="number" id="draw-amount" name="amount"
                class="form-control" placeholder="0.00"
                data-testid="funding-draw-form-amount">
@@ -51,7 +51,7 @@
     </div>
     <div class="form-row single">
       <div class="form-group">
-        <label class="form-label" for="draw-description">Description</label>
+        <label class="form-label" for="draw-description">{{.Labels.Draw.Description}}</label>
         <input type="text" id="draw-description" name="description"
                class="form-control"
                data-testid="funding-draw-form-description">
@@ -59,8 +59,8 @@
     </div>
   </div>
   <div class="sheet-footer">
-    <button type="button" class="btn btn-ghost" data-sheet-close>Cancel</button>
-    <button type="submit" class="btn btn-primary">Charge</button>
+    <button type="button" class="btn btn-ghost" data-sheet-close>{{.CommonLabels.Buttons.Cancel}}</button>
+    <button type="submit" class="btn btn-primary">{{.Labels.Draw.Submit}}</button>
   </div>
 </form>
 {{end}}
@@ -75,7 +75,7 @@
   <div class="sheet-body">
     <div class="form-row single">
       <div class="form-group">
-        <label class="form-label" for="settle-amount">Settlement Amount</label>
+        <label class="form-label" for="settle-amount">{{.Labels.Settlement.Amount}}</label>
         <input type="number" id="settle-amount" name="amount"
                class="form-control" placeholder="0.00"
                data-testid="funding-settlement-form-amount">
@@ -83,8 +83,8 @@
     </div>
   </div>
   <div class="sheet-footer">
-    <button type="button" class="btn btn-ghost" data-sheet-close>Cancel</button>
-    <button type="submit" class="btn btn-primary">Settle</button>
+    <button type="button" class="btn btn-ghost" data-sheet-close>{{.CommonLabels.Buttons.Cancel}}</button>
+    <button type="submit" class="btn btn-primary">{{.Labels.Settlement.Submit}}</button>
   </div>
 </form>
 {{end}}
@@ -99,7 +99,7 @@
   <div class="sheet-body">
     <div class="form-row single">
       <div class="form-group">
-        <label class="form-label" for="transfer-dest">Destination Fund ID</label>
+        <label class="form-label" for="transfer-dest">{{.Labels.Transfer.DestinationFundID}}</label>
         <input type="text" id="transfer-dest" name="destination_fund_id"
                class="form-control"
                data-testid="funding-transfer-form-dest">
@@ -107,7 +107,7 @@
     </div>
     <div class="form-row single">
       <div class="form-group">
-        <label class="form-label" for="transfer-amount">Amount</label>
+        <label class="form-label" for="transfer-amount">{{.Labels.Transfer.Amount}}</label>
         <input type="number" id="transfer-amount" name="amount"
                class="form-control" placeholder="0.00"
                data-testid="funding-transfer-form-amount">
@@ -115,8 +115,8 @@
     </div>
   </div>
   <div class="sheet-footer">
-    <button type="button" class="btn btn-ghost" data-sheet-close>Cancel</button>
-    <button type="submit" class="btn btn-primary">Transfer</button>
+    <button type="button" class="btn btn-ghost" data-sheet-close>{{.CommonLabels.Buttons.Cancel}}</button>
+    <button type="submit" class="btn btn-primary">{{.Labels.Transfer.Submit}}</button>
   </div>
 </form>
 {{end}}

@@ -9,6 +9,7 @@ import (
 	"log"
 
 	fundpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/funding/fund"
+	fycha "github.com/erniealice/fycha-golang"
 	pyeza "github.com/erniealice/pyeza-golang"
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
@@ -18,6 +19,7 @@ import (
 type Deps struct {
 	CommonLabels pyeza.CommonLabels
 	TableLabels  types.TableLabels
+	Labels       fycha.FundingFormLabels
 	ListFunds    func(ctx context.Context, req *fundpb.ListFundsRequest) (*fundpb.ListFundsResponse, error)
 }
 
@@ -44,12 +46,12 @@ func NewView(deps *Deps) view.View {
 		pd := &PageData{
 			PageData: types.PageData{
 				CacheVersion:   viewCtx.CacheVersion,
-				Title:          "Fund Sources",
+				Title:          deps.Labels.Source.Title,
 				CurrentPath:    viewCtx.CurrentPath,
 				ActiveNav:      "funding",
 				ActiveSubNav:   "sources-all",
-				HeaderTitle:    "Fund Sources",
-				HeaderSubtitle: "Funds you own and share with workspaces",
+				HeaderTitle:    deps.Labels.Source.Title,
+				HeaderSubtitle: deps.Labels.Source.Subtitle,
 				HeaderIcon:     "icon-credit-card",
 				CommonLabels:   deps.CommonLabels,
 			},

@@ -81,6 +81,9 @@ type CashFlowPageData struct {
 	// Statement body
 	Activities   []CFActivity
 	Verification *CFVerification
+
+	// Labels for static template text
+	Labels fycha.ReportsLabels
 }
 
 // ---------------------------------------------------------------------------
@@ -172,6 +175,7 @@ func NewCashFlowView(deps *CashFlowDeps) view.View {
 			OperatingTrend:  "+15%",
 			Activities:      activities,
 			Verification:    verification,
+			Labels:          deps.Labels,
 		}
 
 		if viewCtx.IsHTMX {

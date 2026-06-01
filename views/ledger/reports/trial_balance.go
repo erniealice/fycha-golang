@@ -81,6 +81,8 @@ type TrialBalancePageData struct {
 
 	// Labels
 	Labels fycha.AccountLabels
+	// ReportLabels holds static trial-balance template strings.
+	ReportLabels fycha.TrialBalanceLabels
 }
 
 // ---------------------------------------------------------------------------
@@ -125,6 +127,7 @@ func NewTrialBalanceView(deps *TrialBalanceDeps) view.View {
 			ContentTemplate: "trial-balance-content",
 			AsOfDate:        asOfDate,
 			Labels:          deps.Labels,
+			ReportLabels:    rl,
 		}
 
 		// Fetch data (Phase 3: fall back to mock if no real use case wired)
