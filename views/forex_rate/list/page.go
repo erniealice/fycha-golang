@@ -198,7 +198,7 @@ func buildTableConfig(deps *Deps, rows []ForexRateRow, perms *types.UserPermissi
 			Href: deps.Routes.DetailFor(r.ID),
 			Cells: []types.TableCell{
 				{Type: "badge", Value: r.FromCurrency, Variant: "default"},
-				{Type: "badge", Value: r.ToCurrency, Variant: "navy"},
+				{Type: "badge", Value: r.ToCurrency, Variant: "info"},
 				{Type: "text", Value: r.RateMicroUnits},
 				{Type: "text", Value: r.Source},
 				{Type: "text", Value: r.EffectiveFrom},
