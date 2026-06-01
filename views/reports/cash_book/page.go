@@ -31,18 +31,19 @@ func NewCashBookView(getCashBook CashBookFetcher, commonLabels pyeza.CommonLabel
 		CommonLabels: commonLabels,
 		TableLabels:  tableLabels,
 		BuildData: func(ctx context.Context) ([]types.TableColumn, []types.TableRow, error) {
-			return fetchCashBook(ctx, getCashBook)
+			return fetchCashBook(ctx, getCashBook, commonLabels)
 		},
 	})
 }
 
-func fetchCashBook(ctx context.Context, getCashBook CashBookFetcher) ([]types.TableColumn, []types.TableRow, error) {
+func fetchCashBook(ctx context.Context, getCashBook CashBookFetcher, commonLabels pyeza.CommonLabels) ([]types.TableColumn, []types.TableRow, error) {
+	cols := commonLabels.Columns
 	columns := []types.TableColumn{
-		{Key: "date", Label: "Date"},
-		{Key: "description", Label: "Description"},
-		{Key: "reference", Label: "Reference"},
-		{Key: "type", Label: "Type", WidthClass: "col-2xl"},
-		{Key: "amount", Label: "Amount", Align: "right"},
+		{Key: "date", Label: cols.Date},
+		{Key: "description", Label: cols.Description},
+		{Key: "reference", Label: cols.Reference},
+		{Key: "type", Label: cols.Type, WidthClass: "col-2xl"},
+		{Key: "amount", Label: cols.Amount, Align: "right"},
 	}
 
 	if getCashBook == nil {
