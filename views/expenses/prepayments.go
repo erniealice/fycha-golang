@@ -107,7 +107,7 @@ func buildPrepaymentTableConfig(deps *PrepaymentDeps, perms *types.UserPermissio
 	rows := buildPrepaymentRows(mockPrepayments(), l, deps.Routes, perms)
 	types.ApplyColumnStyles(columns, rows)
 
-	bulkCfg := fycha.MapBulkConfig(deps.CommonLabels)
+	bulkCfg := pyeza.MapBulkConfig(deps.CommonLabels)
 
 	tableConfig := &types.TableConfig{
 		ID:                   "prepayments-table",

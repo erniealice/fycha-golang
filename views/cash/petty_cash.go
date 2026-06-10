@@ -129,7 +129,7 @@ func buildPettyCashRegisterTableConfig(deps *PettyCashDeps, perms *types.UserPer
 	rows := buildPettyCashRegisterRows(mockPettyCashFunds(), l, deps.Routes, perms)
 	types.ApplyColumnStyles(columns, rows)
 
-	bulkCfg := fycha.MapBulkConfig(deps.CommonLabels)
+	bulkCfg := pyeza.MapBulkConfig(deps.CommonLabels)
 
 	tableConfig := &types.TableConfig{
 		ID:                   "petty-cash-register-table",

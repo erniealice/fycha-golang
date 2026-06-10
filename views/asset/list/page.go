@@ -153,7 +153,7 @@ func buildTableConfig(ctx context.Context, deps *ListViewDeps, status string, pe
 	rows := buildTableRows(assets, l, deps.Routes, perms, status, inUseIDs)
 	types.ApplyColumnStyles(columns, rows)
 
-	bulkCfg := fycha.MapBulkConfig(deps.CommonLabels)
+	bulkCfg := pyeza.MapBulkConfig(deps.CommonLabels)
 	// 2026-05-14 permission-gates P2b: pass perms through so bulk actions
 	// render disabled-with-tooltip when the user lacks asset:update / :delete.
 	bulkCfg.Actions = buildBulkActions(l, deps.CommonLabels, status, deps.Routes, perms)

@@ -163,7 +163,7 @@ func buildTableConfig(
 	types.ApplyColumnStyles(columns, tableRows)
 
 	// Bulk actions
-	bulkCfg := fycha.MapBulkConfig(deps.CommonLabels)
+	bulkCfg := pyeza.MapBulkConfig(deps.CommonLabels)
 	bulkCfg.Actions = []types.BulkAction{
 		{
 			Key:             "run-selected",

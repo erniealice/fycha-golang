@@ -136,7 +136,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		}
 
 		// --- Fycha-specific table labels ---
-		fychaTableLabels := fycha.MapTableLabels(ctx.Common)
+		fychaTableLabels := pyeza.MapTableLabels(ctx.Common)
 
 		// --- Load routes (defaults + optional lyngua overrides) ---
 		reportsRoutes := fycha.DefaultReportsRoutes()
