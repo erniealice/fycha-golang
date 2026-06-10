@@ -10,7 +10,6 @@ import (
 	"github.com/erniealice/pyeza-golang/route"
 	"github.com/erniealice/pyeza-golang/view"
 
-	fycha "github.com/erniealice/fycha-golang"
 	assetform "github.com/erniealice/fycha-golang/views/asset/form"
 )
 
@@ -20,7 +19,7 @@ func NewEditAction(deps *Deps) view.View {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("asset", "update") {
 			// 2026-05-14 permission-gates P3: error-shape fix.
-			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
+			return view.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		id := viewCtx.Request.PathValue("id")
@@ -34,7 +33,7 @@ func NewEditAction(deps *Deps) view.View {
 				record, err := deps.ReadAsset(ctx, id)
 				if err != nil {
 					log.Printf("asset read error for edit: %v", err)
-					return fycha.HTMXError(deps.Labels.Actions.IDRequired)
+					return view.HTMXError(deps.Labels.Actions.IDRequired)
 				}
 				return view.OK("asset-drawer-form", &assetform.Data{
 					FormAction:               route.ResolveURL(deps.Routes.EditURL, "id", record.ID),
@@ -74,12 +73,12 @@ func NewEditAction(deps *Deps) view.View {
 
 		// POST — update asset
 		if err := viewCtx.Request.ParseForm(); err != nil {
-			return fycha.HTMXError(deps.Labels.Actions.InvalidFormData)
+			return view.HTMXError(deps.Labels.Actions.InvalidFormData)
 		}
 
 		name := viewCtx.Request.FormValue("name")
 		if name == "" {
-			return fycha.HTMXError(deps.Labels.Actions.InvalidFormData)
+			return view.HTMXError(deps.Labels.Actions.InvalidFormData)
 		}
 
 		acqCost, _ := strconv.ParseFloat(viewCtx.Request.FormValue("acquisition_cost"), 64)
@@ -109,13 +108,13 @@ func NewEditAction(deps *Deps) view.View {
 		if deps.UpdateAsset != nil {
 			if err := deps.UpdateAsset(ctx, record); err != nil {
 				log.Printf("asset update error: %v", err)
-				return fycha.HTMXError(deps.Labels.Actions.InvalidFormData)
+				return view.HTMXError(deps.Labels.Actions.InvalidFormData)
 			}
 		} else {
 			log.Printf("mock update asset %s: %s (no UpdateAsset wired)", id, name)
 		}
 
-		return fycha.HTMXSuccess("assets-table")
+		return view.HTMXSuccess("assets-table")
 	})
 }
 

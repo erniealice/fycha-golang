@@ -90,7 +90,7 @@ func NewDepreciationRunAction(deps *DepreciationRunDeps) view.View {
 		// "depreciation_schedule" — see plan §"naming asymmetry".
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("depreciation_schedule", "create") {
-			return fycha.HTMXError(deps.Labels.Errors.PermissionDenied)
+			return view.HTMXError(deps.Labels.Errors.PermissionDenied)
 		}
 
 		assetID := viewCtx.Request.PathValue("asset_id")
@@ -155,7 +155,7 @@ func handleDepreciationRunPOST(ctx context.Context, viewCtx *view.ViewContext, d
 	// and swaps the body in. Canonical example: subscription/recognize/action.go:335-345.
 
 	if err := viewCtx.Request.ParseForm(); err != nil {
-		return fycha.HTMXError(deps.Labels.Errors.InvalidSelection)
+		return view.HTMXError(deps.Labels.Errors.InvalidSelection)
 	}
 
 	asOfDate := viewCtx.Request.FormValue("as_of_date")
@@ -166,7 +166,7 @@ func handleDepreciationRunPOST(ctx context.Context, viewCtx *view.ViewContext, d
 
 	if deps.GenerateDepreciationRun == nil {
 		log.Printf("depreciation_run: GenerateDepreciationRun callback not wired (service unavailable)")
-		return fycha.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
+		return view.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
 	}
 	result, err := deps.GenerateDepreciationRun(ctx, DepreciationRunRequest{
 		AssetID:          assetID,
@@ -175,7 +175,7 @@ func handleDepreciationRunPOST(ctx context.Context, viewCtx *view.ViewContext, d
 	})
 	if err != nil {
 		log.Printf("GenerateDepreciationRun error: %v", err)
-		return fycha.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
+		return view.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
 	}
 
 	// Build toast payload per pyeza:toast contract

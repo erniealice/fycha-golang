@@ -51,12 +51,12 @@ func NewAddAction(deps *ActionDeps) view.View {
 
 		// POST — create fiscal period
 		if err := viewCtx.Request.ParseForm(); err != nil {
-			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
+			return view.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		if deps.CreateFiscalPeriod == nil {
 			log.Printf("CreateFiscalPeriod use case not wired")
-			return fycha.HTMXSuccess("fiscal-periods-table")
+			return view.HTMXSuccess("fiscal-periods-table")
 		}
 
 		name := viewCtx.Request.FormValue("name")
@@ -82,17 +82,17 @@ func NewAddAction(deps *ActionDeps) view.View {
 		resp, err := deps.CreateFiscalPeriod(ctx, req)
 		if err != nil {
 			log.Printf("CreateFiscalPeriod error: %v", err)
-			return fycha.HTMXError("Failed to create fiscal period")
+			return view.HTMXError("Failed to create fiscal period")
 		}
 		if resp == nil || !resp.GetSuccess() {
 			errMsg := "Failed to create fiscal period"
 			if resp.GetError() != nil {
 				errMsg = resp.GetError().GetMessage()
 			}
-			return fycha.HTMXError(errMsg)
+			return view.HTMXError(errMsg)
 		}
 
-		return fycha.HTMXSuccess("fiscal-periods-table")
+		return view.HTMXSuccess("fiscal-periods-table")
 	})
 }
 
@@ -110,12 +110,12 @@ func NewCloseAction(deps *ActionDeps) view.View {
 
 		id := viewCtx.Request.PathValue("id")
 		if id == "" {
-			return fycha.HTMXError("Fiscal period ID is required")
+			return view.HTMXError("Fiscal period ID is required")
 		}
 
 		if deps.CloseFiscalPeriod == nil {
 			log.Printf("CloseFiscalPeriod use case not wired")
-			return fycha.HTMXSuccess("fiscal-periods-table")
+			return view.HTMXSuccess("fiscal-periods-table")
 		}
 
 		// Extract the current user ID from context.
@@ -127,16 +127,16 @@ func NewCloseAction(deps *ActionDeps) view.View {
 		})
 		if err != nil {
 			log.Printf("CloseFiscalPeriod error for %s: %v", id, err)
-			return fycha.HTMXError("Failed to close fiscal period")
+			return view.HTMXError("Failed to close fiscal period")
 		}
 		if resp == nil || !resp.GetSuccess() {
 			errMsg := "Failed to close fiscal period"
 			if resp.GetError() != nil {
 				errMsg = resp.GetError().GetMessage()
 			}
-			return fycha.HTMXError(errMsg)
+			return view.HTMXError(errMsg)
 		}
 
-		return fycha.HTMXSuccess("fiscal-periods-table")
+		return view.HTMXSuccess("fiscal-periods-table")
 	})
 }

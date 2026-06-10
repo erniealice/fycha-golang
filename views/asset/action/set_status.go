@@ -5,8 +5,6 @@ import (
 	"log"
 
 	"github.com/erniealice/pyeza-golang/view"
-
-	fycha "github.com/erniealice/fycha-golang"
 )
 
 // NewSetStatusAction creates the asset activate/deactivate action (POST only).
@@ -15,7 +13,7 @@ func NewSetStatusAction(deps *Deps) view.View {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("asset", "update") {
 			// 2026-05-14 permission-gates P3: error-shape fix.
-			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
+			return view.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		id := viewCtx.Request.URL.Query().Get("id")
@@ -27,10 +25,10 @@ func NewSetStatusAction(deps *Deps) view.View {
 			targetStatus = viewCtx.Request.FormValue("status")
 		}
 		if id == "" {
-			return fycha.HTMXError(deps.Labels.Actions.IDRequired)
+			return view.HTMXError(deps.Labels.Actions.IDRequired)
 		}
 		if targetStatus != "active" && targetStatus != "inactive" {
-			return fycha.HTMXError(deps.Labels.Actions.InvalidStatus)
+			return view.HTMXError(deps.Labels.Actions.InvalidStatus)
 		}
 
 		active := targetStatus == "active"
@@ -38,13 +36,13 @@ func NewSetStatusAction(deps *Deps) view.View {
 		if deps.SetActive != nil {
 			if err := deps.SetActive(ctx, id, active); err != nil {
 				log.Printf("asset set-status error: %v", err)
-				return fycha.HTMXError("Failed to update asset")
+				return view.HTMXError("Failed to update asset")
 			}
 		} else {
 			log.Printf("Mock set asset status %s: %s", id, targetStatus)
 		}
 
-		return fycha.HTMXSuccess("assets-table")
+		return view.HTMXSuccess("assets-table")
 	})
 }
 
@@ -54,7 +52,7 @@ func NewBulkSetStatusAction(deps *Deps) view.View {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("asset", "update") {
 			// 2026-05-14 permission-gates P3: error-shape fix.
-			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
+			return view.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		_ = viewCtx.Request.ParseMultipartForm(32 << 20)
@@ -63,10 +61,10 @@ func NewBulkSetStatusAction(deps *Deps) view.View {
 		targetStatus := viewCtx.Request.FormValue("target_status")
 
 		if len(ids) == 0 {
-			return fycha.HTMXError(deps.Labels.Actions.NoIDsProvided)
+			return view.HTMXError(deps.Labels.Actions.NoIDsProvided)
 		}
 		if targetStatus != "active" && targetStatus != "inactive" {
-			return fycha.HTMXError(deps.Labels.Actions.InvalidTargetStatus)
+			return view.HTMXError(deps.Labels.Actions.InvalidTargetStatus)
 		}
 
 		active := targetStatus == "active"
@@ -81,6 +79,6 @@ func NewBulkSetStatusAction(deps *Deps) view.View {
 			log.Printf("Mock bulk set asset status %v: %s", ids, targetStatus)
 		}
 
-		return fycha.HTMXSuccess("assets-table")
+		return view.HTMXSuccess("assets-table")
 	})
 }

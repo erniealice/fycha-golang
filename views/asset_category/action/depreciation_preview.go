@@ -59,7 +59,7 @@ func NewDepreciationPreviewView(deps *DepreciationPreviewDeps) view.View {
 		// depreciation_schedule:read.
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("depreciation_schedule", "read") {
-			return fycha.HTMXError(deps.Labels.Errors.PermissionDenied)
+			return view.HTMXError(deps.Labels.Errors.PermissionDenied)
 		}
 
 		categoryID := viewCtx.Request.PathValue("category_id")

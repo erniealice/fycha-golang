@@ -5,7 +5,6 @@ import (
 	"log"
 
 	withholdingcertificatepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/withholding_certificate"
-	fycha "github.com/erniealice/fycha-golang"
 	"github.com/erniealice/pyeza-golang/view"
 )
 
@@ -15,7 +14,7 @@ func NewDeleteAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("withholding_certificate", "delete") {
-			return fycha.HTMXError("You do not have permission to delete withholding certificates")
+			return view.HTMXError("You do not have permission to delete withholding certificates")
 		}
 
 		id := viewCtx.Request.URL.Query().Get("id")
@@ -24,19 +23,19 @@ func NewDeleteAction(deps *Deps) view.View {
 			id = viewCtx.Request.FormValue("id")
 		}
 		if id == "" {
-			return fycha.HTMXError("Certificate ID is required")
+			return view.HTMXError("Certificate ID is required")
 		}
 
 		if deps.DeleteWithholdingCertificate == nil {
-			return fycha.HTMXError("Delete use case not available")
+			return view.HTMXError("Delete use case not available")
 		}
 		if _, err := deps.DeleteWithholdingCertificate(ctx, &withholdingcertificatepb.DeleteWithholdingCertificateRequest{
 			Data: &withholdingcertificatepb.WithholdingCertificate{Id: id},
 		}); err != nil {
 			log.Printf("DeleteWithholdingCertificate %s: %v", id, err)
-			return fycha.HTMXError(err.Error())
+			return view.HTMXError(err.Error())
 		}
 
-		return fycha.HTMXSuccess("withholding-certs-table")
+		return view.HTMXSuccess("withholding-certs-table")
 	})
 }

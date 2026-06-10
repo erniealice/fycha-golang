@@ -76,17 +76,17 @@ type CategoryDepreciationRunDeps struct {
 
 // categoryRunFormData is the template context for the Surface C drawer.
 type categoryRunFormData struct {
-	FormAction   string
-	WorkspaceID  string // injected by C1: populated by ViewAdapter.injectWorkspaceID for action_workspace_guard
-	Nonce        string // injected by ViewAdapter.injectPageData via reflection
-	CategoryID   string
-	ScopeKind    string // "category" | "policy" — controls breadcrumb
-	AsOfDate     string
-	MaxAsOfDate  string
-	Rows         []CategoryDepreciationRunAssetRow
+	FormAction    string
+	WorkspaceID   string // injected by C1: populated by ViewAdapter.injectWorkspaceID for action_workspace_guard
+	Nonce         string // injected by ViewAdapter.injectPageData via reflection
+	CategoryID    string
+	ScopeKind     string // "category" | "policy" — controls breadcrumb
+	AsOfDate      string
+	MaxAsOfDate   string
+	Rows          []CategoryDepreciationRunAssetRow
 	EligibleCount int
-	Labels       fycha.DepreciationRunLabels
-	CommonLabels pyeza.CommonLabels
+	Labels        fycha.DepreciationRunLabels
+	CommonLabels  pyeza.CommonLabels
 }
 
 // NewCategoryDepreciationRunAction creates the Surface C per-category/per-policy depreciation-run drawer.
@@ -101,7 +101,7 @@ func NewCategoryDepreciationRunAction(deps *CategoryDepreciationRunDeps) view.Vi
 		// gate; here the action handler enforces the mutating verb.
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("depreciation_schedule", "create") {
-			return fycha.HTMXError(deps.Labels.Errors.PermissionDenied)
+			return view.HTMXError(deps.Labels.Errors.PermissionDenied)
 		}
 
 		categoryID := viewCtx.Request.PathValue("category_id")
@@ -189,7 +189,7 @@ func handleCategoryRunPOST(
 	// and swaps the body in. Canonical example: subscription/recognize/action.go:335-345.
 
 	if err := viewCtx.Request.ParseForm(); err != nil {
-		return fycha.HTMXError(deps.Labels.Errors.InvalidSelection)
+		return view.HTMXError(deps.Labels.Errors.InvalidSelection)
 	}
 
 	asOfDate := viewCtx.Request.FormValue("as_of_date")
@@ -207,7 +207,7 @@ func handleCategoryRunPOST(
 
 	if deps.GenerateCategoryRun == nil {
 		log.Printf("surface-c: GenerateCategoryRun callback not wired (service unavailable)")
-		return fycha.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
+		return view.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
 	}
 	result, err := deps.GenerateCategoryRun(ctx, CategoryDepreciationRunRequest{
 		CategoryID: categoryID,
@@ -217,7 +217,7 @@ func handleCategoryRunPOST(
 	})
 	if err != nil {
 		log.Printf("surface-c: GenerateCategoryRun error for category %s: %v", categoryID, err)
-		return fycha.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
+		return view.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
 	}
 
 	// Build toast payload per pyeza:toast contract.

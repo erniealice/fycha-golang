@@ -32,7 +32,7 @@ func NewAddAction(deps *Deps) view.View {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("account", "create") {
 			// 2026-05-14 permission-gates P3: error-shape fix.
-			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
+			return view.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		if viewCtx.Request.Method == http.MethodGet {
@@ -49,12 +49,12 @@ func NewAddAction(deps *Deps) view.View {
 
 		// POST -- create account
 		if err := viewCtx.Request.ParseForm(); err != nil {
-			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
+			return view.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		if deps.CreateAccount == nil {
 			log.Printf("CreateAccount use case not wired")
-			return fycha.HTMXSuccess("accounts-tree-table")
+			return view.HTMXSuccess("accounts-tree-table")
 		}
 
 		element := form.ParseElement(viewCtx.Request.FormValue("element"))
@@ -82,17 +82,17 @@ func NewAddAction(deps *Deps) view.View {
 		resp, err := deps.CreateAccount(ctx, req)
 		if err != nil {
 			log.Printf("CreateAccount error: %v", err)
-			return fycha.HTMXError("Failed to save account")
+			return view.HTMXError("Failed to save account")
 		}
 		if resp == nil || !resp.GetSuccess() {
 			errMsg := "Failed to save account"
 			if resp.GetError() != nil {
 				errMsg = resp.GetError().GetMessage()
 			}
-			return fycha.HTMXError(errMsg)
+			return view.HTMXError(errMsg)
 		}
 
-		return fycha.HTMXSuccess("accounts-tree-table")
+		return view.HTMXSuccess("accounts-tree-table")
 	})
 }
 
@@ -102,7 +102,7 @@ func NewEditAction(deps *Deps) view.View {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("account", "update") {
 			// 2026-05-14 permission-gates P3: error-shape fix.
-			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
+			return view.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		id := viewCtx.Request.PathValue("id")
@@ -115,12 +115,12 @@ func NewEditAction(deps *Deps) view.View {
 
 		// POST -- update account
 		if err := viewCtx.Request.ParseForm(); err != nil {
-			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
+			return view.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		if deps.UpdateAccount == nil {
 			log.Printf("UpdateAccount use case not wired")
-			return fycha.HTMXSuccess("accounts-tree-table")
+			return view.HTMXSuccess("accounts-tree-table")
 		}
 
 		element := form.ParseElement(viewCtx.Request.FormValue("element"))
@@ -149,17 +149,17 @@ func NewEditAction(deps *Deps) view.View {
 		resp, err := deps.UpdateAccount(ctx, req)
 		if err != nil {
 			log.Printf("UpdateAccount error for %s: %v", id, err)
-			return fycha.HTMXError("Failed to save account")
+			return view.HTMXError("Failed to save account")
 		}
 		if resp == nil || !resp.GetSuccess() {
 			errMsg := "Failed to save account"
 			if resp.GetError() != nil {
 				errMsg = resp.GetError().GetMessage()
 			}
-			return fycha.HTMXError(errMsg)
+			return view.HTMXError(errMsg)
 		}
 
-		return fycha.HTMXSuccess("accounts-tree-table")
+		return view.HTMXSuccess("accounts-tree-table")
 	})
 }
 
@@ -169,17 +169,17 @@ func NewDeleteAction(deps *Deps) view.View {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("account", "delete") {
 			// 2026-05-14 permission-gates P3: error-shape fix.
-			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
+			return view.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		id := viewCtx.Request.URL.Query().Get("id")
 		if id == "" {
-			return fycha.HTMXError("Account ID is required")
+			return view.HTMXError("Account ID is required")
 		}
 
 		if deps.DeleteAccount == nil {
 			log.Printf("DeleteAccount use case not wired")
-			return fycha.HTMXSuccess("accounts-tree-table")
+			return view.HTMXSuccess("accounts-tree-table")
 		}
 
 		resp, err := deps.DeleteAccount(ctx, &accountpb.DeleteAccountRequest{
@@ -187,17 +187,17 @@ func NewDeleteAction(deps *Deps) view.View {
 		})
 		if err != nil {
 			log.Printf("DeleteAccount error for %s: %v", id, err)
-			return fycha.HTMXError("Failed to delete account")
+			return view.HTMXError("Failed to delete account")
 		}
 		if resp == nil || !resp.GetSuccess() {
 			errMsg := "Failed to delete account"
 			if resp.GetError() != nil {
 				errMsg = resp.GetError().GetMessage()
 			}
-			return fycha.HTMXError(errMsg)
+			return view.HTMXError(errMsg)
 		}
 
-		return fycha.HTMXSuccess("accounts-tree-table")
+		return view.HTMXSuccess("accounts-tree-table")
 	})
 }
 
@@ -277,7 +277,7 @@ func NewApplyTemplateAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("account", "create") {
-			return fycha.HTMXError("You do not have permission to apply account templates.")
+			return view.HTMXError("You do not have permission to apply account templates.")
 		}
 
 		templateID := viewCtx.Request.URL.Query().Get("template_id")
@@ -286,7 +286,7 @@ func NewApplyTemplateAction(deps *Deps) view.View {
 		}
 
 		if templateID != "service-ph" {
-			return fycha.HTMXError(
+			return view.HTMXError(
 				fmt.Sprintf("Template %q is not yet available. Only 'service-ph' is currently supported.", templateID),
 			)
 		}
@@ -294,7 +294,7 @@ func NewApplyTemplateAction(deps *Deps) view.View {
 		if deps.CreateAccount == nil {
 			// No use case wired — log and return success for dev/demo mode
 			log.Printf("ApplyTemplate: CreateAccount use case not wired, skipping seeder")
-			return fycha.HTMXSuccess("account-templates-content")
+			return view.HTMXSuccess("account-templates-content")
 		}
 
 		created, skipped, err := seeder.SeedDefaultCoA(ctx, deps.CreateAccount, "")
@@ -305,6 +305,6 @@ func NewApplyTemplateAction(deps *Deps) view.View {
 		}
 
 		log.Printf("ApplyTemplate: created=%d skipped=%d template=%s", created, skipped, templateID)
-		return fycha.HTMXSuccess("account-templates-content")
+		return view.HTMXSuccess("account-templates-content")
 	})
 }

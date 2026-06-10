@@ -62,12 +62,12 @@ func NewAddAction(deps *Deps) view.View {
 
 		// POST -- parse form and create
 		if err := viewCtx.Request.ParseForm(); err != nil {
-			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
+			return view.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		entry, parsedLines, err := parseJournalForm(viewCtx.Request)
 		if err != nil {
-			return fycha.HTMXError(err.Error())
+			return view.HTMXError(err.Error())
 		}
 
 		submitAction := viewCtx.Request.FormValue("submit")
@@ -75,20 +75,20 @@ func NewAddAction(deps *Deps) view.View {
 
 		if deps.CreateJournalEntry == nil {
 			log.Printf("CreateJournalEntry use case not wired")
-			return fycha.HTMXSuccess("journals-table")
+			return view.HTMXSuccess("journals-table")
 		}
 
 		resp, err := deps.CreateJournalEntry(ctx, &jepb.CreateJournalEntryRequest{Data: entry})
 		if err != nil {
 			log.Printf("CreateJournalEntry error: %v", err)
-			return fycha.HTMXError(deps.Labels.Actions.SaveError)
+			return view.HTMXError(deps.Labels.Actions.SaveError)
 		}
 		if resp == nil || !resp.GetSuccess() {
 			errMsg := deps.Labels.Actions.SaveError
 			if resp.GetError() != nil {
 				errMsg = resp.GetError().GetMessage()
 			}
-			return fycha.HTMXError(errMsg)
+			return view.HTMXError(errMsg)
 		}
 
 		newID := ""
@@ -118,7 +118,7 @@ func NewAddAction(deps *Deps) view.View {
 			}
 		}
 
-		return fycha.HTMXSuccess("journals-table")
+		return view.HTMXSuccess("journals-table")
 	})
 }
 
@@ -143,34 +143,34 @@ func NewEditAction(deps *Deps) view.View {
 
 		// POST -- update draft
 		if err := viewCtx.Request.ParseForm(); err != nil {
-			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
+			return view.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		entry, _, err := parseJournalForm(viewCtx.Request)
 		if err != nil {
-			return fycha.HTMXError(err.Error())
+			return view.HTMXError(err.Error())
 		}
 		entry.Id = id
 
 		if deps.UpdateJournalEntry == nil {
 			log.Printf("UpdateJournalEntry use case not wired")
-			return fycha.HTMXSuccess("journals-table")
+			return view.HTMXSuccess("journals-table")
 		}
 
 		resp, err := deps.UpdateJournalEntry(ctx, &jepb.UpdateJournalEntryRequest{Data: entry})
 		if err != nil {
 			log.Printf("UpdateJournalEntry error for %s: %v", id, err)
-			return fycha.HTMXError(deps.Labels.Actions.SaveError)
+			return view.HTMXError(deps.Labels.Actions.SaveError)
 		}
 		if resp == nil || !resp.GetSuccess() {
 			errMsg := deps.Labels.Actions.SaveError
 			if resp.GetError() != nil {
 				errMsg = resp.GetError().GetMessage()
 			}
-			return fycha.HTMXError(errMsg)
+			return view.HTMXError(errMsg)
 		}
 
-		return fycha.HTMXSuccess("journals-table")
+		return view.HTMXSuccess("journals-table")
 	})
 }
 
@@ -188,12 +188,12 @@ func NewPostAction(deps *Deps) view.View {
 
 		id := viewCtx.Request.PathValue("id")
 		if id == "" {
-			return fycha.HTMXError("Journal entry ID is required")
+			return view.HTMXError("Journal entry ID is required")
 		}
 
 		if deps.PostJournalEntry == nil {
 			log.Printf("PostJournalEntry use case not wired")
-			return fycha.HTMXSuccess("journals-table")
+			return view.HTMXSuccess("journals-table")
 		}
 
 		// Extract the authenticated user ID from context.
@@ -205,17 +205,17 @@ func NewPostAction(deps *Deps) view.View {
 		})
 		if err != nil {
 			log.Printf("PostJournalEntry error for %s: %v", id, err)
-			return fycha.HTMXError(deps.Labels.Actions.PostError)
+			return view.HTMXError(deps.Labels.Actions.PostError)
 		}
 		if resp == nil || !resp.GetSuccess() {
 			errMsg := deps.Labels.Actions.PostError
 			if resp.GetError() != nil {
 				errMsg = resp.GetError().GetMessage()
 			}
-			return fycha.HTMXError(errMsg)
+			return view.HTMXError(errMsg)
 		}
 
-		return fycha.HTMXSuccess("journals-table")
+		return view.HTMXSuccess("journals-table")
 	})
 }
 
@@ -233,12 +233,12 @@ func NewReverseAction(deps *Deps) view.View {
 
 		id := viewCtx.Request.PathValue("id")
 		if id == "" {
-			return fycha.HTMXError("Journal entry ID is required")
+			return view.HTMXError("Journal entry ID is required")
 		}
 
 		if deps.ReverseJournalEntry == nil {
 			log.Printf("ReverseJournalEntry use case not wired")
-			return fycha.HTMXSuccess("journals-table")
+			return view.HTMXSuccess("journals-table")
 		}
 
 		resp, err := deps.ReverseJournalEntry(ctx, &jepb.ReverseJournalEntryRequest{
@@ -246,17 +246,17 @@ func NewReverseAction(deps *Deps) view.View {
 		})
 		if err != nil {
 			log.Printf("ReverseJournalEntry error for %s: %v", id, err)
-			return fycha.HTMXError(deps.Labels.Actions.ReverseError)
+			return view.HTMXError(deps.Labels.Actions.ReverseError)
 		}
 		if resp == nil || !resp.GetSuccess() {
 			errMsg := deps.Labels.Actions.ReverseError
 			if resp.GetError() != nil {
 				errMsg = resp.GetError().GetMessage()
 			}
-			return fycha.HTMXError(errMsg)
+			return view.HTMXError(errMsg)
 		}
 
-		return fycha.HTMXSuccess("journals-table")
+		return view.HTMXSuccess("journals-table")
 	})
 }
 
@@ -274,12 +274,12 @@ func NewDeleteAction(deps *Deps) view.View {
 
 		id := viewCtx.Request.URL.Query().Get("id")
 		if id == "" {
-			return fycha.HTMXError("Journal entry ID is required")
+			return view.HTMXError("Journal entry ID is required")
 		}
 
 		if deps.DeleteJournalEntry == nil {
 			log.Printf("DeleteJournalEntry use case not wired")
-			return fycha.HTMXSuccess("journals-table")
+			return view.HTMXSuccess("journals-table")
 		}
 
 		resp, err := deps.DeleteJournalEntry(ctx, &jepb.DeleteJournalEntryRequest{
@@ -287,17 +287,17 @@ func NewDeleteAction(deps *Deps) view.View {
 		})
 		if err != nil {
 			log.Printf("DeleteJournalEntry error for %s: %v", id, err)
-			return fycha.HTMXError(deps.Labels.Actions.DeleteError)
+			return view.HTMXError(deps.Labels.Actions.DeleteError)
 		}
 		if resp == nil || !resp.GetSuccess() {
 			errMsg := deps.Labels.Actions.DeleteError
 			if resp.GetError() != nil {
 				errMsg = resp.GetError().GetMessage()
 			}
-			return fycha.HTMXError(errMsg)
+			return view.HTMXError(errMsg)
 		}
 
-		return fycha.HTMXSuccess("journals-table")
+		return view.HTMXSuccess("journals-table")
 	})
 }
 

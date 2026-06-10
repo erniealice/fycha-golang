@@ -9,7 +9,6 @@ import (
 	"context"
 
 	withholdingcertificatepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/withholding_certificate"
-	fycha "github.com/erniealice/fycha-golang"
 	"github.com/erniealice/fycha-golang/views/withholding_certificate/form"
 	"github.com/erniealice/pyeza-golang/view"
 )
@@ -20,7 +19,7 @@ func NewEditAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("withholding_certificate", "update") {
-			return fycha.HTMXError("You do not have permission to edit withholding certificates")
+			return view.HTMXError("You do not have permission to edit withholding certificates")
 		}
 
 		id := viewCtx.Request.PathValue("id")
@@ -28,18 +27,18 @@ func NewEditAction(deps *Deps) view.View {
 
 		if viewCtx.Request.Method == http.MethodGet {
 			if deps.ReadWithholdingCertificate == nil {
-				return fycha.HTMXError("Read use case not available")
+				return view.HTMXError("Read use case not available")
 			}
 			resp, err := deps.ReadWithholdingCertificate(ctx, &withholdingcertificatepb.ReadWithholdingCertificateRequest{
 				Data: &withholdingcertificatepb.WithholdingCertificate{Id: id},
 			})
 			if err != nil {
 				log.Printf("ReadWithholdingCertificate %s: %v", id, err)
-				return fycha.HTMXError("Certificate not found")
+				return view.HTMXError("Certificate not found")
 			}
 			data := resp.GetData()
 			if len(data) == 0 {
-				return fycha.HTMXError("Certificate not found")
+				return view.HTMXError("Certificate not found")
 			}
 			wc := data[0]
 			certifiedDisplay := fmt.Sprintf("%.2f", float64(wc.GetActualAmount())/100.0)
@@ -60,7 +59,7 @@ func NewEditAction(deps *Deps) view.View {
 
 		// POST — update
 		if err := viewCtx.Request.ParseForm(); err != nil {
-			return fycha.HTMXError("Invalid form data")
+			return view.HTMXError("Invalid form data")
 		}
 		r := viewCtx.Request
 
@@ -89,15 +88,15 @@ func NewEditAction(deps *Deps) view.View {
 		}
 
 		if deps.UpdateWithholdingCertificate == nil {
-			return fycha.HTMXError("Update use case not available")
+			return view.HTMXError("Update use case not available")
 		}
 		if _, err := deps.UpdateWithholdingCertificate(ctx, &withholdingcertificatepb.UpdateWithholdingCertificateRequest{
 			Data: updated,
 		}); err != nil {
 			log.Printf("UpdateWithholdingCertificate %s: %v", id, err)
-			return fycha.HTMXError(err.Error())
+			return view.HTMXError(err.Error())
 		}
 
-		return fycha.HTMXSuccess("withholding-certs-table")
+		return view.HTMXSuccess("withholding-certs-table")
 	})
 }

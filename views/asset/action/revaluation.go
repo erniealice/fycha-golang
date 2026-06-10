@@ -62,12 +62,12 @@ type RevaluationPreview struct {
 
 // revaluationFormData is the template data for the Surface E drawer.
 type revaluationFormData struct {
-	FormAction string
+	FormAction  string
 	WorkspaceID string // injected by C1: populated by ViewAdapter.injectWorkspaceID for action_workspace_guard
-	PreviewURL string
-	AssetID    string
-	Preview    *RevaluationPreview
-	Labels     fycha.AssetRevaluationLabels
+	PreviewURL  string
+	AssetID     string
+	Preview     *RevaluationPreview
+	Labels      fycha.AssetRevaluationLabels
 }
 
 // NewRevaluationAction creates the Surface E per-asset revaluation drawer.
@@ -77,7 +77,7 @@ func NewRevaluationAction(deps *RevaluationDeps) view.View {
 		// asset_revaluation:create (catalog verb).
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("asset_revaluation", "create") {
-			return fycha.HTMXError(deps.Labels.Errors.PermissionDenied)
+			return view.HTMXError(deps.Labels.Errors.PermissionDenied)
 		}
 
 		assetID := viewCtx.Request.PathValue("asset_id")
@@ -99,7 +99,7 @@ func NewRevaluationPreviewAction(deps *RevaluationDeps) view.View {
 		// asset_revaluation:read.
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("asset_revaluation", "read") {
-			return fycha.HTMXError(deps.Labels.Errors.PermissionDenied)
+			return view.HTMXError(deps.Labels.Errors.PermissionDenied)
 		}
 
 		assetID := viewCtx.Request.PathValue("asset_id")
@@ -154,13 +154,13 @@ func handleRevaluationPOST(ctx context.Context, viewCtx *view.ViewContext, deps 
 	// and swaps the body in. Canonical example: subscription/recognize/action.go:335-345.
 
 	if err := viewCtx.Request.ParseForm(); err != nil {
-		return fycha.HTMXError(deps.Labels.Errors.FormParseFailed)
+		return view.HTMXError(deps.Labels.Errors.FormParseFailed)
 	}
 
 	newFairValueCents, err := types.ParseCentavos(viewCtx.Request.FormValue("new_fair_value"))
 	if err != nil {
 		log.Printf("revaluation: invalid amount input: %v", err)
-		return fycha.HTMXError(deps.Labels.Errors.InvalidAmount)
+		return view.HTMXError(deps.Labels.Errors.InvalidAmount)
 	}
 
 	req := RevaluationRequest{
@@ -177,12 +177,12 @@ func handleRevaluationPOST(ctx context.Context, viewCtx *view.ViewContext, deps 
 	// real bootstrap defect and we surface a service-unavailable error.
 	if deps.RevalueAsset == nil {
 		log.Printf("revalue_asset: RevalueAsset callback not wired (codex C4 — service unavailable)")
-		return fycha.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
+		return view.HTMXError(deps.Labels.Errors.UseCaseUnavailable)
 	}
 	result, err := deps.RevalueAsset(ctx, req)
 	if err != nil {
 		log.Printf("RevalueAsset error: %v", err)
-		return fycha.HTMXError(deps.Labels.Errors.RevaluateFailed)
+		return view.HTMXError(deps.Labels.Errors.RevaluateFailed)
 	}
 
 	detailURL := route.ResolveURL(deps.Routes.DetailURL, "id", assetID)

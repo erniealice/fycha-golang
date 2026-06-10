@@ -36,7 +36,7 @@ func NewCreateAction(deps *Deps) view.View {
 	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
 		perms := view.GetUserPermissions(ctx)
 		if !perms.Can("withholding_certificate", "create") {
-			return fycha.HTMXError("You do not have permission to create withholding certificates")
+			return view.HTMXError("You do not have permission to create withholding certificates")
 		}
 
 		labels := form.BuildLabels(deps.Labels)
@@ -64,7 +64,7 @@ func NewCreateAction(deps *Deps) view.View {
 
 		// POST — create
 		if err := viewCtx.Request.ParseForm(); err != nil {
-			return fycha.HTMXError("Invalid form data")
+			return view.HTMXError("Invalid form data")
 		}
 		r := viewCtx.Request
 
@@ -97,16 +97,16 @@ func NewCreateAction(deps *Deps) view.View {
 		}
 
 		if deps.CreateWithholdingCertificate == nil {
-			return fycha.HTMXError("Create use case not available")
+			return view.HTMXError("Create use case not available")
 		}
 		if _, err := deps.CreateWithholdingCertificate(ctx, &withholdingcertificatepb.CreateWithholdingCertificateRequest{
 			Data: record,
 		}); err != nil {
 			log.Printf("CreateWithholdingCertificate error: %v", err)
-			return fycha.HTMXError(err.Error())
+			return view.HTMXError(err.Error())
 		}
 
-		return fycha.HTMXSuccess("withholding-certs-table")
+		return view.HTMXSuccess("withholding-certs-table")
 	})
 }
 

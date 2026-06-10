@@ -8,7 +8,6 @@ import (
 
 	"github.com/erniealice/pyeza-golang/view"
 
-	fycha "github.com/erniealice/fycha-golang"
 	assetform "github.com/erniealice/fycha-golang/views/asset/form"
 )
 
@@ -20,7 +19,7 @@ func NewAddAction(deps *Deps) view.View {
 			// 2026-05-14 permission-gates P3: error-shape — emit a proper
 			// HTMX error (HX-Error-Message header + 422) rather than the
 			// generic view.Error(...) which surfaces as a 500 page.
-			return fycha.HTMXError(deps.Labels.Actions.NoPermission)
+			return view.HTMXError(deps.Labels.Actions.NoPermission)
 		}
 
 		if viewCtx.Request.Method == http.MethodGet {
@@ -35,12 +34,12 @@ func NewAddAction(deps *Deps) view.View {
 
 		// POST — create asset
 		if err := viewCtx.Request.ParseForm(); err != nil {
-			return fycha.HTMXError(deps.Labels.Actions.InvalidFormData)
+			return view.HTMXError(deps.Labels.Actions.InvalidFormData)
 		}
 
 		name := viewCtx.Request.FormValue("name")
 		if name == "" {
-			return fycha.HTMXError("Name is required")
+			return view.HTMXError("Name is required")
 		}
 
 		acqCost, _ := strconv.ParseFloat(viewCtx.Request.FormValue("acquisition_cost"), 64)
@@ -83,12 +82,12 @@ func NewAddAction(deps *Deps) view.View {
 		if deps.CreateAsset != nil {
 			if err := deps.CreateAsset(ctx, record); err != nil {
 				log.Printf("asset create error: %v", err)
-				return fycha.HTMXError("Failed to create asset")
+				return view.HTMXError("Failed to create asset")
 			}
 		} else {
 			log.Printf("Mock create asset: %s (no CreateAsset wired)", name)
 		}
 
-		return fycha.HTMXSuccess("assets-table")
+		return view.HTMXSuccess("assets-table")
 	})
 }
