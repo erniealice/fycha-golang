@@ -27,12 +27,12 @@ import (
 
 	"github.com/erniealice/pyeza-golang/types"
 
-	assetaction "github.com/erniealice/fycha-golang/views/asset/action"
-	assetlist "github.com/erniealice/fycha-golang/views/asset/list"
-	assetcataction "github.com/erniealice/fycha-golang/views/asset_category/action"
-	assetcatpolicies "github.com/erniealice/fycha-golang/views/asset_category/policies"
-	depreciationrunmod "github.com/erniealice/fycha-golang/views/depreciation_run"
-	lapsinglist "github.com/erniealice/fycha-golang/views/lapsing_schedule/list"
+	assetaction "github.com/erniealice/fycha-golang/domain/asset/views/asset/action"
+	assetlist "github.com/erniealice/fycha-golang/domain/asset/views/asset/list"
+	assetcataction "github.com/erniealice/fycha-golang/domain/asset/views/asset_category/action"
+	assetcatpolicies "github.com/erniealice/fycha-golang/domain/asset/views/asset_category/policies"
+	depreciationrunmod "github.com/erniealice/fycha-golang/domain/asset/views/depreciation_run"
+	lapsinglist "github.com/erniealice/fycha-golang/domain/asset/views/lapsing_schedule/list"
 )
 
 // ---------------------------------------------------------------------------

@@ -1,0 +1,441 @@
+package revenue_report
+
+import (
+	"context"
+	"fmt"
+	"log"
+	"net/url"
+	"time"
+
+	report "github.com/erniealice/fycha-golang/service/report"
+
+	dspb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/domain_specific"
+	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
+	pyeza "github.com/erniealice/pyeza-golang"
+	"github.com/erniealice/pyeza-golang/types"
+	"github.com/erniealice/pyeza-golang/view"
+)
+
+// Deps holds view dependencies.
+//
+// 20260521 Wave B P1.E.5 — DB replaced with the typed GetRevenueReport
+// closure into the service-driven domain-specific use case.
+type Deps struct {
+	GetRevenueReport func(context.Context, *dspb.GetRevenueReportRequest) (*dspb.GetRevenueReportResponse, error)
+	Labels           report.ReportsLabels
+	CommonLabels     pyeza.CommonLabels
+	TableLabels      types.TableLabels
+	Routes           report.ReportsRoutes
+}
+
+// PageData holds the data for the revenue report page.
+type PageData struct {
+	types.PageData
+	ContentTemplate   string
+	Labels            report.RevenueReportLabels
+	Summary           []report.SummaryMetric
+	Table             *types.TableConfig
+	Filter            report.FilterState
+	PeriodLabels      report.PeriodLabels
+	ReportURL         string
+	FilterSheetURL    string
+	ExportURL         string
+	ActiveFilterCount int
+	PrimaryDimension  string
+	RowDimension      string
+	PrimaryOptions    []report.FilterOption
+	RowOptions        []report.FilterOption
+}
+
+// NewView creates the revenue report pivot-table view.
+func NewView(deps *Deps) view.View {
+	return view.ViewFunc(func(ctx context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		l := deps.Labels.RevenueReport
+		pl := deps.Labels.Period
+
+		// Parse query params
+		primary := viewCtx.QueryParams["primary"]
+		if primary == "" {
+			primary = "monthly"
+		}
+		rows := viewCtx.QueryParams["rows"]
+		if rows == "" {
+			rows = "product"
+		}
+		period := viewCtx.QueryParams["period"]
+		if period == "" {
+			period = "thisMonth"
+		}
+		startDateStr := viewCtx.QueryParams["start"]
+		endDateStr := viewCtx.QueryParams["end"]
+
+		// Secondary filter IDs
+		productID := viewCtx.QueryParams["product-id"]
+		collectionID := viewCtx.QueryParams["collection-id"]
+		locationID := viewCtx.QueryParams["location-id"]
+		locationAreaID := viewCtx.QueryParams["location-area-id"]
+		revenueCategoryID := viewCtx.QueryParams["revenue-category-id"]
+
+		reportURL := viewCtx.CurrentPath
+		if reportURL == "" {
+			reportURL = deps.Routes.RevenueReportURL
+		}
+
+		// Build dimension options
+		primaryOptions := l.DimensionOptions(primary)
+		rowOptions := l.DimensionOptions(rows)
+
+		// Handle filter sheet request
+		if viewCtx.QueryParams["sheet"] == "filters" {
+			sheetFilter := report.FilterState{
+				ActivePreset:  period,
+				StartDate:     startDateStr,
+				EndDate:       endDateStr,
+				PeriodPresets: report.DefaultPeriodPresets(pl, period),
+			}
+			return view.OK("revenue-report-filter-sheet", &RevenueReportFilterSheetData{
+				Filter:           sheetFilter,
+				PeriodLabels:     pl,
+				Labels:           l,
+				ReportURL:        reportURL,
+				PrimaryDimension: primary,
+				RowDimension:     rows,
+				PrimaryOptions:   primaryOptions,
+				RowOptions:       rowOptions,
+			})
+		}
+
+		// Build proto request
+		req := &dspb.GetRevenueReportRequest{
+			PrimaryDimension: primary,
+			RowDimension:     rows,
+		}
+
+		// Resolve dates
+		if period == "custom" && startDateStr != "" {
+			if _, err := time.Parse("2006-01-02", startDateStr); err == nil {
+				req.StartDate = &startDateStr
+			}
+		}
+		if period == "custom" && endDateStr != "" {
+			if _, err := time.Parse("2006-01-02", endDateStr); err == nil {
+				req.EndDate = &endDateStr
+			}
+		}
+
+		// Apply period preset if not custom
+		if req.StartDate == nil {
+			start, _ := report.ParsePeriodPreset(period)
+			s := start.Format("2006-01-02")
+			req.StartDate = &s
+		}
+		if req.EndDate == nil {
+			_, end := report.ParsePeriodPreset(period)
+			e := end.Format("2006-01-02")
+			req.EndDate = &e
+		}
+
+		// Apply optional secondary filters
+		if productID != "" {
+			req.ProductId = &productID
+		}
+		if collectionID != "" {
+			req.CollectionId = &collectionID
+		}
+		if locationID != "" {
+			req.LocationId = &locationID
+		}
+		if locationAreaID != "" {
+			req.LocationAreaId = &locationAreaID
+		}
+		if revenueCategoryID != "" {
+			req.RevenueCategoryId = &revenueCategoryID
+		}
+
+		// Call service-driven domain-specific use case (Wave B P1.E.5).
+		var resp *dspb.GetRevenueReportResponse
+		if deps.GetRevenueReport != nil {
+			var err error
+			resp, err = deps.GetRevenueReport(ctx, req)
+			if err != nil {
+				log.Printf("Failed to get revenue report: %v", err)
+				resp = nil
+			}
+		}
+		if resp == nil {
+			resp = &dspb.GetRevenueReportResponse{
+				ColumnKeys: []string{},
+				Rows:       []*dspb.RevenueReportRow{},
+				Summary:    &dspb.RevenueReportSummary{},
+			}
+		}
+
+		// Build summary bar
+		summary := buildSummary(resp.GetSummary(), l)
+
+		// Build pivot table
+		table := buildPivotTable(resp, l, deps.TableLabels, primary, rows)
+
+		// Build filter sheet URL — carries current state so the sheet reflects active filters
+		filterSheetURL := buildFilterSheetURL(reportURL, primary, rows, period, startDateStr, endDateStr)
+
+		// Count active filters
+		activeCount := 0
+		if period != "" && period != "thisMonth" {
+			activeCount++
+		}
+		if primary != "" && primary != "monthly" {
+			activeCount++
+		}
+		if rows != "" && rows != "product" {
+			activeCount++
+		}
+
+		// Inject filter button + dimension chips into the table toolbar prefix
+		table.ToolbarPrefixTemplate = "report-dimension-toolbar-prefix"
+		table.ToolbarPrefixData = report.DimensionToolbarPrefixData{
+			FilterSheetURL:    filterSheetURL,
+			ActiveFilterCount: activeCount,
+			PrimaryLabel:      "Columns:",
+			PrimaryValue:      primary,
+			RowsLabel:         "Rows:",
+			RowsValue:         rows,
+		}
+
+		filter := report.FilterState{
+			ActivePreset:  period,
+			StartDate:     startDateStr,
+			EndDate:       endDateStr,
+			PeriodPresets: report.DefaultPeriodPresets(pl, period),
+		}
+
+		// Build export URL with current query params
+		exportURL := buildExportURL(deps.Routes.RevenueReportExportURL, primary, rows, period, startDateStr, endDateStr)
+
+		pageData := &PageData{
+			PageData: types.PageData{
+				CacheVersion: viewCtx.CacheVersion,
+				Title:        l.Title,
+				CurrentPath:  viewCtx.CurrentPath,
+				ActiveNav:    "report",
+				ActiveSubNav: "revenue-report",
+				HeaderTitle:  l.Title,
+				HeaderIcon:   "icon-bar-chart",
+				CommonLabels: deps.CommonLabels,
+			},
+			ContentTemplate:   "revenue-report-content",
+			Labels:            l,
+			Summary:           summary,
+			Table:             table,
+			Filter:            filter,
+			PeriodLabels:      pl,
+			ReportURL:         reportURL,
+			FilterSheetURL:    filterSheetURL,
+			ExportURL:         exportURL,
+			ActiveFilterCount: activeCount,
+			PrimaryDimension:  primary,
+			RowDimension:      rows,
+			PrimaryOptions:    primaryOptions,
+			RowOptions:        rowOptions,
+		}
+
+		// KB help content
+		if viewCtx.Translations != nil {
+			if provider, ok := viewCtx.Translations.(*lynguaV1.TranslationProvider); ok {
+				if kb, _ := provider.LoadKBIfExists(viewCtx.Lang, viewCtx.BusinessType, "report-revenue-report"); kb != nil {
+					pageData.HasHelp = true
+					pageData.HelpContent = kb.Body
+				}
+			}
+		}
+
+		if viewCtx.IsHTMX {
+			return view.OK("revenue-report-content", pageData)
+		}
+		return view.OK("revenue-report", pageData)
+	})
+}
+
+// RevenueReportFilterSheetData holds data for the revenue report filter sheet template.
+type RevenueReportFilterSheetData struct {
+	Filter           report.FilterState
+	PeriodLabels     report.PeriodLabels
+	Labels           report.RevenueReportLabels
+	ReportURL        string
+	PrimaryDimension string
+	RowDimension     string
+	PrimaryOptions   []report.FilterOption
+	RowOptions       []report.FilterOption
+	Nonce            string // injected by ViewAdapter.injectPageData via reflection
+}
+
+func buildSummary(s *dspb.RevenueReportSummary, l report.RevenueReportLabels) []report.SummaryMetric {
+	if s == nil {
+		s = &dspb.RevenueReportSummary{}
+	}
+	grandTotal := float64(s.GetGrandTotal()) / 100.0
+	txnCount := s.GetTotalTransactions()
+	avgTxn := 0.0
+	if txnCount > 0 {
+		avgTxn = grandTotal / float64(txnCount)
+	}
+	rr0 := types.MoneyCell(grandTotal, "PHP", true)
+	rr1 := types.MoneyCell(avgTxn, "PHP", true)
+	return []report.SummaryMetric{
+		{Label: l.SummaryGrandTotal, Value: rr0.Currency + " " + rr0.Value, Highlight: true},
+		{Label: l.SummaryTransactions, Value: fmt.Sprintf("%d", txnCount)},
+		{Label: l.SummaryAverage, Value: rr1.Currency + " " + rr1.Value},
+	}
+}
+
+func buildPivotTable(resp *dspb.GetRevenueReportResponse, l report.RevenueReportLabels, tableLabels types.TableLabels, primary, rowDim string) *types.TableConfig {
+	columnKeys := resp.GetColumnKeys()
+
+	// Build dynamic columns: Name + per-column-key + Total
+	dynamicColumns := make([]types.TableColumn, 0, len(columnKeys))
+	for _, ck := range columnKeys {
+		dynamicColumns = append(dynamicColumns, types.TableColumn{
+			Key:      ck,
+			Label:    ck,
+			Align:    "right",
+			MinWidth: "7.5rem",
+		})
+	}
+
+	table := &types.TableConfig{
+		ID:              "revenueReportTable",
+		NameColumnLabel: l.PrimaryGroupLabel(rowDim),
+		ShowSearch:      false,
+		ShowFilters:     false,
+		ShowSort:        false,
+		ShowColumns:     false,
+		ShowExport:      true,
+		ShowEntries:     true,
+		ShowDensity:     true,
+		Labels:          tableLabels,
+		ColumnGroups: []types.ColumnGroup{
+			{
+				Label:   l.PrimaryGroupLabel(primary),
+				Columns: dynamicColumns,
+			},
+			{
+				Label: "",
+				Columns: []types.TableColumn{
+					{Key: "total", Label: l.Total, Align: "right", MinWidth: "8.125rem"},
+				},
+			},
+		},
+		EmptyState: types.TableEmptyState{
+			Title:   l.EmptyTitle,
+			Message: l.EmptyMessage,
+		},
+	}
+
+	// Flatten columns for ApplyColumnStyles — prepend a name column so
+	// indices align with the cells slice (which has the name cell at [0]).
+	allColumns := []types.TableColumn{
+		{Key: "name", Align: "left"},
+	}
+	for _, group := range table.ColumnGroups {
+		allColumns = append(allColumns, group.Columns...)
+	}
+
+	currency := "PHP" // report currency
+
+	rows := make([]types.TableRow, 0, len(resp.GetRows()))
+	for i, row := range resp.GetRows() {
+		// Build cell map from row cells for quick lookup
+		cellMap := make(map[string]*dspb.RevenueReportCell, len(row.GetCells()))
+		for _, c := range row.GetCells() {
+			cellMap[c.GetColumnKey()] = c
+		}
+
+		// Show currency only on the first row; middle rows omit it
+		rowCurrency := ""
+		if i == 0 {
+			rowCurrency = currency
+		}
+
+		cells := []types.TableCell{
+			{Type: "name", Value: row.GetRowKey(), Align: "left"},
+		}
+		dataAttrs := map[string]string{}
+
+		for _, ck := range columnKeys {
+			var val int64
+			if c, ok := cellMap[ck]; ok {
+				val = c.GetTotalRevenue()
+			}
+			cells = append(cells, types.MoneyCell(float64(val), rowCurrency, true))
+			dataAttrs[ck] = fmt.Sprintf("%d", val)
+		}
+
+		// Total cell
+		cells = append(cells, types.MoneyCell(float64(row.GetRowTotal()), rowCurrency, true))
+		dataAttrs["total"] = fmt.Sprintf("%d", row.GetRowTotal())
+
+		rows = append(rows, types.TableRow{
+			ID:        row.GetRowKey(),
+			Cells:     cells,
+			DataAttrs: dataAttrs,
+		})
+	}
+
+	// Add totals row from summary.column_totals
+	summary := resp.GetSummary()
+	if summary != nil && len(resp.GetRows()) > 0 {
+		colTotalMap := make(map[string]*dspb.RevenueReportCell, len(summary.GetColumnTotals()))
+		for _, ct := range summary.GetColumnTotals() {
+			colTotalMap[ct.GetColumnKey()] = ct
+		}
+
+		totalsCells := []types.TableCell{
+			{Type: "name", Value: l.Totals, Align: "left"},
+		}
+		for _, ck := range columnKeys {
+			var val int64
+			if ct, ok := colTotalMap[ck]; ok {
+				val = ct.GetTotalRevenue()
+			}
+			totalsCells = append(totalsCells, types.MoneyCell(float64(val), currency, true))
+		}
+		totalsCells = append(totalsCells, types.MoneyCell(float64(summary.GetGrandTotal()), currency, true))
+
+		table.TotalsRow = totalsCells
+	}
+
+	table.Rows = rows
+	types.ApplyColumnStyles(allColumns, rows)
+	types.ApplyTableSettings(table)
+
+	return table
+}
+
+func buildExportURL(base, primary, rows, period, start, end string) string {
+	params := url.Values{}
+	params.Set("primary", primary)
+	params.Set("rows", rows)
+	params.Set("period", period)
+	if start != "" {
+		params.Set("start", start)
+	}
+	if end != "" {
+		params.Set("end", end)
+	}
+	return base + "?" + params.Encode()
+}
+
+func buildFilterSheetURL(base, primary, rows, period, start, end string) string {
+	params := url.Values{}
+	params.Set("sheet", "filters")
+	params.Set("primary", primary)
+	params.Set("rows", rows)
+	params.Set("period", period)
+	if start != "" {
+		params.Set("start", start)
+	}
+	if end != "" {
+		params.Set("end", end)
+	}
+	return base + "?" + params.Encode()
+}

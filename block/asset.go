@@ -22,15 +22,15 @@ import (
 	pyeza "github.com/erniealice/pyeza-golang"
 	pyezatypes "github.com/erniealice/pyeza-golang/types"
 
-	fycha "github.com/erniealice/fycha-golang"
-	assetmod "github.com/erniealice/fycha-golang/views/asset"
-	assetaction "github.com/erniealice/fycha-golang/views/asset/action"
-	assetform "github.com/erniealice/fycha-golang/views/asset/form"
-	assetlist "github.com/erniealice/fycha-golang/views/asset/list"
-	assetcataction "github.com/erniealice/fycha-golang/views/asset_category/action"
-	assetcatpolicies "github.com/erniealice/fycha-golang/views/asset_category/policies"
-	depreciationrunmod "github.com/erniealice/fycha-golang/views/depreciation_run"
-	lapsinglist "github.com/erniealice/fycha-golang/views/lapsing_schedule/list"
+	asset "github.com/erniealice/fycha-golang/domain/asset"
+	assetmod "github.com/erniealice/fycha-golang/domain/asset/views/asset"
+	assetaction "github.com/erniealice/fycha-golang/domain/asset/views/asset/action"
+	assetform "github.com/erniealice/fycha-golang/domain/asset/views/asset/form"
+	assetlist "github.com/erniealice/fycha-golang/domain/asset/views/asset/list"
+	assetcataction "github.com/erniealice/fycha-golang/domain/asset/views/asset_category/action"
+	assetcatpolicies "github.com/erniealice/fycha-golang/domain/asset/views/asset_category/policies"
+	depreciationrunmod "github.com/erniealice/fycha-golang/domain/asset/views/depreciation_run"
+	lapsinglist "github.com/erniealice/fycha-golang/domain/asset/views/lapsing_schedule/list"
 )
 
 // assetWiring holds everything wireAssetModule needs from the surrounding
@@ -39,14 +39,14 @@ import (
 // More than 6 fields → use a struct (per the convention in block.go's header
 // doc). Asset has 14 dependencies, so a struct is unavoidable here.
 type assetWiring struct {
-	assetRoutes                     fycha.AssetRoutes
-	lapsingScheduleRoutes           fycha.LapsingScheduleRoutes
-	depreciationRunRoutes           fycha.DepreciationRunRoutes
-	assetCategoryDepreciationRoutes fycha.AssetCategoryDepreciationRoutes
-	assetLabels                     fycha.AssetLabels
-	depreciationRunLabels           fycha.DepreciationRunLabels
-	depreciationPoliciesLabels      fycha.DepreciationPoliciesLabels
-	assetRevaluationLabels          fycha.AssetRevaluationLabels
+	assetRoutes                     asset.AssetRoutes
+	lapsingScheduleRoutes           asset.LapsingScheduleRoutes
+	depreciationRunRoutes           asset.DepreciationRunRoutes
+	assetCategoryDepreciationRoutes asset.AssetCategoryDepreciationRoutes
+	assetLabels                     asset.AssetLabels
+	depreciationRunLabels           asset.DepreciationRunLabels
+	depreciationPoliciesLabels      asset.DepreciationPoliciesLabels
+	assetRevaluationLabels          asset.AssetRevaluationLabels
 	fychaTableLabels                pyezatypes.TableLabels
 	common                          pyeza.CommonLabels
 	refChecker                      topref.Checker
@@ -206,10 +206,10 @@ func wireAssetModule(
 		}
 	}
 	// Register Surface B at new URL.
-	ctx.Routes.GET(fycha.LapsingScheduleListURL, lapsinglist.NewView(lapsingDeps))
+	ctx.Routes.GET(asset.LapsingScheduleListURL, lapsinglist.NewView(lapsingDeps))
 	// Redirect from legacy mock URL to new URL (preserves bookmarks).
-	handleFunc(ctx.Routes, "GET", fycha.AssetLapsingScheduleURL, func(w http.ResponseWriter, r *http.Request) {
-		http.Redirect(w, r, fycha.LapsingScheduleListURL, http.StatusMovedPermanently)
+	handleFunc(ctx.Routes, "GET", asset.AssetLapsingScheduleURL, func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, asset.LapsingScheduleListURL, http.StatusMovedPermanently)
 	})
 
 	// ---------------------------------------------------------------------------
@@ -227,7 +227,7 @@ func wireAssetModule(
 			return listPoliciesWithRollup(fctx, useCases)
 		}
 	}
-	ctx.Routes.GET(fycha.DepreciationPoliciesURL, assetcatpolicies.NewView(policiesDeps))
+	ctx.Routes.GET(asset.DepreciationPoliciesURL, assetcatpolicies.NewView(policiesDeps))
 
 	// ---------------------------------------------------------------------------
 	// Surface F preview drawer (read-only /action/asset-policy/depreciation-preview/{category_id})
@@ -243,7 +243,7 @@ func wireAssetModule(
 			return listCandidatesForPolicy(fctx, useCases, categoryID, asOfDate)
 		}
 	}
-	ctx.Routes.GET(fycha.AssetPolicyDepreciationPreviewURL, assetcataction.NewDepreciationPreviewView(previewDeps))
+	ctx.Routes.GET(asset.AssetPolicyDepreciationPreviewURL, assetcataction.NewDepreciationPreviewView(previewDeps))
 
 	// ---------------------------------------------------------------------------
 	// Surface C — per-category / per-policy depreciation-run drawer
@@ -266,10 +266,10 @@ func wireAssetModule(
 		}
 	}
 	categoryRunView := assetcataction.NewCategoryDepreciationRunAction(categoryRunDeps)
-	ctx.Routes.GET(fycha.AssetCategoryDepreciationRunURL, categoryRunView)
-	ctx.Routes.POST(fycha.AssetCategoryDepreciationRunURL, categoryRunView)
-	ctx.Routes.GET(fycha.AssetPolicyDepreciationRunURL, categoryRunView)
-	ctx.Routes.POST(fycha.AssetPolicyDepreciationRunURL, categoryRunView)
+	ctx.Routes.GET(asset.AssetCategoryDepreciationRunURL, categoryRunView)
+	ctx.Routes.POST(asset.AssetCategoryDepreciationRunURL, categoryRunView)
+	ctx.Routes.GET(asset.AssetPolicyDepreciationRunURL, categoryRunView)
+	ctx.Routes.POST(asset.AssetPolicyDepreciationRunURL, categoryRunView)
 
 	// ---------------------------------------------------------------------------
 	// Surface D — Depreciation Runs history list + detail module

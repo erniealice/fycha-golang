@@ -12,10 +12,10 @@ package block
 // view renders empty state (the existing fallback behaviour).
 
 import (
-	equitymod "github.com/erniealice/fycha-golang/views/equity"
-	ledgermod "github.com/erniealice/fycha-golang/views/ledger"
-	loansmod "github.com/erniealice/fycha-golang/views/loans"
-	payrollmod "github.com/erniealice/fycha-golang/views/payroll"
+	equitymod "github.com/erniealice/fycha-golang/domain/ledger/views/equity"
+	ledgermod "github.com/erniealice/fycha-golang/domain/ledger/views/ledger"
+	loansmod "github.com/erniealice/fycha-golang/domain/treasury/views/loans"
+	payrollmod "github.com/erniealice/fycha-golang/domain/payroll/views/payroll"
 )
 
 // wireLedgerDashboard sets ledgerDeps.GetLedgerDashboardPageData from the

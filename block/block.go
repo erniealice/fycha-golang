@@ -38,19 +38,24 @@ import (
 	attachmentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/document/attachment"
 	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
 
-	fycha "github.com/erniealice/fycha-golang"
-	cashmod "github.com/erniealice/fycha-golang/views/cash"
-	equitymod "github.com/erniealice/fycha-golang/views/equity"
-	expensesmod "github.com/erniealice/fycha-golang/views/expenses"
-	financialmod "github.com/erniealice/fycha-golang/views/financial"
-	forexratemod "github.com/erniealice/fycha-golang/views/forex_rate"
-	ledgermod "github.com/erniealice/fycha-golang/views/ledger"
-	loansmod "github.com/erniealice/fycha-golang/views/loans"
-	payrollmod "github.com/erniealice/fycha-golang/views/payroll"
-	reportmod "github.com/erniealice/fycha-golang/views/reports"
-	cashbookview "github.com/erniealice/fycha-golang/views/reports/cash_book"
-	taxratemod "github.com/erniealice/fycha-golang/views/tax_rate"
-	withholdingcertmod "github.com/erniealice/fycha-golang/views/withholding_certificate"
+	asset "github.com/erniealice/fycha-golang/domain/asset"
+	finance "github.com/erniealice/fycha-golang/domain/finance"
+	ledger "github.com/erniealice/fycha-golang/domain/ledger"
+	tax "github.com/erniealice/fycha-golang/domain/tax"
+	treasury "github.com/erniealice/fycha-golang/domain/treasury"
+	report "github.com/erniealice/fycha-golang/service/report"
+	cashmod "github.com/erniealice/fycha-golang/domain/treasury/views/cash"
+	equitymod "github.com/erniealice/fycha-golang/domain/ledger/views/equity"
+	expensesmod "github.com/erniealice/fycha-golang/domain/expenditure/views/expenses"
+	financialmod "github.com/erniealice/fycha-golang/service/report/views/financial"
+	forexratemod "github.com/erniealice/fycha-golang/domain/finance/views/forex_rate"
+	ledgermod "github.com/erniealice/fycha-golang/domain/ledger/views/ledger"
+	loansmod "github.com/erniealice/fycha-golang/domain/treasury/views/loans"
+	payrollmod "github.com/erniealice/fycha-golang/domain/payroll/views/payroll"
+	reportmod "github.com/erniealice/fycha-golang/service/report/views"
+	cashbookview "github.com/erniealice/fycha-golang/service/report/views/cash_book"
+	taxratemod "github.com/erniealice/fycha-golang/domain/tax/views/tax_rate"
+	withholdingcertmod "github.com/erniealice/fycha-golang/domain/treasury/views/withholding_certificate"
 )
 
 // ---------------------------------------------------------------------------
@@ -139,97 +144,97 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		fychaTableLabels := pyeza.MapTableLabels(ctx.Common)
 
 		// --- Load routes (defaults + optional lyngua overrides) ---
-		reportsRoutes := fycha.DefaultReportsRoutes()
+		reportsRoutes := report.DefaultReportsRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "reports", &reportsRoutes)
 
-		assetRoutes := fycha.DefaultAssetRoutes()
+		assetRoutes := asset.DefaultAssetRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "asset", &assetRoutes)
 
-		accountRoutes := fycha.DefaultAccountRoutes()
+		accountRoutes := ledger.DefaultAccountRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "ledger_account", &accountRoutes)
 
-		journalRoutes := fycha.DefaultJournalRoutes()
+		journalRoutes := ledger.DefaultJournalRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "ledger_journal", &journalRoutes)
 
-		statementRoutes := fycha.DefaultLedgerStatementRoutes()
+		statementRoutes := ledger.DefaultLedgerStatementRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "ledger_statement", &statementRoutes)
 
-		fiscalPeriodRoutes := fycha.DefaultFiscalPeriodRoutes()
+		fiscalPeriodRoutes := ledger.DefaultFiscalPeriodRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "fiscal_period", &fiscalPeriodRoutes)
 
-		ledgerSettingsRoutes := fycha.DefaultLedgerSettingsRoutes()
+		ledgerSettingsRoutes := ledger.DefaultLedgerSettingsRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "ledger_settings", &ledgerSettingsRoutes)
 
-		loanRoutes := fycha.DefaultLoanRoutes()
+		loanRoutes := treasury.DefaultLoanRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "loan", &loanRoutes)
 
-		loanPaymentRoutes := fycha.DefaultLoanPaymentRoutes()
+		loanPaymentRoutes := treasury.DefaultLoanPaymentRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "loan_payment", &loanPaymentRoutes)
 
-		equityRoutes := fycha.DefaultEquityRoutes()
+		equityRoutes := ledger.DefaultEquityRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "equity", &equityRoutes)
 
-		lapsingScheduleRoutes := fycha.DefaultLapsingScheduleRoutes()
+		lapsingScheduleRoutes := asset.DefaultLapsingScheduleRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "lapsing_schedule", &lapsingScheduleRoutes)
 
-		depreciationRunRoutes := fycha.DefaultDepreciationRunRoutes()
+		depreciationRunRoutes := asset.DefaultDepreciationRunRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "depreciation_run", &depreciationRunRoutes)
 
-		assetCategoryDepreciationRoutes := fycha.DefaultAssetCategoryDepreciationRoutes()
+		assetCategoryDepreciationRoutes := asset.DefaultAssetCategoryDepreciationRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "asset_category_depreciation", &assetCategoryDepreciationRoutes)
 
-		taxRateRoutes := fycha.DefaultTaxRateRoutes()
+		taxRateRoutes := tax.DefaultTaxRateRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "tax_rate", &taxRateRoutes)
 
-		forexRateRoutes := fycha.DefaultForexRateRoutes()
+		forexRateRoutes := finance.DefaultForexRateRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "forex_rate", &forexRateRoutes)
 
-		withholdingCertificateRoutes := fycha.DefaultWithholdingCertificateRoutes()
+		withholdingCertificateRoutes := treasury.DefaultWithholdingCertificateRoutes()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "withholding_certificate", &withholdingCertificateRoutes)
 
 		// --- Load labels ---
-		var reportsLabels fycha.ReportsLabels
+		var reportsLabels report.ReportsLabels
 		if err := translations.LoadPath("en", ctx.BusinessType, "report.json", "", &reportsLabels); err != nil {
 			log.Printf("fycha.Block: warning loading reports labels: %v", err)
 		}
 
-		assetLabels := fycha.DefaultAssetLabels()
+		assetLabels := asset.DefaultAssetLabels()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "asset.json", "", &assetLabels)
 
-		accountLabels := fycha.DefaultAccountLabels()
+		accountLabels := ledger.DefaultAccountLabels()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "account.json", "", &accountLabels)
 
-		journalLabels := fycha.DefaultJournalLabels()
+		journalLabels := ledger.DefaultJournalLabels()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "journal.json", "", &journalLabels)
 
-		fiscalPeriodLabels := fycha.DefaultFiscalPeriodLabels()
+		fiscalPeriodLabels := ledger.DefaultFiscalPeriodLabels()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "fiscal_period.json", "", &fiscalPeriodLabels)
 
-		recurringTemplateLabels := fycha.DefaultRecurringTemplateLabels()
+		recurringTemplateLabels := ledger.DefaultRecurringTemplateLabels()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "recurring_template.json", "", &recurringTemplateLabels)
 
-		loanLabels := fycha.DefaultLoanLabels()
+		loanLabels := treasury.DefaultLoanLabels()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "loan.json", "", &loanLabels)
 
-		depreciationRunLabels := fycha.DefaultDepreciationRunLabels()
+		depreciationRunLabels := asset.DefaultDepreciationRunLabels()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "depreciation_run.json", "", &depreciationRunLabels)
 
-		assetRevaluationLabels := fycha.DefaultAssetRevaluationLabels()
+		assetRevaluationLabels := asset.DefaultAssetRevaluationLabels()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "asset_revaluation.json", "", &assetRevaluationLabels)
 
-		depreciationPoliciesLabels := fycha.DefaultDepreciationPoliciesLabels()
+		depreciationPoliciesLabels := asset.DefaultDepreciationPoliciesLabels()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "depreciation_policies.json", "", &depreciationPoliciesLabels)
 
-		loanPaymentLabels := fycha.DefaultLoanPaymentLabels()
+		loanPaymentLabels := treasury.DefaultLoanPaymentLabels()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "loan_payment.json", "", &loanPaymentLabels)
 
-		taxRateLabels := fycha.DefaultTaxRateLabels()
+		taxRateLabels := tax.DefaultTaxRateLabels()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "tax_rate.json", "", &taxRateLabels)
 
-		forexRateLabels := fycha.DefaultForexRateLabels()
+		forexRateLabels := finance.DefaultForexRateLabels()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "forex_rate.json", "", &forexRateLabels)
 
-		withholdingCertificateLabels := fycha.DefaultWithholdingCertificateLabels()
+		withholdingCertificateLabels := treasury.DefaultWithholdingCertificateLabels()
 		_ = translations.LoadPathIfExists("en", ctx.BusinessType, "withholding_certificate.json", "", &withholdingCertificateLabels)
 
 		// =====================================================================
@@ -372,7 +377,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		if cfg.wantEquity() {
 			equityDeps := &equitymod.ModuleDeps{
 				Routes:       equityRoutes,
-				Labels:       fycha.DefaultEquityLabels(),
+				Labels:       ledger.DefaultEquityLabels(),
 				CommonLabels: ctx.Common,
 				TableLabels:  fychaTableLabels,
 			}
@@ -414,7 +419,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 			}).RegisterRoutes(ctx.Routes)
 
 			// Cash → Reports → Cash Book — Wave B P1.E.3 service-driven closure.
-			ctx.Routes.GET(fycha.CashBookURL, cashbookview.NewCashBookView(
+			ctx.Routes.GET(report.CashBookURL, cashbookview.NewCashBookView(
 				useCases.Reports.GrossCashFlow.GetCashBookReport,
 				ctx.Common,
 				ctx.Table,

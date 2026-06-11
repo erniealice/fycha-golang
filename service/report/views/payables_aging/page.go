@@ -1,0 +1,111 @@
+package payables_aging
+
+import (
+	"context"
+	"fmt"
+
+	apagingpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/ap_aging"
+	reports "github.com/erniealice/fycha-golang/service/report/views"
+	pyeza "github.com/erniealice/pyeza-golang"
+	"github.com/erniealice/pyeza-golang/types"
+	"github.com/erniealice/pyeza-golang/view"
+)
+
+// SimpleFetcher is the typed closure consumed by the simple payables aging
+// view — service-driven AP aging use case (Wave B P1.E.2).
+type SimpleFetcher func(context.Context, *apagingpb.GetSimplePayablesAgingRequest) (*apagingpb.GetSimplePayablesAgingResponse, error)
+
+// NewPayablesAgingView creates the payables aging report with typed service data.
+//
+// 20260521 Wave B P1.E.2 — `db report.DataSource` replaced with the typed
+// `GetSimplePayablesAgingReport` closure into the service-driven AP aging
+// use case. Nil-safe: when the closure is nil the view renders an empty
+// table.
+func NewPayablesAgingView(getSimple SimpleFetcher, commonLabels pyeza.CommonLabels, tableLabels types.TableLabels) view.View {
+	return reports.NewReportView(reports.ReportConfig{
+		ActiveNav:    "supplier",
+		ActiveSubNav: "payables-aging",
+		Title:        "Payables Aging",
+		Subtitle:     "Aging analysis of outstanding payables by supplier",
+		Icon:         "icon-file-text",
+		TableID:      "payables-aging-table",
+		CommonLabels: commonLabels,
+		TableLabels:  tableLabels,
+		BuildData: func(ctx context.Context) ([]types.TableColumn, []types.TableRow, error) {
+			return fetchPayablesAging(ctx, getSimple)
+		},
+		BuildTotals: payablesAgingTotals,
+	})
+}
+
+// payablesAgingTotals computes column totals for the payables aging tfoot.
+// Columns: Supplier | Current | 1-30 | 31-60 | 61-90 | Over 90 | Total
+func payablesAgingTotals(rows []types.TableRow) []types.TableCell {
+	if len(rows) == 0 {
+		return nil
+	}
+	// Parse and sum the 6 numeric columns (indices 1-6); index 0 is supplier name.
+	var current, d30, d60, d90, over90, total float64
+	for _, row := range rows {
+		if len(row.Cells) < 7 {
+			continue
+		}
+		current += reports.ParseCurrency(row.Cells[1].Value)
+		d30 += reports.ParseCurrency(row.Cells[2].Value)
+		d60 += reports.ParseCurrency(row.Cells[3].Value)
+		d90 += reports.ParseCurrency(row.Cells[4].Value)
+		over90 += reports.ParseCurrency(row.Cells[5].Value)
+		total += reports.ParseCurrency(row.Cells[6].Value)
+	}
+	return []types.TableCell{
+		{Value: "Total"},
+		types.MoneyCell(current, "PHP", false),
+		types.MoneyCell(d30, "PHP", false),
+		types.MoneyCell(d60, "PHP", false),
+		types.MoneyCell(d90, "PHP", false),
+		types.MoneyCell(over90, "PHP", false),
+		types.MoneyCell(total, "PHP", false),
+	}
+}
+
+func fetchPayablesAging(ctx context.Context, getSimple SimpleFetcher) ([]types.TableColumn, []types.TableRow, error) {
+	columns := []types.TableColumn{
+		{Key: "supplier", Label: "Supplier"},
+		{Key: "current", Label: "Current", Align: "right"},
+		{Key: "days-30", Label: "1-30 Days", Align: "right"},
+		{Key: "days-60", Label: "31-60 Days", Align: "right"},
+		{Key: "days-90", Label: "61-90 Days", Align: "right"},
+		{Key: "over-90", Label: "Over 90 Days", Align: "right"},
+		{Key: "total", Label: "Total", Align: "right"},
+	}
+
+	if getSimple == nil {
+		return columns, nil, nil
+	}
+
+	resp, err := getSimple(ctx, &apagingpb.GetSimplePayablesAgingRequest{})
+	if err != nil {
+		return columns, nil, fmt.Errorf("payables aging query: %w", err)
+	}
+	if resp == nil {
+		return columns, nil, nil
+	}
+
+	var rows []types.TableRow
+	for idx, row := range resp.Data {
+		rows = append(rows, types.TableRow{
+			ID: fmt.Sprintf("pa-%d", idx+1),
+			Cells: []types.TableCell{
+				{Value: row.SupplierName},
+				types.MoneyCell(float64(row.Current)/100, "PHP", true),
+				types.MoneyCell(float64(row.Days_30)/100, "PHP", true),
+				types.MoneyCell(float64(row.Days_60)/100, "PHP", true),
+				types.MoneyCell(float64(row.Days_90)/100, "PHP", true),
+				types.MoneyCell(float64(row.Over_90)/100, "PHP", true),
+				types.MoneyCell(float64(row.Total)/100, "PHP", true),
+			},
+		})
+	}
+
+	return columns, rows, nil
+}

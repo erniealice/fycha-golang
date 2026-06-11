@@ -31,10 +31,10 @@ import (
 	gcfpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/gross_cashflow"
 	stmtspb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/statements"
 
-	equitydashboard "github.com/erniealice/fycha-golang/views/equity/dashboard"
-	ledgerdashboard "github.com/erniealice/fycha-golang/views/ledger/dashboard"
-	loansdashboard "github.com/erniealice/fycha-golang/views/loans/dashboard"
-	payrolldashboard "github.com/erniealice/fycha-golang/views/payroll/dashboard"
+	equitydashboard "github.com/erniealice/fycha-golang/domain/ledger/views/equity/dashboard"
+	ledgerdashboard "github.com/erniealice/fycha-golang/domain/ledger/views/ledger/dashboard"
+	loansdashboard "github.com/erniealice/fycha-golang/domain/treasury/views/loans/dashboard"
+	payrolldashboard "github.com/erniealice/fycha-golang/domain/payroll/views/payroll/dashboard"
 )
 
 // UseCases declares everything fycha's Block() needs from outside.
