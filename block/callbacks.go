@@ -27,12 +27,12 @@ import (
 
 	"github.com/erniealice/pyeza-golang/types"
 
-	assetaction "github.com/erniealice/fycha-golang/domain/asset/views/asset/action"
-	assetlist "github.com/erniealice/fycha-golang/domain/asset/views/asset/list"
-	assetcataction "github.com/erniealice/fycha-golang/domain/asset/views/asset_category/action"
-	assetcatpolicies "github.com/erniealice/fycha-golang/domain/asset/views/asset_category/policies"
-	depreciationrunmod "github.com/erniealice/fycha-golang/domain/asset/views/depreciation_run"
-	lapsinglist "github.com/erniealice/fycha-golang/domain/asset/views/lapsing_schedule/list"
+	asset "github.com/erniealice/fycha-golang/domain/asset"
+	assetaction "github.com/erniealice/fycha-golang/domain/asset/asset/action"
+	assetlist "github.com/erniealice/fycha-golang/domain/asset/asset/list"
+	assetcataction "github.com/erniealice/fycha-golang/domain/asset/asset_category/action"
+	assetcatpolicies "github.com/erniealice/fycha-golang/domain/asset/asset_category/policies"
+	lapsinglist "github.com/erniealice/fycha-golang/domain/asset/lapsing_schedule/list"
 )
 
 // ---------------------------------------------------------------------------
@@ -405,8 +405,8 @@ func generateDepreciationRunForCategory(
 func listDepreciationRunsForWorkspace(
 	ctx context.Context,
 	uc *UseCases,
-	scope depreciationrunmod.ListDepreciationRunsScope,
-) ([]depreciationrunmod.DepreciationRunRow, string, error) {
+	scope asset.ListDepreciationRunsScope,
+) ([]asset.DepreciationRunRow, string, error) {
 	if uc.DepRun.List == nil {
 		return nil, "", nil
 	}
@@ -415,7 +415,7 @@ func listDepreciationRunsForWorkspace(
 	if err != nil {
 		return nil, "", err
 	}
-	rows := make([]depreciationrunmod.DepreciationRunRow, 0, len(resp.GetData()))
+	rows := make([]asset.DepreciationRunRow, 0, len(resp.GetData()))
 	for _, r := range resp.GetData() {
 		if scope.Status != "" {
 			status := strings.ToLower(strings.TrimPrefix(r.GetStatus().String(), "DEPRECIATION_RUN_STATUS_"))
@@ -435,7 +435,7 @@ func readDepreciationRunWithEntries(
 	ctx context.Context,
 	uc *UseCases,
 	id string,
-) (*depreciationrunmod.DepreciationRunWithEntries, error) {
+) (*asset.DepreciationRunWithEntries, error) {
 	if uc.DepRun.Read == nil {
 		return nil, fmt.Errorf("depreciation run %s not found: Read use case not wired", id)
 	}
@@ -451,7 +451,7 @@ func readDepreciationRunWithEntries(
 	run := depreciationRunToRow(resp.GetData()[0])
 
 	// Fetch schedule entries (selections/results tabs).
-	var entries []depreciationrunmod.DepreciationRunEntryRow
+	var entries []asset.DepreciationRunEntryRow
 	if uc.DepRun.ListEntries != nil {
 		entriesResp, err := uc.DepRun.ListEntries(ctx, &deprunpb.ListDepreciationRunEntriesRequest{
 			RunId: id,
@@ -466,7 +466,7 @@ func readDepreciationRunWithEntries(
 		}
 	}
 
-	return &depreciationrunmod.DepreciationRunWithEntries{
+	return &asset.DepreciationRunWithEntries{
 		Run:     run,
 		Entries: entries,
 	}, nil
@@ -474,15 +474,15 @@ func readDepreciationRunWithEntries(
 
 // depreciationScheduleToEntryRow maps a proto DepreciationSchedule (scoped to a run)
 // to the view-layer DepreciationRunEntryRow used by the selections and results tabs.
-func depreciationScheduleToEntryRow(s *depschpb.DepreciationSchedule) depreciationrunmod.DepreciationRunEntryRow {
+func depreciationScheduleToEntryRow(s *depschpb.DepreciationSchedule) asset.DepreciationRunEntryRow {
 	if s == nil {
-		return depreciationrunmod.DepreciationRunEntryRow{}
+		return asset.DepreciationRunEntryRow{}
 	}
 	// outcome is stored as a string matching DepreciationRunOutcome enum values
 	// (e.g. "DEPRECIATION_RUN_OUTCOME_CREATED"). Map to lowercase view status
 	// ("created" | "skipped" | "errored") for CSS class hooks.
 	outcome := strings.ToLower(strings.TrimPrefix(s.GetOutcome(), "DEPRECIATION_RUN_OUTCOME_"))
-	return depreciationrunmod.DepreciationRunEntryRow{
+	return asset.DepreciationRunEntryRow{
 		ID:                 s.GetId(),
 		RunID:              s.GetDepreciationRunId(),
 		AssetID:            s.GetAssetId(),
@@ -495,13 +495,13 @@ func depreciationScheduleToEntryRow(s *depschpb.DepreciationSchedule) depreciati
 }
 
 // depreciationRunToRow maps a proto DepreciationRun to the view-layer DepreciationRunRow.
-func depreciationRunToRow(r *deprunpb.DepreciationRun) depreciationrunmod.DepreciationRunRow {
+func depreciationRunToRow(r *deprunpb.DepreciationRun) asset.DepreciationRunRow {
 	if r == nil {
-		return depreciationrunmod.DepreciationRunRow{}
+		return asset.DepreciationRunRow{}
 	}
 	status := strings.ToLower(strings.TrimPrefix(r.GetStatus().String(), "DEPRECIATION_RUN_STATUS_"))
 	scopeKind := strings.ToLower(strings.TrimPrefix(r.GetScopeKind().String(), "DEPRECIATION_RUN_SCOPE_KIND_"))
-	return depreciationrunmod.DepreciationRunRow{
+	return asset.DepreciationRunRow{
 		ID:           r.GetId(),
 		WorkspaceID:  r.GetWorkspaceId(),
 		ScopeKind:    scopeKind,

@@ -1,0 +1,44 @@
+// Package form provides the FundTransaction Settlement drawer-form stub.
+// Renders a "settle outstanding" form; submit handler is stubbed for FS-E.
+package form
+
+import (
+	"context"
+
+	fundinglabels "github.com/erniealice/fycha-golang/domain/funding/funding/labels"
+	pyeza "github.com/erniealice/pyeza-golang"
+	"github.com/erniealice/pyeza-golang/types"
+	"github.com/erniealice/pyeza-golang/view"
+)
+
+// Deps holds view dependencies.
+type Deps struct {
+	CommonLabels pyeza.CommonLabels
+	Labels       fundinglabels.FundingFormLabels
+}
+
+// PageData holds data for the settlement form drawer.
+type PageData struct {
+	types.PageData
+	AllocationID string
+	Labels       fundinglabels.FundingFormLabels
+}
+
+// NewView creates the settlement drawer-form view.
+func NewView(deps *Deps) view.View {
+	return view.ViewFunc(func(_ context.Context, viewCtx *view.ViewContext) view.ViewResult {
+		allocationID := viewCtx.Request.URL.Query().Get("allocation_id")
+		pd := &PageData{
+			PageData: types.PageData{
+				CacheVersion: viewCtx.CacheVersion,
+				Title:        deps.Labels.Settlement.Submit,
+				CurrentPath:  viewCtx.CurrentPath,
+				ActiveNav:    "funding",
+				CommonLabels: deps.CommonLabels,
+			},
+			AllocationID: allocationID,
+			Labels:       deps.Labels,
+		}
+		return view.OK("funding-settlement-form", pd)
+	})
+}

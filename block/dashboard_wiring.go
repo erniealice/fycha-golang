@@ -12,15 +12,14 @@ package block
 // view renders empty state (the existing fallback behaviour).
 
 import (
-	equitymod "github.com/erniealice/fycha-golang/domain/ledger/views/equity"
-	ledgermod "github.com/erniealice/fycha-golang/domain/ledger/views/ledger"
-	loansmod "github.com/erniealice/fycha-golang/domain/treasury/views/loans"
-	payrollmod "github.com/erniealice/fycha-golang/domain/payroll/views/payroll"
+	ledger "github.com/erniealice/fycha-golang/domain/ledger"
+	payroll "github.com/erniealice/fycha-golang/domain/payroll"
+	treasury "github.com/erniealice/fycha-golang/domain/treasury"
 )
 
 // wireLedgerDashboard sets ledgerDeps.GetLedgerDashboardPageData from the
 // typed closure on the UseCases struct.
-func wireLedgerDashboard(deps *ledgermod.ModuleDeps, uc *UseCases) {
+func wireLedgerDashboard(deps *ledger.LedgerModuleDeps, uc *UseCases) {
 	if uc == nil || uc.GetLedgerDashboardPageData == nil {
 		return
 	}
@@ -29,7 +28,7 @@ func wireLedgerDashboard(deps *ledgermod.ModuleDeps, uc *UseCases) {
 
 // wireEquityDashboard sets equityDeps.GetEquityDashboardPageData from the
 // typed closure on the UseCases struct.
-func wireEquityDashboard(deps *equitymod.ModuleDeps, uc *UseCases) {
+func wireEquityDashboard(deps *ledger.EquityModuleDeps, uc *UseCases) {
 	if uc == nil || uc.GetEquityDashboardPageData == nil {
 		return
 	}
@@ -38,7 +37,7 @@ func wireEquityDashboard(deps *equitymod.ModuleDeps, uc *UseCases) {
 
 // wirePayrollDashboard sets payrollDeps.GetPayrollDashboardPageData from the
 // typed closure on the UseCases struct.
-func wirePayrollDashboard(deps *payrollmod.ModuleDeps, uc *UseCases) {
+func wirePayrollDashboard(deps *payroll.PayrollDashboardModuleDeps, uc *UseCases) {
 	if uc == nil || uc.GetPayrollDashboardPageData == nil {
 		return
 	}
@@ -47,7 +46,7 @@ func wirePayrollDashboard(deps *payrollmod.ModuleDeps, uc *UseCases) {
 
 // wireLoansDashboard sets loansDeps.GetLoanDashboardPageData from the
 // typed closure on the UseCases struct.
-func wireLoansDashboard(deps *loansmod.ModuleDeps, uc *UseCases) {
+func wireLoansDashboard(deps *treasury.LoanModuleDeps, uc *UseCases) {
 	if uc == nil || uc.GetLoanDashboardPageData == nil {
 		return
 	}

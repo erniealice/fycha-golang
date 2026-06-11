@@ -23,14 +23,12 @@ import (
 	pyezatypes "github.com/erniealice/pyeza-golang/types"
 
 	asset "github.com/erniealice/fycha-golang/domain/asset"
-	assetmod "github.com/erniealice/fycha-golang/domain/asset/views/asset"
-	assetaction "github.com/erniealice/fycha-golang/domain/asset/views/asset/action"
-	assetform "github.com/erniealice/fycha-golang/domain/asset/views/asset/form"
-	assetlist "github.com/erniealice/fycha-golang/domain/asset/views/asset/list"
-	assetcataction "github.com/erniealice/fycha-golang/domain/asset/views/asset_category/action"
-	assetcatpolicies "github.com/erniealice/fycha-golang/domain/asset/views/asset_category/policies"
-	depreciationrunmod "github.com/erniealice/fycha-golang/domain/asset/views/depreciation_run"
-	lapsinglist "github.com/erniealice/fycha-golang/domain/asset/views/lapsing_schedule/list"
+	assetaction "github.com/erniealice/fycha-golang/domain/asset/asset/action"
+	assetform "github.com/erniealice/fycha-golang/domain/asset/asset/form"
+	assetlist "github.com/erniealice/fycha-golang/domain/asset/asset/list"
+	assetcataction "github.com/erniealice/fycha-golang/domain/asset/asset_category/action"
+	assetcatpolicies "github.com/erniealice/fycha-golang/domain/asset/asset_category/policies"
+	lapsinglist "github.com/erniealice/fycha-golang/domain/asset/lapsing_schedule/list"
 )
 
 // assetWiring holds everything wireAssetModule needs from the surrounding
@@ -67,7 +65,7 @@ func wireAssetModule(
 	useCases *UseCases,
 	w assetWiring,
 ) {
-	assetDeps := &assetmod.ModuleDeps{
+	assetDeps := &asset.AssetModuleDeps{
 		Routes:       w.assetRoutes,
 		CommonLabels: w.common,
 		Labels:       w.assetLabels,
@@ -186,7 +184,7 @@ func wireAssetModule(
 		}
 	}
 
-	assetmod.NewModule(assetDeps).RegisterRoutes(ctx.Routes)
+	asset.NewAssetModule(assetDeps).RegisterRoutes(ctx.Routes)
 
 	// ---------------------------------------------------------------------------
 	// Surface B — Lapsing Schedule live list page (replaces mock at /app/assets/reports/lapsing-schedule)
@@ -274,26 +272,26 @@ func wireAssetModule(
 	// ---------------------------------------------------------------------------
 	// Surface D — Depreciation Runs history list + detail module
 	// ---------------------------------------------------------------------------
-	drDeps := &depreciationrunmod.ModuleDeps{
+	drDeps := &asset.DepreciationRunModuleDeps{
 		Routes:       w.depreciationRunRoutes,
 		Labels:       w.depreciationRunLabels,
 		CommonLabels: w.common,
 		TableLabels:  w.fychaTableLabels,
 	}
 	if useCases != nil && useCases.DepRun.List != nil {
-		drDeps.ListDepreciationRuns = func(fctx context.Context, scope depreciationrunmod.ListDepreciationRunsScope) ([]depreciationrunmod.DepreciationRunRow, string, error) {
+		drDeps.ListDepreciationRuns = func(fctx context.Context, scope asset.ListDepreciationRunsScope) ([]asset.DepreciationRunRow, string, error) {
 			return listDepreciationRunsForWorkspace(fctx, useCases, scope)
 		}
 	}
 	if useCases != nil && useCases.DepRun.Read != nil {
-		drDeps.ReadDepreciationRun = func(fctx context.Context, id string) (*depreciationrunmod.DepreciationRunWithEntries, error) {
+		drDeps.ReadDepreciationRun = func(fctx context.Context, id string) (*asset.DepreciationRunWithEntries, error) {
 			return readDepreciationRunWithEntries(fctx, useCases, id)
 		}
 		// TODO: add ListAssetTransactionsByRunID use case (Followup — Phase 4 codex H2).
 		// When ListAssetTransactionsByRunID is available in espyna-golang, wire it here.
 		// Until then, the transactions tab renders an empty table (nil guard in detail/page.go:loadTabData).
 	}
-	depreciationrunmod.NewModule(drDeps).RegisterRoutes(ctx.Routes)
+	asset.NewDepreciationRunModule(drDeps).RegisterRoutes(ctx.Routes)
 }
 
 // ---------------------------------------------------------------------------

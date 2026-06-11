@@ -39,23 +39,16 @@ import (
 	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
 
 	asset "github.com/erniealice/fycha-golang/domain/asset"
+	expenditure "github.com/erniealice/fycha-golang/domain/expenditure"
 	finance "github.com/erniealice/fycha-golang/domain/finance"
 	ledger "github.com/erniealice/fycha-golang/domain/ledger"
+	payroll "github.com/erniealice/fycha-golang/domain/payroll"
 	tax "github.com/erniealice/fycha-golang/domain/tax"
 	treasury "github.com/erniealice/fycha-golang/domain/treasury"
 	report "github.com/erniealice/fycha-golang/service/report"
-	cashmod "github.com/erniealice/fycha-golang/domain/treasury/views/cash"
-	equitymod "github.com/erniealice/fycha-golang/domain/ledger/views/equity"
-	expensesmod "github.com/erniealice/fycha-golang/domain/expenditure/views/expenses"
-	financialmod "github.com/erniealice/fycha-golang/service/report/views/financial"
-	forexratemod "github.com/erniealice/fycha-golang/domain/finance/views/forex_rate"
-	ledgermod "github.com/erniealice/fycha-golang/domain/ledger/views/ledger"
-	loansmod "github.com/erniealice/fycha-golang/domain/treasury/views/loans"
-	payrollmod "github.com/erniealice/fycha-golang/domain/payroll/views/payroll"
 	reportmod "github.com/erniealice/fycha-golang/service/report/views"
 	cashbookview "github.com/erniealice/fycha-golang/service/report/views/cash_book"
-	taxratemod "github.com/erniealice/fycha-golang/domain/tax/views/tax_rate"
-	withholdingcertmod "github.com/erniealice/fycha-golang/domain/treasury/views/withholding_certificate"
+	financialmod "github.com/erniealice/fycha-golang/service/report/views/financial"
 )
 
 // ---------------------------------------------------------------------------
@@ -294,7 +287,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		// =====================================================================
 
 		if cfg.wantLedger() {
-			ledgerDeps := &ledgermod.ModuleDeps{
+			ledgerDeps := &ledger.LedgerModuleDeps{
 				Routes:                  accountRoutes,
 				StatementRoutes:         statementRoutes,
 				JournalRoutes:           journalRoutes,
@@ -349,7 +342,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 			}
 			// Wire ledger dashboard use case.
 			wireLedgerDashboard(ledgerDeps, useCases)
-			ledgermod.NewModule(ledgerDeps).RegisterRoutes(ctx.Routes)
+			ledger.NewLedgerModule(ledgerDeps).RegisterRoutes(ctx.Routes)
 		}
 
 		// =====================================================================
@@ -357,7 +350,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		// =====================================================================
 
 		if cfg.wantLoans() {
-			loansDeps := &loansmod.ModuleDeps{
+			loansDeps := &treasury.LoanModuleDeps{
 				Routes:        loanRoutes,
 				PaymentRoutes: loanPaymentRoutes,
 				Labels:        loanLabels,
@@ -367,7 +360,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 			}
 			// Wire loan dashboard use case.
 			wireLoansDashboard(loansDeps, useCases)
-			loansmod.NewModule(loansDeps).RegisterRoutes(ctx.Routes)
+			treasury.NewLoanModule(loansDeps).RegisterRoutes(ctx.Routes)
 		}
 
 		// =====================================================================
@@ -375,7 +368,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		// =====================================================================
 
 		if cfg.wantEquity() {
-			equityDeps := &equitymod.ModuleDeps{
+			equityDeps := &ledger.EquityModuleDeps{
 				Routes:       equityRoutes,
 				Labels:       ledger.DefaultEquityLabels(),
 				CommonLabels: ctx.Common,
@@ -383,7 +376,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 			}
 			// Wire equity dashboard use case.
 			wireEquityDashboard(equityDeps, useCases)
-			equitymod.NewModule(equityDeps).RegisterRoutes(ctx.Routes)
+			ledger.NewEquityModule(equityDeps).RegisterRoutes(ctx.Routes)
 		}
 
 		// =====================================================================
@@ -391,10 +384,10 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		// =====================================================================
 
 		if cfg.wantPayroll() {
-			payrollDeps := &payrollmod.ModuleDeps{}
+			payrollDeps := &payroll.PayrollDashboardModuleDeps{}
 			// Wire payroll dashboard use case.
 			wirePayrollDashboard(payrollDeps, useCases)
-			payrollmod.NewModule(payrollDeps).RegisterRoutes(ctx.Routes)
+			payroll.NewPayrollDashboardModule(payrollDeps).RegisterRoutes(ctx.Routes)
 		}
 
 		// =====================================================================
@@ -414,7 +407,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		// =====================================================================
 
 		if cfg.wantCash() {
-			cashmod.NewModule(&cashmod.ModuleDeps{
+			treasury.NewPettyCashModule(&treasury.PettyCashModuleDeps{
 				// TODO: wire when useCases.Treasury.SecurityDeposit / PettyCashFund are available
 			}).RegisterRoutes(ctx.Routes)
 
@@ -431,7 +424,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		// =====================================================================
 
 		if cfg.wantExpenses() {
-			expensesmod.NewModule(&expensesmod.ModuleDeps{
+			expenditure.NewPrepaymentModule(&expenditure.PrepaymentModuleDeps{
 				// TODO: wire when useCases.Expenditure.Prepayment is available
 			}).RegisterRoutes(ctx.Routes)
 		}
@@ -441,7 +434,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		// =====================================================================
 
 		if cfg.wantTaxRate() {
-			taxRateDeps := &taxratemod.ModuleDeps{
+			taxRateDeps := &tax.TaxRateModuleDeps{
 				Routes:       taxRateRoutes,
 				Labels:       taxRateLabels,
 				CommonLabels: ctx.Common,
@@ -450,7 +443,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 			if useCases.Tax.ListTaxRates != nil {
 				taxRateDeps.ListTaxRates = useCases.Tax.ListTaxRates
 			}
-			taxratemod.NewModule(taxRateDeps).RegisterRoutes(ctx.Routes)
+			tax.NewTaxRateModule(taxRateDeps).RegisterRoutes(ctx.Routes)
 		}
 
 		// =====================================================================
@@ -458,7 +451,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		// =====================================================================
 
 		if cfg.wantForexRate() {
-			forexRateDeps := &forexratemod.ModuleDeps{
+			forexRateDeps := &finance.ForexRateModuleDeps{
 				Routes:       forexRateRoutes,
 				Labels:       forexRateLabels,
 				CommonLabels: ctx.Common,
@@ -467,7 +460,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 			if useCases.Finance.ListForexRates != nil {
 				forexRateDeps.ListForexRates = useCases.Finance.ListForexRates
 			}
-			forexratemod.NewModule(forexRateDeps).RegisterRoutes(ctx.Routes)
+			finance.NewForexRateModule(forexRateDeps).RegisterRoutes(ctx.Routes)
 		}
 
 		// =====================================================================
@@ -475,7 +468,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		// =====================================================================
 
 		if cfg.wantWithholdingCertificate() {
-			withholdingCertDeps := &withholdingcertmod.ModuleDeps{
+			withholdingCertDeps := &treasury.WithholdingCertificateModuleDeps{
 				Routes:       withholdingCertificateRoutes,
 				Labels:       withholdingCertificateLabels,
 				CommonLabels: ctx.Common,
@@ -484,7 +477,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 			if useCases.Treasury.ListWithholdingCertificates != nil {
 				withholdingCertDeps.ListWithholdingCertificates = useCases.Treasury.ListWithholdingCertificates
 			}
-			withholdingcertmod.NewModule(withholdingCertDeps).RegisterRoutes(ctx.Routes)
+			treasury.NewWithholdingCertificateModule(withholdingCertDeps).RegisterRoutes(ctx.Routes)
 		}
 
 		log.Println("  fycha accounting domain initialized")
