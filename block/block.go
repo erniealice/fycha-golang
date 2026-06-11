@@ -111,6 +111,15 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 			return fmt.Errorf("fycha.Block: WithUseCases(...) is required")
 		}
 		useCases := cfg.useCases
+		// FAIL-CLOSED completeness gate: a missing REQUIRED closure for an enabled
+		// module is a boot REFUSAL, NOT a silent runtime nil. MustValidate panics
+		// in dev/test (loud, stack-traced, uncatchable-by-accident) and returns a
+		// screamed boot error in prod (which this AppOption propagates → boot halt).
+		// Mirrors the AUTHZ_ENFORCE boot-guard; closes the architecture-roast
+		// burn #1 (a nil-closure rendering an empty feature with no error).
+		if err := useCases.MustValidate(cfg); err != nil {
+			return err
+		}
 
 		// 20260521 Wave B P1.E.1-P1.E.5 — fycha report views consume
 		// service-driven typed closures via `useCases.Reports.<Group>`
