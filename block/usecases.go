@@ -24,6 +24,9 @@ import (
 	deprunpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/depreciation_run"
 	workspacepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/entity/workspace"
 	forexratepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/finance/forex_rate"
+	fundpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/funding/fund"
+	fundallocationpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/funding/fund_allocation"
+	fundtransactionpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/funding/fund_transaction"
 	accountpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/account"
 	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
 	journalentrypb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_entry"
@@ -61,6 +64,9 @@ type UseCases struct {
 	// Ledger domain groups
 	Ledger       LedgerUseCases
 	FiscalPeriod FiscalPeriodUseCases
+
+	// Funding domain group
+	Funding FundingUseCases
 
 	// Other accounting groups
 	Tax      TaxUseCases
@@ -242,6 +248,17 @@ type TaxUseCases struct {
 // FinanceUseCases — forex rate read-only ops.
 type FinanceUseCases struct {
 	ListForexRates func(context.Context, *forexratepb.ListForexRatesRequest) (*forexratepb.ListForexRatesResponse, error)
+}
+
+// FundingUseCases — cross-workspace fund source/card/transaction read ops
+// consumed by the funding view module (source list, source detail, card list,
+// card detail). Write ops (create/update/delete) are not wired yet (FS-E stubs).
+type FundingUseCases struct {
+	ReadFund         func(context.Context, *fundpb.ReadFundRequest) (*fundpb.ReadFundResponse, error)
+	ListFunds        func(context.Context, *fundpb.ListFundsRequest) (*fundpb.ListFundsResponse, error)
+	ReadAllocation   func(context.Context, *fundallocationpb.ReadFundAllocationRequest) (*fundallocationpb.ReadFundAllocationResponse, error)
+	ListAllocations  func(context.Context, *fundallocationpb.ListFundAllocationsRequest) (*fundallocationpb.ListFundAllocationsResponse, error)
+	ListTransactions func(context.Context, *fundtransactionpb.ListFundTransactionsRequest) (*fundtransactionpb.ListFundTransactionsResponse, error)
 }
 
 // TreasuryUseCases — withholding certificate and other treasury ops.

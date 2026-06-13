@@ -1,15 +1,25 @@
 package funding
 
-import "github.com/erniealice/pyeza-golang/compose"
+import (
+	"github.com/erniealice/pyeza-golang/compose"
+
+	fundinglabels "github.com/erniealice/fycha-golang/domain/funding/funding/labels"
+)
 
 // Describe returns the funding view module's compose.Unit. This unit is a
-// view-module contributor: it supplies an AppEntry and sidebar Items for the
-// "funding" app but owns no entity Routes or Labels of its own — those live in
-// the centymo fund / fund_allocation / fund_transaction descriptor units.
+// view-module contributor: it supplies an AppEntry, sidebar Items, and
+// lyngua-overlayable FundingFormLabels for the "funding" app. Entity-level
+// routes (fund, fund_allocation, fund_transaction) live in the centymo
+// descriptor units; this unit owns the view-module wiring via its Mount
+// closure (set by the block catalog).
 func Describe() compose.Unit {
+	l := fundinglabels.DefaultFundingFormLabels()
 	return compose.Unit{
 		Key:       "funding.funding",
 		Templates: TemplatesFS,
+		Labels:    &l,
+		LabelJSON: compose.JSONBinding{File: "funding.json", Key: "funding"},
+		LabelName: "FundingFormLabels",
 		Nav: compose.NavContrib{
 			Permission: "fund:list",
 			AppEntry: &compose.AppEntry{

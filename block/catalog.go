@@ -36,9 +36,12 @@ import (
 	prepayment "github.com/erniealice/fycha-golang/domain/expenditure/prepayment"
 	finance "github.com/erniealice/fycha-golang/domain/finance"
 	forexrate "github.com/erniealice/fycha-golang/domain/finance/forex_rate"
+	fundingdom "github.com/erniealice/fycha-golang/domain/funding"
+	fundingpkg "github.com/erniealice/fycha-golang/domain/funding/funding"
+	fundinglabels "github.com/erniealice/fycha-golang/domain/funding/funding/labels"
 	ledger "github.com/erniealice/fycha-golang/domain/ledger"
-	ledgerview "github.com/erniealice/fycha-golang/domain/ledger/ledger"
 	equity "github.com/erniealice/fycha-golang/domain/ledger/equity"
+	ledgerview "github.com/erniealice/fycha-golang/domain/ledger/ledger"
 	payroll "github.com/erniealice/fycha-golang/domain/payroll"
 	payrolldashboard "github.com/erniealice/fycha-golang/domain/payroll/payrolldashboard"
 	payrollemployee "github.com/erniealice/fycha-golang/domain/payroll/payrollemployee"
@@ -464,6 +467,62 @@ func PayrollSettingsUnit(_ *UseCases, _ *Infra) compose.Unit {
 }
 
 // ---------------------------------------------------------------------------
+// Funding unit
+// ---------------------------------------------------------------------------
+
+// FundingUnit wires the funding view module (8 views: source list/detail,
+// card list/detail, 4 drawer form stubs). The funding descriptor contributes
+// the AppEntry + sidebar items; the Mount closure builds the FundingModuleDeps
+// from the block's UseCases and registers the HTTP routes.
+//
+// Route URLs use the defaults from FundingModule.RegisterRoutes (no /app/
+// prefix — workspace_path middleware dispatches /w/{slug}/funding/* to the
+// bare /funding/* handlers). Labels are overlaid via LabelJSON in phase 1.
+func FundingUnit(uc *UseCases, _ *Infra) compose.Unit {
+	u := fundingpkg.Describe()
+	u.Mount = func(mc *compose.MountContext) error {
+		// Type-assert the post-overlay labels pointer back to concrete type.
+		var lbls fundinglabels.FundingFormLabels
+		if u.Labels != nil {
+			if p, ok := u.Labels.(*fundinglabels.FundingFormLabels); ok {
+				lbls = *p
+			}
+		}
+		if lbls.Source.Title == "" {
+			lbls = fundinglabels.DefaultFundingFormLabels()
+		}
+
+		deps := &fundingdom.FundingModuleDeps{
+			CommonLabels: mc.Common,
+			TableLabels:  mc.Table,
+			Labels:       fundingdom.FundingFormLabels(lbls),
+			// Route URLs match DefaultFundRoutes() (workspace_path strips /app/).
+			SourceListURL:     "/funding/sources",
+			SourceDetailURL:   "/funding/sources/{fund_id}",
+			CardListURL:       "/funding/cards",
+			CardDetailURL:     "/funding/cards/{allocation_id}",
+			AllocationFormURL: "/funding/allocation/form",
+			DrawFormURL:       "/funding/draw/form",
+			SettlementFormURL: "/funding/settlement/form",
+			TransferFormURL:   "/funding/transfer/form",
+		}
+
+		if uc != nil {
+			f := &uc.Funding
+			deps.ReadFund = f.ReadFund
+			deps.ListFunds = f.ListFunds
+			deps.ReadAllocation = f.ReadAllocation
+			deps.ListAllocations = f.ListAllocations
+			deps.ListTransactions = f.ListTransactions
+		}
+
+		fundingdom.NewFundingModule(deps).RegisterRoutes(mc.Routes)
+		return nil
+	}
+	return u
+}
+
+// ---------------------------------------------------------------------------
 // Reports unit
 // ---------------------------------------------------------------------------
 
@@ -540,6 +599,9 @@ func AllUnits(uc *UseCases, infra *Infra) []compose.Unit {
 
 		// Expenditure (stub)
 		PrepaymentUnit(uc, infra),
+
+		// Funding domain (cross-workspace fund sources + cards + drawer forms)
+		FundingUnit(uc, infra),
 
 		// Payroll domain — siblings precede dashboard so routes are available
 		PayrollRunUnit(uc, infra),
