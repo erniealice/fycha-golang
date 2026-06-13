@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strconv"
 
-	appcontext "github.com/erniealice/espyna-golang/appcontext"
+	"github.com/erniealice/espyna-golang/shared/identity"
 	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
 	"github.com/erniealice/pyeza-golang/view"
 
@@ -119,7 +119,7 @@ func NewCloseAction(deps *ActionDeps) view.View {
 		}
 
 		// Extract the current user ID from context.
-		closedBy := appcontext.ExtractUserIDFromContext(ctx)
+		closedBy := identity.Must(ctx).UserID
 
 		resp, err := deps.CloseFiscalPeriod(ctx, &fiscalperiodpb.CloseFiscalPeriodRequest{
 			FiscalPeriodId: id,

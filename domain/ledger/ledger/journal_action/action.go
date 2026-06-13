@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	appcontext "github.com/erniealice/espyna-golang/appcontext"
+	"github.com/erniealice/espyna-golang/shared/identity"
 	jepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_entry"
 	"github.com/erniealice/pyeza-golang/view"
 
@@ -106,7 +106,7 @@ func NewAddAction(deps *Deps) view.View {
 
 		// If "post" was clicked, post the newly created entry
 		if submitAction == "post" && newID != "" && deps.PostJournalEntry != nil {
-			postedByCreate := appcontext.ExtractUserIDFromContext(ctx)
+			postedByCreate := identity.Must(ctx).UserID
 			postResp, postErr := deps.PostJournalEntry(ctx, &jepb.PostJournalEntryRequest{
 				JournalEntryId: newID,
 				PostedBy:       postedByCreate,
@@ -197,7 +197,7 @@ func NewPostAction(deps *Deps) view.View {
 		}
 
 		// Extract the authenticated user ID from context.
-		postedBy := appcontext.ExtractUserIDFromContext(ctx)
+		postedBy := identity.Must(ctx).UserID
 
 		resp, err := deps.PostJournalEntry(ctx, &jepb.PostJournalEntryRequest{
 			JournalEntryId: id,
