@@ -13,5 +13,11 @@ func Describe() compose.Unit {
 		LabelJSON: compose.JSONBinding{File: "depreciation_run.json", Key: ""},
 		LabelName: "DepreciationRunLabels",
 		Templates: TemplatesFS,
+		Nav: compose.NavContrib{
+			Permission: "asset:list",
+			Items: []compose.NavItem{
+				{Key: "depreciation-runs", Route: "depreciation_run.list", Params: map[string]string{"status": "complete"}, Label: "Depreciation Runs", Icon: "icon-trending-down", Permission: "asset:list"},
+			},
+		},
 	}
 }

@@ -13,5 +13,11 @@ func Describe() compose.Unit {
 		LabelJSON: compose.JSONBinding{File: "withholding_certificate.json", Key: ""},
 		LabelName: "WithholdingCertificateLabels",
 		Templates: TemplatesFS,
+		Nav: compose.NavContrib{
+			Permission: "withholding_certificate:list",
+			Items: []compose.NavItem{
+				{Key: "withholding-certs", Route: "withholding_certificate.list", Params: map[string]string{"status": "active"}, Label: "Withholding Certificates", Icon: "icon-file-text", Permission: "withholding_certificate:list"},
+			},
+		},
 	}
 }

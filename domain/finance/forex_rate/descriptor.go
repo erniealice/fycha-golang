@@ -13,5 +13,11 @@ func Describe() compose.Unit {
 		LabelJSON: compose.JSONBinding{File: "forex_rate.json", Key: ""},
 		LabelName: "ForexRateLabels",
 		Templates: TemplatesFS,
+		Nav: compose.NavContrib{
+			Permission: "forex_rate:read",
+			Items: []compose.NavItem{
+				{Key: "forex-rates", Route: "forex_rate.list", Params: map[string]string{"status": "active"}, Label: "Forex Rates", Icon: "icon-refresh-cw", Permission: "forex_rate:read"},
+			},
+		},
 	}
 }

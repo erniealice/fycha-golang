@@ -13,5 +13,11 @@ func Describe() compose.Unit {
 		LabelJSON: compose.JSONBinding{File: "tax_rate.json", Key: ""},
 		LabelName: "TaxRateLabels",
 		Templates: TemplatesFS,
+		Nav: compose.NavContrib{
+			Permission: "tax_rate:read",
+			Items: []compose.NavItem{
+				{Key: "tax-rates", Route: "tax_rate.list", Params: map[string]string{"status": "active"}, Label: "Tax Rates", Icon: "icon-percent", Permission: "tax_rate:read"},
+			},
+		},
 	}
 }
