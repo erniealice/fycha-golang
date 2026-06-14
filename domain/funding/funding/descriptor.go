@@ -29,15 +29,16 @@ func Describe() compose.Unit {
 				Icon:       "icon-wallet",
 				Permission: "fund:list|fund_allocation:list",
 			},
-			Items: []compose.NavItem{
-				{Key: "sources-all", Route: "fund.source.list", Label: "All Sources", Icon: "icon-list", Permission: "fund:list"},
-				{Key: "cards-active", Route: "fund.card.list", Query: "?status=active", Label: "Active", Icon: "icon-credit-card", Permission: "fund_allocation:list"},
-				{Key: "cards-suspended", Route: "fund.card.list", Query: "?status=suspended", Label: "Suspended", Icon: "icon-pause-circle", Permission: "fund_allocation:list"},
-				{Key: "cards-closed", Route: "fund.card.list", Query: "?status=closed", Label: "Closed", Icon: "icon-x-circle", Permission: "fund_allocation:list"},
-				{Key: "activity-posted", Route: "fund_transaction.list", Params: map[string]string{"status": "posted"}, Label: "Posted", Icon: "icon-check-circle", Permission: "fund_transaction:list"},
-				{Key: "activity-draft", Route: "fund_transaction.list", Params: map[string]string{"status": "draft"}, Label: "Draft", Icon: "icon-edit", Permission: "fund_transaction:list"},
-				{Key: "activity-voided", Route: "fund_transaction.list", Params: map[string]string{"status": "voided"}, Label: "Voided", Icon: "icon-x-circle", Permission: "fund_transaction:list"},
-			},
+			// NOTE: nav items (sources-all / cards-* / activity-*) removed —
+			// they reference route keys "fund.source.list", "fund.card.list",
+			// and "fund_transaction.list", but the fund / fund_card /
+			// fund_transaction entities are scaffold-only (labels.go, no
+			// routes.go / descriptor / mounted unit) in BOTH fycha and centymo.
+			// Within compose, phase-3 nav validation runs against the per-engine
+			// RouteMap, so these unmounted-entity references fail-closed the
+			// entire fycha engine. Restore once the fund* entities ship route
+			// structs and are mounted in their owning engine's AllUnits.
+			Items: []compose.NavItem{},
 		},
 	}
 }

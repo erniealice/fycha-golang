@@ -25,8 +25,12 @@ func Describe() compose.Unit {
 			Items: []compose.NavItem{
 				{Key: "loans-active", Route: "loan.list", Params: map[string]string{"status": "active"}, Label: "Active", Icon: "icon-check-circle", Permission: "loan:list"},
 				{Key: "loans-completed", Route: "loan.list", Params: map[string]string{"status": "completed"}, Label: "Complete", Icon: "icon-check-circle", Permission: "loan:list"},
-				{Key: "payments-upcoming", Route: "loan_payment.list", Params: map[string]string{"status": "upcoming"}, Label: "Upcoming", Icon: "icon-clock", Permission: "loan:list"},
-				{Key: "payments-history", Route: "loan_payment.list", Params: map[string]string{"status": "history"}, Label: "History", Icon: "icon-clock", Permission: "loan:list"},
+				// NOTE: "payments-upcoming" / "payments-history" nav items removed —
+				// they reference route key "loan_payment.list", but loan_payment is
+				// scaffold-only (labels.go + routes.go, no descriptor / view module /
+				// mounted unit in fycha block.AllUnits), so the key is never in the
+				// route table and a dangling ref fail-closes the entire fycha engine.
+				// Restore once loan_payment ships a view module and is mounted.
 				{Key: "amortization-schedules", Route: "loan.amortization", Label: "Amortization Schedules", Icon: "icon-calendar", Permission: "loan:list"},
 			},
 		},
