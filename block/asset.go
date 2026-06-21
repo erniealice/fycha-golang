@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"strings"
 
+	consumerapp "github.com/erniealice/espyna-golang/consumer/app"
 	topref "github.com/erniealice/espyna-golang/reference"
 
 	assetpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset"
@@ -60,7 +61,7 @@ type assetWiring struct {
 // Behaviour-preserving: same construction order, same registration order,
 // same callbacks. block.go calls this exactly once when cfg.wantAsset().
 func wireAssetModule(
-	ctx *pyeza.AppContext, // route registrar + translation provider live on this
+	ctx *consumerapp.AppContext, // route registrar + translation provider live on this
 	cfg *blockConfig,
 	useCases *UseCases,
 	w assetWiring,

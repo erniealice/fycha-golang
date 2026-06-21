@@ -9,21 +9,20 @@ import (
 	loansdashboardview "github.com/erniealice/fycha-golang/domain/treasury/loan/dashboard"
 
 	"github.com/erniealice/espyna-golang/consumer"
-	composehelper "github.com/erniealice/espyna-golang/consumer/compose"
+	consumerapp "github.com/erniealice/espyna-golang/consumer/app"
 	"github.com/erniealice/espyna-golang/reference"
 	attachmentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/document/attachment"
 	equitydashpb "github.com/erniealice/esqyma/pkg/schema/v1/service/dashboard/equity"
 	ledgerdashpb "github.com/erniealice/esqyma/pkg/schema/v1/service/dashboard/ledger"
 	payrolldashpb "github.com/erniealice/esqyma/pkg/schema/v1/service/dashboard/payroll"
 	treasurydashpb "github.com/erniealice/esqyma/pkg/schema/v1/service/dashboard/treasury"
-	"github.com/erniealice/pyeza-golang"
 )
 
-// fychaEngineBlock returns a pyeza.AppOption that registers all fycha domain
+// fychaEngineBlock returns a consumerapp.AppOption that registers all fycha domain
 // modules via the compose engine (replaces legacy fychaBlock).
-func EngineBlock(depRunURL string) pyeza.AppOption {
-	return func(ctx *pyeza.AppContext) error {
-		uc, err := composehelper.RequireUseCases(ctx, "fychaEngineBlock")
+func EngineBlock(depRunURL string) consumerapp.AppOption {
+	return func(ctx *consumerapp.AppContext) error {
+		uc, err := consumerapp.RequireUseCases(ctx, "fychaEngineBlock")
 		if err != nil {
 			return err
 		}
@@ -42,7 +41,7 @@ func EngineBlock(depRunURL string) pyeza.AppOption {
 		}
 
 		units := AllUnits(adapted, infra)
-		return composehelper.AssembleEngineBlock("fycha", units, ctx)
+		return consumerapp.AssembleEngineBlock("fycha", units, ctx)
 	}
 }
 

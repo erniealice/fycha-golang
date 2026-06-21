@@ -33,6 +33,7 @@ import (
 	lynguaV1 "github.com/erniealice/lyngua/golang/v1"
 	pyeza "github.com/erniealice/pyeza-golang"
 
+	consumerapp "github.com/erniealice/espyna-golang/consumer/app"
 	topref "github.com/erniealice/espyna-golang/reference"
 
 	attachmentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/document/attachment"
@@ -85,7 +86,7 @@ func handleFunc(r pyeza.RouteRegistrar, method, path string, handler http.Handle
 // loans, equity, payroll, financial statements, cash deposits + petty cash,
 // and expenses/prepayments). Call with no options to register ALL modules.
 // Call with specific WithX() options for a subset.
-func Block(opts ...BlockOption) pyeza.AppOption {
+func Block(opts ...BlockOption) consumerapp.AppOption {
 	cfg := &blockConfig{}
 	for _, opt := range opts {
 		opt(cfg)
@@ -99,7 +100,7 @@ func Block(opts ...BlockOption) pyeza.AppOption {
 		cfg.taxRate || cfg.forexRate || cfg.withholdingCertificate
 	cfg.enableAll = !moduleSelected
 
-	return func(ctx *pyeza.AppContext) error {
+	return func(ctx *consumerapp.AppContext) error {
 		// --- Type-assert translations ---
 		translations, ok := ctx.Translations.(*lynguaV1.TranslationProvider)
 		if !ok || translations == nil {

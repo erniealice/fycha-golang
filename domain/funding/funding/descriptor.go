@@ -1,7 +1,7 @@
 package funding
 
 import (
-	"github.com/erniealice/pyeza-golang/compose"
+	"github.com/erniealice/espyna-golang/consumer/compose"
 
 	fundinglabels "github.com/erniealice/fycha-golang/domain/funding/funding/labels"
 )

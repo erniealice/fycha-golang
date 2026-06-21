@@ -24,8 +24,8 @@ import (
 
 	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
 
-	pyeza "github.com/erniealice/pyeza-golang"
-	"github.com/erniealice/pyeza-golang/compose"
+	consumerapp "github.com/erniealice/espyna-golang/consumer/app"
+	"github.com/erniealice/espyna-golang/consumer/compose"
 
 	assetpkg "github.com/erniealice/fycha-golang/domain/asset"
 	assetentity "github.com/erniealice/fycha-golang/domain/asset/asset"
@@ -119,9 +119,9 @@ func AssetUnit(uc *UseCases, infra *Infra) compose.Unit {
 		// Wire the asset module directly without going through blockConfig/Block();
 		// use a minimal blockConfig with asset enabled so wireAssetModule gates work.
 		// wireAssetModule only reads ctx.Routes, ctx.Table, and ctx.Common, so a
-		// minimal pyeza.AppContext with those fields populated is sufficient.
+		// minimal consumerapp.AppContext with those fields populated is sufficient.
 		cfg := &blockConfig{asset: true, assetDepreciationRunURL: assetDepRunURL}
-		minCtx := &pyeza.AppContext{Routes: mc.Routes, Table: mc.Table, Common: mc.Common}
+		minCtx := &consumerapp.AppContext{Routes: mc.Routes, Table: mc.Table, Common: mc.Common}
 		wireAssetModule(minCtx, cfg, uc, w)
 		return nil
 	}
