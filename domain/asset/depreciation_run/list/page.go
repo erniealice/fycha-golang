@@ -9,7 +9,7 @@ import (
 	"strconv"
 
 	espynahttp "github.com/erniealice/espyna-golang/contrib/http"
-	"github.com/erniealice/espyna-golang/tableparams"
+	"github.com/erniealice/espyna-golang/shared/tableparams"
 	depreciationrun "github.com/erniealice/fycha-golang/domain/asset/depreciation_run"
 	drshared "github.com/erniealice/fycha-golang/domain/asset/depreciation_run/shared"
 	pyeza "github.com/erniealice/pyeza-golang"

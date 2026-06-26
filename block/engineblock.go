@@ -10,7 +10,7 @@ import (
 
 	"github.com/erniealice/espyna-golang/consumer"
 	consumerapp "github.com/erniealice/espyna-golang/consumer/app"
-	"github.com/erniealice/espyna-golang/reference"
+	"github.com/erniealice/espyna-golang/ports"
 	attachmentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/document/attachment"
 	equitydashpb "github.com/erniealice/esqyma/pkg/schema/v1/service/dashboard/equity"
 	ledgerdashpb "github.com/erniealice/esqyma/pkg/schema/v1/service/dashboard/ledger"
@@ -35,7 +35,7 @@ func EngineBlock(depRunURL string) consumerapp.AppOption {
 		infra.DeleteAttachment, _ = ctx.DeleteAttachment.(func(context.Context, *attachmentpb.DeleteAttachmentRequest) (*attachmentpb.DeleteAttachmentResponse, error))
 		infra.NewAttachmentID, _ = ctx.NewAttachmentID.(func() string)
 		if ctx.RefChecker != nil {
-			if rc, ok := ctx.RefChecker.(reference.Checker); ok {
+			if rc, ok := ctx.RefChecker.(ports.Checker); ok {
 				infra.RefChecker = rc
 			}
 		}

@@ -14,7 +14,7 @@ import (
 	"strings"
 
 	consumerapp "github.com/erniealice/espyna-golang/consumer/app"
-	topref "github.com/erniealice/espyna-golang/reference"
+	"github.com/erniealice/espyna-golang/ports"
 
 	assetpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset"
 	commonpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/common"
@@ -48,7 +48,7 @@ type assetWiring struct {
 	assetRevaluationLabels          asset.AssetRevaluationLabels
 	fychaTableLabels                pyezatypes.TableLabels
 	common                          pyeza.CommonLabels
-	refChecker                      topref.Checker
+	refChecker                      ports.Checker
 	// Attachments
 	newAttachmentID  func() string
 	uploadFile       func(ctx context.Context, name string, mime string, body []byte, refType string) error

@@ -3,7 +3,7 @@ package block
 import (
 	"context"
 
-	"github.com/erniealice/espyna-golang/reference"
+	"github.com/erniealice/espyna-golang/ports"
 	attachmentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/document/attachment"
 )
 
@@ -19,7 +19,7 @@ type Infra struct {
 	CreateAttachment func(context.Context, *attachmentpb.CreateAttachmentRequest) (*attachmentpb.CreateAttachmentResponse, error)
 	DeleteAttachment func(context.Context, *attachmentpb.DeleteAttachmentRequest) (*attachmentpb.DeleteAttachmentResponse, error)
 	NewAttachmentID  func() string
-	RefChecker       reference.Checker
+	RefChecker       ports.Checker
 
 	// AssetDepreciationRunURL is the optional URL for the asset depreciation-run
 	// toast / redirect on the asset module (Surface A). Empty means no redirect.

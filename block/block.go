@@ -34,7 +34,7 @@ import (
 	pyeza "github.com/erniealice/pyeza-golang"
 
 	consumerapp "github.com/erniealice/espyna-golang/consumer/app"
-	topref "github.com/erniealice/espyna-golang/reference"
+	"github.com/erniealice/espyna-golang/ports"
 
 	attachmentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/document/attachment"
 	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
@@ -138,9 +138,9 @@ func Block(opts ...BlockOption) consumerapp.AppOption {
 
 		// --- Type-assert reference checker (optional — nil-safe) ---
 		// Used to wire in-use checks for deletable entities (e.g. asset H5 gate).
-		var refChecker topref.Checker
+		var refChecker ports.Checker
 		if ctx.RefChecker != nil {
-			refChecker, _ = ctx.RefChecker.(topref.Checker)
+			refChecker, _ = ctx.RefChecker.(ports.Checker)
 		}
 
 		// --- Fycha-specific table labels ---
