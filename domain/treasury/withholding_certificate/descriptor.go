@@ -16,7 +16,7 @@ func Describe() compose.Unit {
 		Nav: compose.NavContrib{
 			Permission: "withholding_certificate:list",
 			Items: []compose.NavItem{
-				{Key: "withholding-certs", Route: "withholding_certificate.list", Params: map[string]string{"status": "active"}, Label: "Withholding Certificates", Icon: "icon-file-text", Permission: "withholding_certificate:list"},
+				{Key: "withholding-certs", Route: "withholding_certificate.list", Params: map[string]string{"status": "active"}, Label: "Withholding Certificates", Icon: "icon-file-text", Permission: "withholding_certificate:list", LabelKey: "withholding_certificates_label", IconKey: "withholding_certificates_icon"},
 			},
 		},
 	}

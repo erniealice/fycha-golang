@@ -23,8 +23,8 @@ func Describe() compose.Unit {
 				Permission: "equity:list",
 			},
 			Items: []compose.NavItem{
-				{Key: "capital-accounts", Route: "equity.accounts", Label: "Capital Accounts", Icon: "icon-users", Permission: "equity:list"},
-				{Key: "equity-transactions", Route: "equity.transactions", Label: "Equity Transactions", Icon: "icon-repeat", Permission: "equity:list"},
+				{Key: "capital-accounts", Route: "equity.accounts", Label: "Capital Accounts", Icon: "icon-users", Permission: "equity:list", LabelKey: "capital_accounts_label", IconKey: "capital_accounts_icon"},
+				{Key: "equity-transactions", Route: "equity.transactions", Label: "Equity Transactions", Icon: "icon-repeat", Permission: "equity:list", LabelKey: "equity_transactions_label", IconKey: "equity_transactions_icon"},
 			},
 		},
 	}

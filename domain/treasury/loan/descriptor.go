@@ -23,15 +23,15 @@ func Describe() compose.Unit {
 				Permission: "loan:list",
 			},
 			Items: []compose.NavItem{
-				{Key: "loans-active", Route: "loan.list", Params: map[string]string{"status": "active"}, Label: "Active", Icon: "icon-check-circle", Permission: "loan:list"},
-				{Key: "loans-completed", Route: "loan.list", Params: map[string]string{"status": "completed"}, Label: "Complete", Icon: "icon-check-circle", Permission: "loan:list"},
+				{Key: "loans-active", Route: "loan.list", Params: map[string]string{"status": "active"}, Label: "Active", Icon: "icon-check-circle", Permission: "loan:list", LabelKey: "active_label", IconKey: "loans_active_icon"},
+				{Key: "loans-completed", Route: "loan.list", Params: map[string]string{"status": "completed"}, Label: "Complete", Icon: "icon-check-circle", Permission: "loan:list", LabelKey: "complete_label", IconKey: "loans_completed_icon"},
 				// NOTE: "payments-upcoming" / "payments-history" nav items removed —
 				// they reference route key "loan_payment.list", but loan_payment is
 				// scaffold-only (labels.go + routes.go, no descriptor / view module /
 				// mounted unit in fycha block.AllUnits), so the key is never in the
 				// route table and a dangling ref fail-closes the entire fycha engine.
 				// Restore once loan_payment ships a view module and is mounted.
-				{Key: "amortization-schedules", Route: "loan.amortization", Label: "Amortization Schedules", Icon: "icon-calendar", Permission: "loan:list"},
+				{Key: "amortization-schedules", Route: "loan.amortization", Label: "Amortization Schedules", Icon: "icon-calendar", Permission: "loan:list", LabelKey: "amortization_schedules_label", IconKey: "amortization_schedules_icon"},
 			},
 		},
 	}

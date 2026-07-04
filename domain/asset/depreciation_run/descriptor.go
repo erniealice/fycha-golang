@@ -16,7 +16,7 @@ func Describe() compose.Unit {
 		Nav: compose.NavContrib{
 			Permission: "asset:list",
 			Items: []compose.NavItem{
-				{Key: "depreciation-runs", Route: "depreciation_run.list", Params: map[string]string{"status": "complete"}, Label: "Depreciation Runs", Icon: "icon-trending-down", Permission: "asset:list"},
+				{Key: "depreciation-runs", Route: "depreciation_run.list", Params: map[string]string{"status": "complete"}, Label: "Depreciation Runs", Icon: "icon-trending-down", Permission: "asset:list", LabelKey: "depreciation_runs_label", IconKey: "depreciation_runs_icon"},
 			},
 		},
 	}

@@ -16,7 +16,7 @@ func Describe() compose.Unit {
 		Nav: compose.NavContrib{
 			Permission: "forex_rate:read",
 			Items: []compose.NavItem{
-				{Key: "forex-rates", Route: "forex_rate.list", Params: map[string]string{"status": "active"}, Label: "Forex Rates", Icon: "icon-refresh-cw", Permission: "forex_rate:read"},
+				{Key: "forex-rates", Route: "forex_rate.list", Params: map[string]string{"status": "active"}, Label: "Forex Rates", Icon: "icon-refresh-cw", Permission: "forex_rate:read", LabelKey: "forex_rates_label", IconKey: "forex_rates_icon"},
 			},
 		},
 	}
