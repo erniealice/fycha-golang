@@ -9,14 +9,17 @@ const (
 
 // Routes holds route paths for Payroll Remittance views.
 type Routes struct {
-	ActiveNav string `json:"active_nav"`
-	ListURL   string `json:"list_url"`
+	ActiveNav    string `json:"active_nav"`
+	ActiveSubNav string `json:"active_sub_nav"`
+	ListURL      string `json:"list_url"`
 }
 
 func DefaultRoutes() Routes {
 	return Routes{
 		ActiveNav: "payroll",
-		ListURL:   ListURL,
+		// bare prefix — list page composes <base>-<status> to match sidebar item keys
+		ActiveSubNav: "remittances",
+		ListURL:      ListURL,
 	}
 }
 

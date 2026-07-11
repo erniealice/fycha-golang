@@ -21,6 +21,7 @@ const (
 // (Treasury domain — tax integration v1).
 type Routes struct {
 	ActiveNav     string `json:"active_nav"`
+	ActiveSubNav  string `json:"active_sub_nav"`
 	ListURL       string `json:"list_url"`
 	DetailURL     string `json:"detail_url"`
 	TableURL      string `json:"table_url"`
@@ -34,7 +35,8 @@ type Routes struct {
 // DefaultRoutes returns a Routes populated from the package-level route constants.
 func DefaultRoutes() Routes {
 	return Routes{
-		ActiveNav:     "withholding_certificate",
+		ActiveNav:     "ledger",
+		ActiveSubNav:  "withholding-certs",
 		ListURL:       ListURL,
 		DetailURL:     DetailURL,
 		TableURL:      TableURL,

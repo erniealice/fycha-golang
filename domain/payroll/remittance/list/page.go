@@ -74,7 +74,7 @@ func NewView(deps *Deps) view.View {
 				Title:          remittanceStatusTitle(deps.Labels, status),
 				CurrentPath:    viewCtx.CurrentPath,
 				ActiveNav:      deps.Routes.ActiveNav,
-				ActiveSubNav:   "payroll-remittances",
+				ActiveSubNav:   deps.Routes.ActiveSubNav + "-" + status,
 				HeaderTitle:    remittanceStatusTitle(deps.Labels, status),
 				HeaderSubtitle: remittanceStatusSubtitle(deps.Labels, status),
 				HeaderIcon:     "icon-landmark",

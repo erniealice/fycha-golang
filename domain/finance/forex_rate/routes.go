@@ -29,18 +29,20 @@ const (
 // Routes holds route paths for Forex Rate read-only views.
 // Forex rates are read-only in the UI; rows are appended only via RecordOperatorRate.
 type Routes struct {
-	ActiveNav string `json:"active_nav"`
-	ListURL   string `json:"list_url"`
-	DetailURL string `json:"detail_url"`
+	ActiveNav    string `json:"active_nav"`
+	ActiveSubNav string `json:"active_sub_nav"`
+	ListURL      string `json:"list_url"`
+	DetailURL    string `json:"detail_url"`
 }
 
 // DefaultRoutes returns a Routes populated from the
 // package-level route constants.
 func DefaultRoutes() Routes {
 	return Routes{
-		ActiveNav: "forex_rate",
-		ListURL:   ListURL,
-		DetailURL: DetailURL,
+		ActiveNav:    "ledger",
+		ActiveSubNav: "forex-rates",
+		ListURL:      ListURL,
+		DetailURL:    DetailURL,
 	}
 }
 

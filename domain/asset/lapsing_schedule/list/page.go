@@ -95,7 +95,7 @@ func NewView(deps *ViewDeps) view.View {
 				CacheVersion:   viewCtx.CacheVersion,
 				Title:          l.Title,
 				CurrentPath:    viewCtx.CurrentPath,
-				ActiveNav:      "assets",
+				ActiveNav:      "asset",
 				ActiveSubNav:   "lapsing-schedule",
 				HeaderTitle:    l.Title,
 				HeaderSubtitle: l.Subtitle,

@@ -36,7 +36,7 @@ type Routes struct {
 // DefaultRoutes returns a Routes populated from the package-level route constants.
 func DefaultRoutes() Routes {
 	return Routes{
-		ActiveNav:          "depreciation-runs",
+		ActiveNav:          "asset",
 		ListURL:            ListURL,
 		ListTableURL:       ListTableURL,
 		DetailURL:          DetailURL,

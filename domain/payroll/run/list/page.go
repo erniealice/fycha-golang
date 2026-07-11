@@ -77,7 +77,7 @@ func NewView(deps *Deps) view.View {
 				Title:          statusTitle(deps.Labels, status),
 				CurrentPath:    viewCtx.CurrentPath,
 				ActiveNav:      deps.Routes.ActiveNav,
-				ActiveSubNav:   "payroll-runs",
+				ActiveSubNav:   deps.Routes.ActiveSubNav + "-" + status,
 				HeaderTitle:    statusTitle(deps.Labels, status),
 				HeaderSubtitle: statusSubtitle(deps.Labels, status),
 				HeaderIcon:     "icon-users",

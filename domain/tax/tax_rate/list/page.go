@@ -84,7 +84,7 @@ func NewView(deps *Deps) view.View {
 				Title:          heading,
 				CurrentPath:    viewCtx.CurrentPath,
 				ActiveNav:      deps.Routes.ActiveNav,
-				ActiveSubNav:   "tax-rates",
+				ActiveSubNav:   deps.Routes.ActiveSubNav,
 				HeaderTitle:    heading,
 				HeaderSubtitle: caption,
 				HeaderIcon:     "icon-percent",

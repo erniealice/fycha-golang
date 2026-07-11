@@ -150,7 +150,7 @@ func buildTableConfig(ctx context.Context, deps *ListViewDeps, status string, pe
 		}
 	}
 
-	rows := buildTableRows(assets, l, deps.Routes, perms, status, inUseIDs)
+	rows := buildTableRows(assets, l, deps.CommonLabels, deps.Routes, perms, status, inUseIDs)
 	types.ApplyColumnStyles(columns, rows)
 
 	bulkCfg := pyeza.MapBulkConfig(deps.CommonLabels)
@@ -206,7 +206,7 @@ func assetColumns(l asset.Labels) []types.TableColumn {
 	}
 }
 
-func buildTableRows(assets []AssetRow, l asset.Labels, routes asset.Routes, perms *types.UserPermissions, status string, inUseIDs map[string]bool) []types.TableRow {
+func buildTableRows(assets []AssetRow, l asset.Labels, cl pyeza.CommonLabels, routes asset.Routes, perms *types.UserPermissions, status string, inUseIDs map[string]bool) []types.TableRow {
 	rows := []types.TableRow{}
 	for _, asset := range assets {
 		id := asset.ID
@@ -277,7 +277,7 @@ func buildTableRows(assets []AssetRow, l asset.Labels, routes asset.Routes, perm
 				// converts proto centavos → float64 pesos via float64(x)/100.
 				types.MoneyCell(asset.AcquisitionCost, "PHP", false),
 				types.MoneyCell(asset.BookValue, "PHP", false),
-				{Type: "badge", Value: recordStatus, Variant: statusVariant(recordStatus)},
+				{Type: "badge", Value: statusLabel(cl, recordStatus), Variant: statusVariant(recordStatus)},
 			},
 			DataAttrs: map[string]string{
 				"name":             name,
@@ -347,6 +347,19 @@ func statusVariant(status string) string {
 		return "warning"
 	default:
 		return "default"
+	}
+}
+
+// statusLabel maps the raw status key to its lyngua display label — the badge
+// cell renders Value verbatim, so passing the raw key would bypass translation.
+func statusLabel(cl pyeza.CommonLabels, status string) string {
+	switch status {
+	case "active":
+		return cl.Status.Active
+	case "inactive":
+		return cl.Status.Inactive
+	default:
+		return status
 	}
 }
 

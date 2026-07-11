@@ -78,7 +78,7 @@ func NewView(deps *ListViewDeps) view.View {
 				Title:          statusPageTitle(l, status),
 				CurrentPath:    viewCtx.CurrentPath,
 				ActiveNav:      deps.Routes.ActiveNav,
-				ActiveSubNav:   status,
+				ActiveSubNav:   "depreciation-runs",
 				HeaderTitle:    statusPageTitle(l, status),
 				HeaderSubtitle: l.List.Subtitle,
 				HeaderIcon:     "icon-zap",
