@@ -8,6 +8,32 @@ import (
 	"github.com/erniealice/fycha-golang/services/pdfconv"
 )
 
+// libreOfficeUnavailableError is the concrete type behind ErrLibreOfficeUnavailable.
+// It carries a STRUCTURAL marker method — LibreOfficeUnavailable() bool — so callers
+// that must NOT import fycha (e.g. fayna's injected-closure boundary) can classify
+// the error via an interface type-assertion / errors.As on that method, with NO
+// dependency on this concrete type or on the sentinel value. The stable message is
+// retained as a secondary contract (documented string fallback).
+type libreOfficeUnavailableError struct{ msg string }
+
+func (e *libreOfficeUnavailableError) Error() string { return e.msg }
+
+// LibreOfficeUnavailable is the structural marker the boundary asserts on. Its mere
+// presence (returning true) is the contract — a change to the message can no longer
+// silently break the 503 classification.
+func (e *libreOfficeUnavailableError) LibreOfficeUnavailable() bool { return true }
+
+// ErrLibreOfficeUnavailable is the sentinel returned (wrapped with %w) by the
+// PDF paths (ProcessBytesToPDF / ProcessFromStorageToPDF*) when the LibreOffice
+// (soffice) binary is absent from the host. It is a RUNTIME infrastructure
+// condition — the closure IS wired, but the converter has no binary to call —
+// as opposed to a genuine template-processing / conversion crash. Sanctioned
+// importers (e.g. centymo) can errors.Is(err, document.ErrLibreOfficeUnavailable)
+// to map it to a 503 (service unavailable) instead of a 500. Callers that cannot
+// import fycha prefer the structural LibreOfficeUnavailable() bool assertion (via
+// errors.As), falling back to the stable "LibreOffice is not installed" substring.
+var ErrLibreOfficeUnavailable error = &libreOfficeUnavailableError{msg: "PDF conversion unavailable: LibreOffice is not installed"}
+
 // StorageReadWriter reads and writes objects from a storage backend.
 // Implementations wrap provider-specific adapters (e.g., espyna StorageAdapter)
 // to keep fycha provider-agnostic.
@@ -183,7 +209,7 @@ func convertToPDF(docxBytes []byte) ([]byte, error) {
 		return nil, fmt.Errorf("PDF conversion failed: %w", err)
 	}
 	if !ok {
-		return nil, fmt.Errorf("PDF conversion unavailable: LibreOffice is not installed (see https://www.libreoffice.org/download/)")
+		return nil, fmt.Errorf("%w (see https://www.libreoffice.org/download/)", ErrLibreOfficeUnavailable)
 	}
 	return pdfBytes, nil
 }
