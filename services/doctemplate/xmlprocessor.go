@@ -200,7 +200,14 @@ func processTable(tbl *etree.Element, data map[string]any) {
 		if key := extractLoopMarker(text, "#"); key != "" {
 			loopKey = key
 			startIndex = i
-		} else if extractLoopMarker(text, "/") != "" && loopKey != "" {
+		} else if closeKey := extractLoopMarker(text, "/"); closeKey != "" && loopKey != "" && closeKey == loopKey {
+			// The close marker row must carry the SAME key as the open marker
+			// row. A mismatched {{/otherkey}} does not close this loop; scanning
+			// continues for the matching {{/loopKey}}. If no matching close is
+			// ever found, endIndex stays -1 and the block below treats the table
+			// as having no loop (rows processed once for simple placeholders,
+			// marker paragraphs blanked) — fail closed, never truncating at the
+			// wrong close marker.
 			endIndex = i
 			break
 		}
@@ -254,6 +261,14 @@ func processTable(tbl *etree.Element, data map[string]any) {
 				loopData[i] = v
 			}
 		} else {
+			// Resolved value is neither []any nor []map[string]any (e.g. a
+			// scalar, a plain map, or a typed slice such as []string). Fail
+			// closed by removing the marker and template rows, identical to the
+			// missing-key and empty-slice cleanup paths above — so no raw loop
+			// markers or unresolved template placeholders leak into the output.
+			for i := startIndex; i <= endIndex; i++ {
+				tbl.RemoveChild(rows[i])
+			}
 			return
 		}
 	}
@@ -424,7 +439,16 @@ func findBodyLoopMarkers(elements []*etree.Element) (startIdx, endIdx int, key s
 				key = strings.TrimSpace(m[1])
 			}
 		} else {
-			if m := loopEndRegex.FindStringSubmatch(trimmed); len(m) > 0 && m[0] == trimmed {
+			// The close marker must carry the SAME key as the open marker. A
+			// mismatched {{/otherkey}} does not close this loop; scanning
+			// continues for the matching {{/key}}. If no matching close is ever
+			// found we fall through to the final return and report no loop
+			// (-1, -1, ""), so ProcessBody treats the body as having no loop:
+			// every element is processed once at root scope and stray marker
+			// paragraphs are blanked by processParagraph's exact-match branch.
+			// This is fail closed (matching the no-marker path), never
+			// truncating the template block at the wrong close marker.
+			if m := loopEndRegex.FindStringSubmatch(trimmed); len(m) > 0 && m[0] == trimmed && strings.TrimSpace(m[1]) == key {
 				endIdx = i
 				return
 			}
