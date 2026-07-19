@@ -28,12 +28,29 @@ func testData() map[string]any {
 }
 
 func TestProcessTemplate_NestedJSON(t *testing.T) {
-	// Read the test fixture
-	templatePath := "../../../../references/zazzy-golang-v1/docs/testreplace-1.docx"
-	templateData, err := os.ReadFile(templatePath)
-	if err != nil {
-		t.Fatalf("failed to read test template: %v", err)
-	}
+	// Self-contained fixture: a minimal document.xml carrying the nested-map
+	// placeholders testData() supplies, built inline via createTestDocx so the
+	// test has no dependency on any file outside the module (the original
+	// external references/zazzy-golang-v1 fixture was never committed). The
+	// {{client.name}} placeholder is deliberately split across three <w:r> runs
+	// (the "{{" / "client.name" / "}}" shape a real Word-authored .docx produces)
+	// so the test also exercises processParagraph's cross-run accumulation.
+	documentXML := `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+<w:body>
+<w:p><w:r><w:t>Bill To: </w:t></w:r><w:r><w:t>{{</w:t></w:r><w:r><w:t>client.name</w:t></w:r><w:r><w:t>}}</w:t></w:r></w:p>
+<w:p><w:r><w:t>Address: {{client.address}}</w:t></w:r></w:p>
+<w:p><w:r><w:t>Country: {{client.country}}</w:t></w:r></w:p>
+<w:p><w:r><w:t>Skills: {{client.skills}}</w:t></w:r></w:p>
+<w:p><w:r><w:t>Dev Address: {{developer.address}}</w:t></w:r></w:p>
+<w:p><w:r><w:t>Dev CSZ: {{developer.city_state_zip}}</w:t></w:r></w:p>
+<w:p><w:r><w:t>Dev Email: {{developer.email}}</w:t></w:r></w:p>
+<w:p><w:r><w:t>Dev Phone: {{developer.phone}}</w:t></w:r></w:p>
+<w:p><w:r><w:t>Dev Website: {{developer.website}}</w:t></w:r></w:p>
+</w:body>
+</w:document>`
+
+	templateData := createTestDocx(t, documentXML)
 
 	data := testData()
 
@@ -64,6 +81,7 @@ func TestProcessTemplate_NestedJSON(t *testing.T) {
 		{"{{client.name}}", "Acme Corporation"},
 		{"{{client.address}}", "123 Business Ave"},
 		{"{{client.country}}", "Philippines"},
+		{"{{client.skills}}", "Web Development"},
 		{"{{developer.address}}", "456 Dev Street"},
 		{"{{developer.city_state_zip}}", "Manila, NCR 1000"},
 		{"{{developer.email}}", "dev@example.com"},
@@ -80,14 +98,6 @@ func TestProcessTemplate_NestedJSON(t *testing.T) {
 		if !strings.Contains(content, check.expected) {
 			t.Errorf("expected value %q not found in output for placeholder %s", check.expected, check.placeholder)
 		}
-	}
-
-	// Write output for manual inspection
-	outputPath := "../../../../references/zazzy-golang-v1/docs/testreplace-1-go-output.docx"
-	if err := os.WriteFile(outputPath, result, 0644); err != nil {
-		t.Logf("warning: could not write output file: %v", err)
-	} else {
-		t.Logf("output written to %s", outputPath)
 	}
 }
 

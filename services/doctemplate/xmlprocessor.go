@@ -16,6 +16,12 @@ var (
 	loopStartRegex = regexp.MustCompile(`{{\s*#\s*([^{}]+)\s*}}`)
 	// loopEndRegex matches loop end markers like {{/key}}.
 	loopEndRegex = regexp.MustCompile(`{{\s*/\s*([^{}]+)\s*}}`)
+	// residualTokenRegex matches any complete {{...}} template construct (a loop
+	// marker or an unresolved placeholder). It is used by the post-processing
+	// zero-leak scrub. It deliberately forbids inner braces ([^{}]) so it can only
+	// ever span a single, already-consolidated text node — see
+	// scrubResidualTemplateTokens.
+	residualTokenRegex = regexp.MustCompile(`{{[^{}]*}}`)
 )
 
 // getPathValue retrieves a nested value from a map using a dot-separated path, returning the raw value.
@@ -161,6 +167,42 @@ func clearNodes(nodes []*etree.Element) {
 	}
 }
 
+// scrubResidualTemplateTokens is the zero-leak backstop for the P7 all-parts
+// {{/}} audit invariant. It removes every residual {{...}} construct left in the
+// tree AFTER all resolvable placeholders were replaced and all well-formed loops
+// expanded. Three leak vectors survive normal processing and are caught here:
+//
+//   - a malformed table (rejected by the complete marker-stream scan in
+//     processTable and rendered as static rows) whose template placeholders
+//     cannot resolve at root scope;
+//   - a placeholder whose leaf is absent from the item/root data — the engine's
+//     no-fallback law leaves it verbatim (replaceInText returns the match
+//     unchanged), which the manifest-driven blank-seeding on the caller side is
+//     built to pre-empt but which must never reach a rendered part;
+//   - a loop/marker token embedded in mixed-content or split across runs that
+//     processParagraph's exact-match branch does not blank.
+//
+// The scrub is deliberately node-scoped, not string-scoped over the serialized
+// XML: processParagraph consolidates every completed {{...}} group into a single
+// <w:t> node (its result goes into the last accumulated node, earlier ones are
+// cleared), so residualTokenRegex — which forbids inner braces — always matches
+// inside one text node's text. A string-level strip could match a token that
+// visually spans element tags and delete the intervening markup; a node-level
+// strip cannot. The engine never emits a lone unpaired "{{" (markers and
+// placeholders always carry their "}}"), so removing complete tokens is
+// sufficient to hold the zero-{{ invariant.
+func scrubResidualTemplateTokens(root *etree.Element) {
+	if root == nil {
+		return
+	}
+	for _, t := range root.FindElements(".//t") {
+		s := t.Text()
+		if strings.Contains(s, "{{") {
+			t.SetText(residualTokenRegex.ReplaceAllString(s, ""))
+		}
+	}
+}
+
 // processElements recursively processes a slice of elements, applying templating logic.
 func processElements(elements []*etree.Element, data map[string]any) {
 	for _, el := range elements {
@@ -191,40 +233,96 @@ func processTable(tbl *etree.Element, data map[string]any) {
 		return
 	}
 
-	// Scan rows to find loop markers
+	// Pair loop markers with a LIFO stack, scanning the COMPLETE marker stream
+	// before selecting anything. A well-nested sequence selects the INNERMOST
+	// complete pair (the first opener/closer pair to balance) as this table's row
+	// loop; any enclosing markers are handled as ordinary non-loop rows and
+	// blanked. The stream is only accepted after the WHOLE table has been proven
+	// well-formed:
+	//
+	//   - every closer must match the nearest still-open opener of the SAME key
+	//     (else a crossing/interleaved close, e.g. #outer,#inner,/outer,/inner);
+	//   - no closer may appear with an empty stack (a stray/unmatched closer,
+	//     whether leading like /ghost,#items,… or trailing like …,/items,/ghost);
+	//   - no opener may remain unclosed at end of stream;
+	//   - at most ONE top-level pair is supported (a second top-level opener/closer
+	//     is rejected rather than silently ignored).
+	//
+	// Any of these makes the table malformed: it is treated as having no loop
+	// (fail closed) — every row processed once, its marker cells blanked, its
+	// non-resolving template placeholders removed by the residual-token scrub in
+	// processXMLContent — rather than silently mispairing markers and rows or
+	// expanding the wrong pair. This mirrors the fail-closed pairing the body-loop
+	// scanner and the P4 hardening wave established for the render path, and the
+	// pre-scan (nothing is mutated until the stream is proven valid) is what makes
+	// the guarantee robust against the trailing-closer / unclosed-opener /
+	// second-top-level shapes the old first-balanced-closer break missed.
+	type openMarker struct {
+		key   string
+		index int
+	}
+	var stack []openMarker
 	loopKey := ""
 	startIndex, endIndex := -1, -1
+	topLevelPairs := 0
+	malformed := false
 
 	for i, row := range rows {
 		text := rowText(row)
 		if key := extractLoopMarker(text, "#"); key != "" {
-			loopKey = key
-			startIndex = i
-		} else if closeKey := extractLoopMarker(text, "/"); closeKey != "" && loopKey != "" && closeKey == loopKey {
-			// The close marker row must carry the SAME key as the open marker
-			// row. A mismatched {{/otherkey}} does not close this loop; scanning
-			// continues for the matching {{/loopKey}}. If no matching close is
-			// ever found, endIndex stays -1 and the block below treats the table
-			// as having no loop (rows processed once for simple placeholders,
-			// marker paragraphs blanked) — fail closed, never truncating at the
-			// wrong close marker.
-			endIndex = i
-			break
+			stack = append(stack, openMarker{key: key, index: i})
+			continue
+		}
+		if closeKey := extractLoopMarker(text, "/"); closeKey != "" {
+			if len(stack) == 0 || stack[len(stack)-1].key != closeKey {
+				// Closer with no matching open opener (stray closer), or a crossing
+				// close whose key differs from the nearest unclosed opener: malformed.
+				malformed = true
+				break
+			}
+			top := stack[len(stack)-1]
+			stack = stack[:len(stack)-1]
+			// First completed pair is the innermost; retain it as the candidate loop
+			// but keep scanning so a later stray closer, unclosed opener, or a second
+			// top-level pair is still classified malformed.
+			if startIndex == -1 {
+				startIndex, endIndex, loopKey = top.index, i, closeKey
+			}
+			if len(stack) == 0 {
+				topLevelPairs++
+			}
 		}
 	}
 
-	// If no loop markers found, just process all rows for simple placeholders
-	if startIndex == -1 || endIndex == -1 || loopKey == "" {
+	// Full-stream validation: unclosed opener(s) still on the stack, or more than
+	// one top-level pair, are malformed even though a prefix balanced.
+	if !malformed {
+		if len(stack) != 0 {
+			malformed = true
+		} else if topLevelPairs > 1 {
+			malformed = true
+		}
+	}
+
+	// No well-formed loop pair (no markers, an unclosed opener, a stray/crossing
+	// closer, or a second top-level pair): process every row once for simple
+	// placeholders. Marker paragraphs are blanked by processParagraph's exact-match
+	// branch; any residual template placeholder that cannot resolve at this scope is
+	// removed by the residual-token scrub after processing; static content survives.
+	// Fail closed — never expand or truncate on ambiguous markers.
+	if malformed || startIndex == -1 || endIndex == -1 || loopKey == "" {
 		for _, row := range rows {
 			processRowCells(row, data)
 		}
 		return
 	}
 
-	// Process non-loop rows (header, total, etc.) for placeholder replacement
+	// Process non-loop rows (header, total, any enclosing markers, etc.) for
+	// placeholder replacement. Rows inside [startIndex..endIndex] are this loop's
+	// own markers and template rows, handled below.
 	for i, row := range rows {
 		if i >= startIndex && i <= endIndex {
-			continue // Skip loop marker and template rows
+			continue
 		}
 		processRowCells(row, data)
 	}
@@ -236,19 +334,16 @@ func processTable(tbl *etree.Element, data map[string]any) {
 	}
 
 	if len(templateRows) == 0 {
-		// No template rows between markers — just remove markers
-		tbl.RemoveChild(rows[startIndex])
-		tbl.RemoveChild(rows[endIndex])
+		// No template rows between markers — just remove the marker rows.
+		spliceTableLoop(tbl, rows, startIndex, endIndex, nil, nil)
 		return
 	}
 
 	// Get the array data for looping
 	rawLoopData, ok := getPathValue(data, loopKey)
 	if !ok {
-		// No data — remove all loop rows (markers + templates)
-		for i := startIndex; i <= endIndex; i++ {
-			tbl.RemoveChild(rows[i])
-		}
+		// No data — remove all loop rows (markers + templates).
+		spliceTableLoop(tbl, rows, startIndex, endIndex, nil, nil)
 		return
 	}
 
@@ -266,43 +361,96 @@ func processTable(tbl *etree.Element, data map[string]any) {
 			// closed by removing the marker and template rows, identical to the
 			// missing-key and empty-slice cleanup paths above — so no raw loop
 			// markers or unresolved template placeholders leak into the output.
-			for i := startIndex; i <= endIndex; i++ {
-				tbl.RemoveChild(rows[i])
-			}
+			spliceTableLoop(tbl, rows, startIndex, endIndex, nil, nil)
 			return
 		}
 	}
 
 	if len(loopData) == 0 {
-		for i := startIndex; i <= endIndex; i++ {
-			tbl.RemoveChild(rows[i])
-		}
+		spliceTableLoop(tbl, rows, startIndex, endIndex, nil, nil)
 		return
 	}
 
-	// The anchor is the end marker row — we insert cloned rows before it
-	anchor := rows[endIndex]
+	// Capture the child token immediately following the end-marker row, so the
+	// cloned rows land in the exact slot the loop block occupied — preserving the
+	// surrounding whitespace CharData and byte-for-byte output identical to the
+	// previous insert-before-end-marker strategy.
+	var afterAnchor etree.Token
+	if idx := rows[endIndex].Index(); idx >= 0 && idx+1 < len(tbl.Child) {
+		afterAnchor = tbl.Child[idx+1]
+	}
 
-	// For each array item, clone template rows and process placeholders
+	// Build every cloned row up front, without mutating the tree yet.
+	var clones []*etree.Element
 	for _, itemData := range loopData {
 		itemMap, ok := itemData.(map[string]any)
 		if !ok {
 			continue
 		}
-
 		for _, tmplRow := range templateRows {
 			newRow := tmplRow.Copy()
 			processRowCells(newRow, itemMap)
-			tbl.InsertChild(anchor, newRow)
+			clones = append(clones, newRow)
 		}
 	}
 
-	// Remove original marker rows and template rows
-	tbl.RemoveChild(rows[startIndex]) // {{#items}} row
-	for _, tmplRow := range templateRows {
-		tbl.RemoveChild(tmplRow)
+	// Remove the marker + template rows and splice the clones into their slot in a
+	// single linear rebuild (see spliceTableLoop).
+	spliceTableLoop(tbl, rows, startIndex, endIndex, clones, afterAnchor)
+}
+
+// spliceTableLoop rebuilds tbl's direct-child list in a single O(n) pass: it drops
+// the marker + template rows rows[startIndex..endIndex] and inserts `clones` into
+// the exact slot the block occupied — immediately before `afterAnchor` (the child
+// that followed the end-marker row), or at the end if afterAnchor is nil.
+//
+// etree's RemoveChildAt and InsertChild reindex EVERY following sibling on each
+// call, so removing or expanding a large loop block one node at a time is O(n²)
+// (the interspersed whitespace CharData that must be preserved for byte-stability
+// are re-indexed on every removal). Detaching all children from the END is O(1)
+// per node (nothing follows the last slot to reindex), and re-adding the final
+// ordered list via AddChild is O(1) per node, so the whole rebuild is linear —
+// an accepted 64 MiB document.xml with many loop rows no longer burns quadratic
+// CPU during cleanup.
+//
+// Non-removed tokens keep their original relative order (including the block's
+// interspersed whitespace CharData), and clones are spliced exactly where the old
+// insert-before-end-marker + per-row-remove strategy left them, so the serialized
+// output is byte-identical — pinned by TestByteStability_FrozenEmissions.
+func spliceTableLoop(tbl *etree.Element, rows []*etree.Element, startIndex, endIndex int, clones []*etree.Element, afterAnchor etree.Token) {
+	remove := make(map[etree.Token]bool, endIndex-startIndex+1)
+	for i := startIndex; i <= endIndex; i++ {
+		remove[rows[i]] = true
 	}
-	tbl.RemoveChild(rows[endIndex]) // {{/items}} row
+
+	final := make([]etree.Token, 0, len(tbl.Child)+len(clones))
+	spliced := false
+	for _, tok := range tbl.Child {
+		if afterAnchor != nil && tok == afterAnchor {
+			for _, c := range clones {
+				final = append(final, c)
+			}
+			spliced = true
+		}
+		if !remove[tok] {
+			final = append(final, tok)
+		}
+	}
+	// afterAnchor nil (block ended at the last child) or not found: clones go last.
+	if !spliced {
+		for _, c := range clones {
+			final = append(final, c)
+		}
+	}
+
+	// Detach every current child from the end (O(1) each), then re-add the final
+	// ordered list (O(1) each). AddChild re-parents and re-indexes each token.
+	for len(tbl.Child) > 0 {
+		tbl.RemoveChildAt(len(tbl.Child) - 1)
+	}
+	for _, tok := range final {
+		tbl.AddChild(tok)
+	}
 }
 
 // processRowCells runs processParagraph on every cell's paragraphs in a table row.

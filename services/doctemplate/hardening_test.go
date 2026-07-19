@@ -49,6 +49,35 @@ func mustNotContain(t *testing.T, content string, unwanted ...string) {
 	}
 }
 
+// assertNoResidualTokens enforces the P7 all-parts zero-leak invariant against
+// the BROAD sentinels "{{" and "}}" — not an enumerated list of known marker
+// strings. Any residual template construct (a marker, an unresolved leaf, a
+// malformed-table template placeholder, a mixed-content or cross-run token) trips
+// it. This is the assertion the Wave-6 review required in place of narrow
+// per-marker mustNotContain checks.
+func assertNoResidualTokens(t *testing.T, content string) {
+	t.Helper()
+	if i := strings.Index(content, "{{"); i >= 0 {
+		t.Errorf("residual %q token leaked: %q", "{{", excerptAround(content, i))
+	}
+	if i := strings.Index(content, "}}"); i >= 0 {
+		t.Errorf("residual %q token leaked: %q", "}}", excerptAround(content, i))
+	}
+}
+
+// excerptAround returns a short window of content around index i for diagnostics.
+func excerptAround(content string, i int) string {
+	lo := i - 20
+	if lo < 0 {
+		lo = 0
+	}
+	hi := i + 20
+	if hi > len(content) {
+		hi = len(content)
+	}
+	return content[lo:hi]
+}
+
 // TestContractShape_BodyLoopWithNestedMapsAndRowLoop exercises the exact
 // converged placeholder contract: a dot-path BODY loop opener
 // ({{#job_categories.academic.jobs}}) whose items carry nested maps read via
@@ -216,7 +245,9 @@ func TestBodyLoopValueNotASlice(t *testing.T) {
 // treated as NO loop — the region is rendered once at root scope and the stray
 // marker paragraphs are blanked, rather than the wrong close marker truncating
 // or wrongly closing the block. Pre-fix, {{/other}} would have closed the loop
-// and expanded it len(items) times.
+// and expanded it len(items) times. Zero-leak law: the item-scope placeholder
+// {{title}} cannot resolve at root scope and is removed by the residual-token
+// scrub, so NO raw {{...}} reaches the output (P7 all-parts invariant).
 func TestMismatchedBodyCloseMarker(t *testing.T) {
 	inner := `<w:p><w:r><w:t>Before</w:t></w:r></w:p>
 <w:p><w:r><w:t>{{#items}}</w:t></w:r></w:p>
@@ -236,19 +267,22 @@ func TestMismatchedBodyCloseMarker(t *testing.T) {
 	mustNotContain(t, content, "{{#items}}", "{{/other}}")
 	// No truncation: content before and after both survive.
 	mustContain(t, content, "Before", "After")
-	// Treated as NO loop → rendered exactly once, not expanded 3x.
+	// Treated as NO loop → rendered exactly once, not expanded 3x (count==1 proves
+	// the region was not iterated over the items, i.e. no wrong-close expansion).
 	if got := strings.Count(content, "ITEMROW"); got != 1 {
 		t.Errorf("expected the region rendered once (no loop), got ITEMROW x%d", got)
 	}
-	// Item-scope placeholder leaks verbatim under root scope (no fallback).
-	mustContain(t, content, "{{title}}")
+	// Zero leak: the unresolved item-scope placeholder is scrubbed, not left raw.
+	assertNoResidualTokens(t, content)
 }
 
 // TestMismatchedTableCloseMarker is the table-row analogue of the pairing rule:
 // {{#items}} with only {{/other}} present is treated as a table with no loop —
 // rows processed once for simple placeholders, marker cells blanked, static
 // rows preserved. Pre-fix, {{/other}} would have closed the loop and expanded
-// the template row per item.
+// the template row per item. Zero-leak law: the unresolved item-scope
+// placeholder {{field}} is removed by the residual-token scrub (P7 all-parts
+// invariant), never rendered raw.
 func TestMismatchedTableCloseMarker(t *testing.T) {
 	inner := `<w:tbl>
 <w:tblGrid><w:gridCol w:w="5000"/></w:tblGrid>
@@ -274,19 +308,27 @@ func TestMismatchedTableCloseMarker(t *testing.T) {
 	if got := strings.Count(content, "ITEMROW"); got != 1 {
 		t.Errorf("expected the template row rendered once (no loop), got ITEMROW x%d", got)
 	}
-	// Item-scope placeholder leaks verbatim under root scope (no fallback).
-	mustContain(t, content, "{{field}}")
+	// Zero leak: the unresolved item-scope placeholder is scrubbed, not left raw.
+	assertNoResidualTokens(t, content)
 }
 
-// TestMissingLeafInsideLoopLeaksVerbatim documents the no-fallback law: a
-// placeholder inside a loop item that references a leaf absent from the item map
-// is left verbatim (no parent/root scope chain), while a present leaf resolves.
-func TestMissingLeafInsideLoopLeaksVerbatim(t *testing.T) {
+// TestMissingLeafInsideLoopNoFallbackScrubbed documents the no-fallback law
+// under the zero-leak backstop: a placeholder inside a loop item that references
+// a leaf absent from the item map does NOT fall back to any parent/root scope
+// (its would-be root value is never substituted). Historically the unresolved
+// token was left verbatim; it is now removed by the residual-token scrub so no
+// raw {{...}} reaches any rendered part (P7 all-parts invariant). The law's
+// intent — no cross-scope resolution — is unchanged; only the residue rendering
+// (verbatim → removed) changed. A present leaf still resolves normally.
+func TestMissingLeafInsideLoopNoFallbackScrubbed(t *testing.T) {
 	inner := `<w:p><w:r><w:t>{{#rows}}</w:t></w:r></w:p>
 <w:p><w:r><w:t>PRESENT {{present}} MISSING {{absent.leaf}}</w:t></w:r></w:p>
 <w:p><w:r><w:t>{{/rows}}</w:t></w:r></w:p>`
 
 	content := renderBody(t, inner, map[string]any{
+		// A ROOT-scope value for the same leaf path proves no fallback: if the
+		// engine ever chained to root scope, ROOTLEAK would appear.
+		"absent": map[string]any{"leaf": "ROOTLEAK"},
 		"rows": []any{
 			map[string]any{"present": "HERE"},
 		},
@@ -294,8 +336,10 @@ func TestMissingLeafInsideLoopLeaksVerbatim(t *testing.T) {
 
 	// Present leaf resolves.
 	mustContain(t, content, "HERE")
-	// Missing leaf leaks verbatim — no fallback to any parent/root scope.
-	mustContain(t, content, "{{absent.leaf}}")
+	// No fallback: the item-scope miss does NOT pick up the root value.
+	mustNotContain(t, content, "ROOTLEAK")
+	// Zero leak: the unresolved leaf is scrubbed, not left verbatim.
+	assertNoResidualTokens(t, content)
 	// Loop markers are still stripped normally.
 	mustNotContain(t, content, "{{#rows}}", "{{/rows}}")
 }

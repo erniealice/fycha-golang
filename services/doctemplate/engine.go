@@ -68,6 +68,15 @@ func processXMLContent(xmlContent string, data map[string]any) (string, error) {
 		ProcessBody(body, data)
 	}
 
+	// Zero-leak backstop (P7 all-parts {{/}} invariant): after every resolvable
+	// placeholder was replaced and every well-formed loop expanded, remove any
+	// residual {{...}} construct — an unresolved leaf (no-fallback law), a
+	// malformed table's static-rendered template placeholders, or a mixed-content
+	// marker — so no part (document.xml, headers, footers) can emit a raw token.
+	// This is a no-op on fully-resolving templates (no residual to remove), so it
+	// does not perturb byte-stable emissions.
+	scrubResidualTemplateTokens(doc.Root())
+
 	doc.WriteSettings.CanonicalEndTags = false
 	doc.WriteSettings.CanonicalText = false
 	doc.WriteSettings.CanonicalAttrVal = false
