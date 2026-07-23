@@ -13,7 +13,7 @@ import (
 	"github.com/erniealice/pyeza-golang/types"
 	"github.com/erniealice/pyeza-golang/view"
 
-	tax_rate "github.com/erniealice/fycha-golang/domain/tax/tax_rate"
+	"github.com/erniealice/fycha-golang/domain/tax/tax_rate"
 )
 
 // ---------------------------------------------------------------------------
