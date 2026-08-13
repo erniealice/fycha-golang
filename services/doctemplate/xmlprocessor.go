@@ -8,6 +8,8 @@ import (
 	"github.com/beevik/etree"
 )
 
+const wordprocessingMLNamespaceURI = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
+
 // Regular expressions to find placeholders and loop markers in the XML text.
 var (
 	// placeholderRegex matches simple placeholders like {{key.path}} or {{ key.path }}.
@@ -22,7 +24,38 @@ var (
 	// ever span a single, already-consolidated text node — see
 	// scrubResidualTemplateTokens.
 	residualTokenRegex = regexp.MustCompile(`{{[^{}]*}}`)
+	styleTokenRegex    = regexp.MustCompile(`^{{\s*([A-Za-z_][A-Za-z0-9_.]*)\s*}}$`)
+	styleHexRegex      = regexp.MustCompile(`(?i)^[0-9a-f]{6}$`)
 )
+
+// StyleTokenContractError is the structural marker for style-leaf validation
+// failures that must survive ProcessTemplate wrapping.
+type StyleTokenContractError interface {
+	error
+	IsStyleTokenContractError() bool
+}
+
+type styleTokenContractError struct {
+	element   string
+	attribute string
+	value     string
+	reason    string
+}
+
+func (e *styleTokenContractError) Error() string {
+	return fmt.Sprintf("style token contract violation (%s@%s): %s", e.element, e.attribute, e.reason)
+}
+
+func (e *styleTokenContractError) IsStyleTokenContractError() bool {
+	return true
+}
+
+// StyleContractError is a small structural marker that callers can detect
+// without importing this package. Keep it alongside IsStyleTokenContractError
+// for callers that prefer a shorter, generic marker name.
+func (e *styleTokenContractError) StyleContractError() bool {
+	return true
+}
 
 // getPathValue retrieves a nested value from a map using a dot-separated path, returning the raw value.
 func getPathValue(data map[string]any, path string) (any, bool) {
@@ -53,6 +86,197 @@ func getReplaceValue(data map[string]any, path string) (string, bool) {
 		return "", true // Treat nil as an empty string
 	}
 	return fmt.Sprintf("%v", val), true
+}
+
+// exactStyleToken extracts a full-token placeholder value and returns its path when
+// present in the exact token form.
+func exactStyleToken(text string) (string, bool) {
+	trimmed := strings.TrimSpace(text)
+	matches := styleTokenRegex.FindStringSubmatch(trimmed)
+	if len(matches) < 2 {
+		return "", false
+	}
+	if strings.TrimSpace(matches[0]) != trimmed {
+		return "", false
+	}
+	return strings.TrimSpace(matches[1]), true
+}
+
+// renderStyleValue validates and normalizes style values by token kind.
+func renderStyleValue(value any, kind string) (string, bool) {
+	var normalized string
+	switch v := value.(type) {
+	case string:
+		// Do not trim caller data: the style grammar is deliberately exact.
+		// Token syntax may contain surrounding whitespace, but the resolved
+		// value itself must be six hex digits or the literal true/false.
+		normalized = v
+	case bool:
+		if v {
+			normalized = "true"
+		} else {
+			normalized = "false"
+		}
+	default:
+		return "", false
+	}
+
+	switch kind {
+	case "fill", "color":
+		if !styleHexRegex.MatchString(normalized) {
+			return "", false
+		}
+	case "bold":
+		if normalized != "true" && normalized != "false" {
+			return "", false
+		}
+	default:
+		return "", false
+	}
+	return normalized, true
+}
+
+type namespaceContext map[string]string
+
+func applyStyleAttributeValue(element *etree.Element, attributeLocal, kind, kindHint string, data map[string]any, namespaces namespaceContext) error {
+	attr := selectWordprocessingMLAttribute(element, attributeLocal, namespaces)
+	if attr == nil {
+		return nil
+	}
+
+	raw := strings.TrimSpace(attr.Value)
+	path, exact := exactStyleToken(raw)
+	if !exact {
+		// Partial tokens, loop markers, and ordinary literals are outside this
+		// narrow whitelist and remain untouched for existing-template parity.
+		return nil
+	}
+
+	rawValue, ok := getPathValue(data, path)
+	if !ok || rawValue == nil {
+		return &styleTokenContractError{
+			element:   element.FullTag(),
+			attribute: attr.FullKey(),
+			value:     raw,
+			reason:    "missing style token value",
+		}
+	}
+
+	normalized, ok := renderStyleValue(rawValue, kind)
+	if !ok {
+		return &styleTokenContractError{
+			element:   element.FullTag(),
+			attribute: attr.FullKey(),
+			value:     fmt.Sprintf("%v", rawValue),
+			reason:    kindHint + " style value is invalid",
+		}
+	}
+
+	// Mutate the parsed attribute so its original, URI-equivalent namespace
+	// prefix and position are preserved. etree escapes the value when serializing.
+	attr.Value = normalized
+	return nil
+}
+
+func selectWordprocessingMLAttribute(element *etree.Element, local string, namespaces namespaceContext) *etree.Attr {
+	for index := range element.Attr {
+		attribute := &element.Attr[index]
+		if attribute.Key == local && attribute.Space != "" && namespaces[attribute.Space] == wordprocessingMLNamespaceURI {
+			return attribute
+		}
+	}
+	return nil
+}
+
+func namespaceContextFor(element *etree.Element) namespaceContext {
+	if element == nil {
+		return nil
+	}
+	var lineage []*etree.Element
+	for current := element; current != nil; current = current.Parent() {
+		lineage = append(lineage, current)
+	}
+	context := make(namespaceContext)
+	for index := len(lineage) - 1; index >= 0; index-- {
+		context = extendNamespaceContext(context, lineage[index])
+	}
+	return context
+}
+
+func extendNamespaceContext(parent namespaceContext, element *etree.Element) namespaceContext {
+	context := parent
+	copied := false
+	for index := range element.Attr {
+		attribute := &element.Attr[index]
+		prefix := ""
+		switch {
+		case attribute.Space == "xmlns":
+			prefix = attribute.Key
+		case attribute.Space == "" && attribute.Key == "xmlns":
+		default:
+			continue
+		}
+		if !copied {
+			context = make(namespaceContext, len(parent)+1)
+			for key, value := range parent {
+				context[key] = value
+			}
+			copied = true
+		}
+		context[prefix] = attribute.Value
+	}
+	return context
+}
+
+func mergeNamespaceContexts(base, overlay namespaceContext) namespaceContext {
+	if len(overlay) == 0 {
+		return base
+	}
+	context := make(namespaceContext, len(base)+len(overlay))
+	for key, value := range base {
+		context[key] = value
+	}
+	for key, value := range overlay {
+		context[key] = value
+	}
+	return context
+}
+
+// applyStyleAttributes scans supported OOXML style attributes and applies token
+// interpolation only where explicitly allowed.
+func applyStyleAttributes(root *etree.Element, data map[string]any) error {
+	return applyStyleAttributesWithNamespaceContext(root, data, nil)
+}
+
+func applyStyleAttributesWithNamespaceContext(root *etree.Element, data map[string]any, inherited namespaceContext) error {
+	base := mergeNamespaceContexts(inherited, namespaceContextFor(root.Parent()))
+	var visit func(*etree.Element, namespaceContext) error
+	visit = func(element *etree.Element, parent namespaceContext) error {
+		namespaces := extendNamespaceContext(parent, element)
+		if namespaces[element.Space] == wordprocessingMLNamespaceURI {
+			switch element.Tag {
+			case "shd":
+				if err := applyStyleAttributeValue(element, "fill", "fill", "fill hex", data, namespaces); err != nil {
+					return err
+				}
+			case "color":
+				if err := applyStyleAttributeValue(element, "val", "color", "color hex", data, namespaces); err != nil {
+					return err
+				}
+			case "b":
+				if err := applyStyleAttributeValue(element, "val", "bold", "bold bool", data, namespaces); err != nil {
+					return err
+				}
+			}
+		}
+		for _, child := range element.ChildElements() {
+			if err := visit(child, namespaces); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	return visit(root, base)
 }
 
 // extractPlaceholder extracts the key from a placeholder string, e.g., "{{propName}}" -> "propName".
@@ -204,15 +428,21 @@ func scrubResidualTemplateTokens(root *etree.Element) {
 }
 
 // processElements recursively processes a slice of elements, applying templating logic.
-func processElements(elements []*etree.Element, data map[string]any) {
+func processElements(elements []*etree.Element, data map[string]any) error {
 	for _, el := range elements {
 		switch el.Tag {
 		case "p":
 			processParagraph(el, data)
+			if err := applyStyleAttributes(el, data); err != nil {
+				return err
+			}
 		case "tbl":
-			processTable(el, data)
+			if err := processTable(el, data); err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }
 
 // processTable handles table row cloning for array loops and placeholder
@@ -227,10 +457,15 @@ func processElements(elements []*etree.Element, data map[string]any) {
 //	  <w:tr>{{/items}}</w:tr>           ← end marker row
 //	  <w:tr>Total: {{total}}</w:tr>     ← static row with placeholders
 //	</w:tbl>
-func processTable(tbl *etree.Element, data map[string]any) {
+func processTable(tbl *etree.Element, data map[string]any) error {
+	return processTableWithNamespaceContext(tbl, data, nil)
+}
+
+func processTableWithNamespaceContext(tbl *etree.Element, data map[string]any, inherited namespaceContext) error {
+	namespaces := mergeNamespaceContexts(inherited, namespaceContextFor(tbl))
 	rows := tbl.FindElements("./tr")
 	if len(rows) == 0 {
-		return
+		return nil
 	}
 
 	// Pair loop markers with a LIFO stack, scanning the COMPLETE marker stream
@@ -312,9 +547,11 @@ func processTable(tbl *etree.Element, data map[string]any) {
 	// Fail closed — never expand or truncate on ambiguous markers.
 	if malformed || startIndex == -1 || endIndex == -1 || loopKey == "" {
 		for _, row := range rows {
-			processRowCells(row, data)
+			if err := processRowCellsWithNamespaceContext(row, data, namespaces); err != nil {
+				return err
+			}
 		}
-		return
+		return nil
 	}
 
 	// Process non-loop rows (header, total, any enclosing markers, etc.) for
@@ -324,7 +561,9 @@ func processTable(tbl *etree.Element, data map[string]any) {
 		if i >= startIndex && i <= endIndex {
 			continue
 		}
-		processRowCells(row, data)
+		if err := processRowCellsWithNamespaceContext(row, data, namespaces); err != nil {
+			return err
+		}
 	}
 
 	// Collect template rows (between start and end markers, exclusive)
@@ -336,7 +575,7 @@ func processTable(tbl *etree.Element, data map[string]any) {
 	if len(templateRows) == 0 {
 		// No template rows between markers — just remove the marker rows.
 		spliceTableLoop(tbl, rows, startIndex, endIndex, nil, nil)
-		return
+		return nil
 	}
 
 	// Get the array data for looping
@@ -344,7 +583,7 @@ func processTable(tbl *etree.Element, data map[string]any) {
 	if !ok {
 		// No data — remove all loop rows (markers + templates).
 		spliceTableLoop(tbl, rows, startIndex, endIndex, nil, nil)
-		return
+		return nil
 	}
 
 	loopData, ok := rawLoopData.([]any)
@@ -362,13 +601,13 @@ func processTable(tbl *etree.Element, data map[string]any) {
 			// missing-key and empty-slice cleanup paths above — so no raw loop
 			// markers or unresolved template placeholders leak into the output.
 			spliceTableLoop(tbl, rows, startIndex, endIndex, nil, nil)
-			return
+			return nil
 		}
 	}
 
 	if len(loopData) == 0 {
 		spliceTableLoop(tbl, rows, startIndex, endIndex, nil, nil)
-		return
+		return nil
 	}
 
 	// Capture the child token immediately following the end-marker row, so the
@@ -389,7 +628,9 @@ func processTable(tbl *etree.Element, data map[string]any) {
 		}
 		for _, tmplRow := range templateRows {
 			newRow := tmplRow.Copy()
-			processRowCells(newRow, itemMap)
+			if err := processRowCellsWithNamespaceContext(newRow, itemMap, namespaces); err != nil {
+				return err
+			}
 			clones = append(clones, newRow)
 		}
 	}
@@ -397,6 +638,7 @@ func processTable(tbl *etree.Element, data map[string]any) {
 	// Remove the marker + template rows and splice the clones into their slot in a
 	// single linear rebuild (see spliceTableLoop).
 	spliceTableLoop(tbl, rows, startIndex, endIndex, clones, afterAnchor)
+	return nil
 }
 
 // spliceTableLoop rebuilds tbl's direct-child list in a single O(n) pass: it drops
@@ -453,13 +695,20 @@ func spliceTableLoop(tbl *etree.Element, rows []*etree.Element, startIndex, endI
 	}
 }
 
-// processRowCells runs processParagraph on every cell's paragraphs in a table row.
-func processRowCells(row *etree.Element, data map[string]any) {
+// processRowCells runs processParagraph on every cell's paragraphs in a table row
+// and resolves whitelisted style tokens against the current data scope.
+func processRowCells(row *etree.Element, data map[string]any) error {
+	return processRowCellsWithNamespaceContext(row, data, nil)
+}
+
+func processRowCellsWithNamespaceContext(row *etree.Element, data map[string]any, inherited namespaceContext) error {
 	for _, cell := range row.FindElements(".//tc") {
 		for _, p := range cell.FindElements("./p") {
 			processParagraph(p, data)
 		}
 	}
+
+	return applyStyleAttributesWithNamespaceContext(row, data, inherited)
 }
 
 // rowText concatenates all text content in a table row for marker detection.
@@ -482,7 +731,7 @@ func rowText(row *etree.Element) string {
 //  4. Processes each clone with the current item's data (resolving nested table loops)
 //  5. Replaces the original markers and template block with processed clones
 //  6. Processes remaining elements (before/after) with root data
-func ProcessBody(body *etree.Element, data map[string]any) {
+func ProcessBody(body *etree.Element, data map[string]any) error {
 	bodyItems := body.ChildElements()
 
 	// First pass: non-destructive scan for body-level loop markers
@@ -494,11 +743,16 @@ func ProcessBody(body *etree.Element, data map[string]any) {
 			switch el.Tag {
 			case "p":
 				processParagraph(el, data)
+				if err := applyStyleAttributes(el, data); err != nil {
+					return err
+				}
 			case "tbl":
-				processTable(el, data)
+				if err := processTable(el, data); err != nil {
+					return err
+				}
 			}
 		}
-		return
+		return nil
 	}
 
 	// Process elements before the loop with root data
@@ -507,8 +761,13 @@ func ProcessBody(body *etree.Element, data map[string]any) {
 		switch el.Tag {
 		case "p":
 			processParagraph(el, data)
+			if err := applyStyleAttributes(el, data); err != nil {
+				return err
+			}
 		case "tbl":
-			processTable(el, data)
+			if err := processTable(el, data); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -534,12 +793,18 @@ func ProcessBody(body *etree.Element, data map[string]any) {
 			continue
 		}
 		for _, tmplEl := range templateBlock {
+			namespaces := namespaceContextFor(tmplEl)
 			clone := tmplEl.Copy()
 			switch clone.Tag {
 			case "p":
 				processParagraph(clone, itemMap)
+				if err := applyStyleAttributesWithNamespaceContext(clone, itemMap, namespaces); err != nil {
+					return err
+				}
 			case "tbl":
-				processTable(clone, itemMap)
+				if err := processTableWithNamespaceContext(clone, itemMap, namespaces); err != nil {
+					return err
+				}
 			}
 			body.InsertChild(anchor, clone)
 		}
@@ -562,10 +827,17 @@ func ProcessBody(body *etree.Element, data map[string]any) {
 		switch el.Tag {
 		case "p":
 			processParagraph(el, data)
+			if err := applyStyleAttributes(el, data); err != nil {
+				return err
+			}
 		case "tbl":
-			processTable(el, data)
+			if err := processTable(el, data); err != nil {
+				return err
+			}
 		}
 	}
+
+	return nil
 }
 
 // findBodyLoopMarkers scans body child elements for the first {{#key}}/{{/key}} pair.

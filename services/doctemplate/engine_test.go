@@ -4,6 +4,7 @@ import (
 	"archive/zip"
 	"bytes"
 	"os"
+	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -262,8 +263,8 @@ func TestProcessTemplate_InvoiceTableLoop(t *testing.T) {
 		t.Errorf("expected at least 6 <w:tr> elements (1 header + 4 data + 1 total), got %d", trCount)
 	}
 
-	// Write output for manual inspection
-	outputPath := "testdata/invoice-output.docx"
+	// Keep the optional manual-inspection artifact isolated from tracked testdata.
+	outputPath := filepath.Join(t.TempDir(), "invoice-output.docx")
 	if err := os.WriteFile(outputPath, result, 0644); err != nil {
 		t.Logf("warning: could not write output: %v", err)
 	} else {

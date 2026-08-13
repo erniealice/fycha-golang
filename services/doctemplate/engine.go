@@ -62,10 +62,14 @@ func processXMLContent(xmlContent string, data map[string]any) (string, error) {
 		// Try alternative: process all paragraphs/tables at document level
 		root := doc.Root()
 		if root != nil {
-			processAllElements(root, data)
+			if err := processAllElements(root, data); err != nil {
+				return "", fmt.Errorf("processing document content: %w", err)
+			}
 		}
 	} else {
-		ProcessBody(body, data)
+		if err := ProcessBody(body, data); err != nil {
+			return "", fmt.Errorf("processing document.xml: %w", err)
+		}
 	}
 
 	// Zero-leak backstop (P7 all-parts {{/}} invariant): after every resolvable
@@ -92,15 +96,23 @@ func processXMLContent(xmlContent string, data map[string]any) (string, error) {
 // processAllElements walks all child elements recursively, processing
 // paragraphs and tables it finds. Used for headers/footers where the
 // structure differs from the main document body.
-func processAllElements(el *etree.Element, data map[string]any) {
+func processAllElements(el *etree.Element, data map[string]any) error {
 	for _, child := range el.ChildElements() {
 		switch child.Tag {
 		case "p":
 			processParagraph(child, data)
+			if err := applyStyleAttributes(child, data); err != nil {
+				return err
+			}
 		case "tbl":
-			processTable(child, data)
+			if err := processTable(child, data); err != nil {
+				return err
+			}
 		default:
-			processAllElements(child, data)
+			if err := processAllElements(child, data); err != nil {
+				return err
+			}
 		}
 	}
+	return nil
 }

@@ -1,20 +1,50 @@
 package pdfconv
 
 import (
+	"context"
 	"fmt"
 	"log"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 )
+
+// LibreOffice startup on the supported macOS development lane can take around
+// 30 seconds before it starts laying out a generated document. Grade-sheet
+// roster tables add enough work to exceed the former 60-second ceiling even
+// though conversion is still progressing normally. Keep the native process
+// bounded, but allow a complete heavy report to finish.
+const libreOfficeConversionTimeout = 120 * time.Second
+
+type conversionDeps struct {
+	findBinary func() (string, error)
+	runCommand func(context.Context, string, ...string) error
+	timeout    time.Duration
+}
+
+func productionConversionDeps() conversionDeps {
+	return conversionDeps{
+		findBinary: findLibreOffice,
+		runCommand: func(ctx context.Context, name string, args ...string) error {
+			return exec.CommandContext(ctx, name, args...).Run()
+		},
+		timeout: libreOfficeConversionTimeout,
+	}
+}
 
 // ConvertDocxToPDF converts DOCX bytes to PDF bytes using LibreOffice headless.
 // It auto-detects the OS to find the LibreOffice binary.
 // If LibreOffice is not installed, it returns the original DOCX bytes with a false flag.
 func ConvertDocxToPDF(docxBytes []byte) (pdfBytes []byte, ok bool, err error) {
-	binary, err := findLibreOffice()
+	return convertDocxToPDFWithDeps(docxBytes, productionConversionDeps())
+}
+
+func convertDocxToPDFWithDeps(docxBytes []byte, deps conversionDeps) (pdfBytes []byte, ok bool, err error) {
+	binary, err := deps.findBinary()
 	if err != nil {
 		log.Printf("pdfconv: LibreOffice not found, falling back to DOCX: %v", err)
 		return docxBytes, false, nil
@@ -33,18 +63,31 @@ func ConvertDocxToPDF(docxBytes []byte) (pdfBytes []byte, ok bool, err error) {
 		return nil, false, fmt.Errorf("pdfconv: writing temp docx: %w", err)
 	}
 
-	// Run LibreOffice headless conversion
-	cmd := exec.Command(binary,
+	// Give every conversion an isolated LibreOffice user profile. Reusing the
+	// interactive/default profile can block indefinitely on a stale singleton
+	// lock, and concurrent requests would otherwise contend for the same office
+	// process. The deadline bounds native-process failure on every provider lane.
+	profileDir := filepath.Join(tmpDir, "libreoffice-profile")
+	profileURL := (&url.URL{Scheme: "file", Path: filepath.ToSlash(profileDir)}).String()
+	ctx, cancel := context.WithTimeout(context.Background(), deps.timeout)
+	defer cancel()
+	args := []string{
+		"-env:UserInstallation=" + profileURL,
 		"--headless",
+		"--nologo",
+		"--nodefault",
+		"--nofirststartwizard",
+		"--nolockcheck",
 		"--norestore",
 		"--convert-to", "pdf",
 		"--outdir", tmpDir,
 		docxPath,
-	)
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
+	}
 
-	if err := cmd.Run(); err != nil {
+	if err := deps.runCommand(ctx, binary, args...); err != nil {
+		if ctx.Err() == context.DeadlineExceeded {
+			return nil, false, fmt.Errorf("pdfconv: libreoffice conversion timed out")
+		}
 		return nil, false, fmt.Errorf("pdfconv: libreoffice conversion failed: %w", err)
 	}
 
