@@ -3,7 +3,7 @@ package doctemplate
 import (
 	"crypto/sha256"
 	"encoding/hex"
-	"encoding/json"
+	"encoding/json/v2"
 	"io"
 	"os"
 	"regexp"
@@ -66,19 +66,19 @@ import (
 //     services/doctemplate contains the OLD last-opener-break pairing, no
 //     complete-stream scan, no residual scrub — verified by grepping the
 //     extracted files for topLevelPairs/scrubResidualTemplateTokens: 0 hits):
-//       git show HEAD:services/doctemplate/engine.go       > head-harness/doctemplate/engine.go
-//       git show HEAD:services/doctemplate/xmlprocessor.go > head-harness/doctemplate/xmlprocessor.go
-//       git show HEAD:services/doctemplate/docx.go         > head-harness/doctemplate/docx.go
-//       git show HEAD:services/doctemplate/placeholder.go  > head-harness/doctemplate/placeholder.go
+//     git show HEAD:services/doctemplate/engine.go       > head-harness/doctemplate/engine.go
+//     git show HEAD:services/doctemplate/xmlprocessor.go > head-harness/doctemplate/xmlprocessor.go
+//     git show HEAD:services/doctemplate/docx.go         > head-harness/doctemplate/docx.go
+//     git show HEAD:services/doctemplate/placeholder.go  > head-harness/doctemplate/placeholder.go
 //  3. A main.go with payload builders and a part-hasher BYTE-EQUIVALENT to the
 //     helpers in this file (frozenDeterministicValue/frozenSetDotPath/
 //     frozenExtractTokens/frozenEmptyLoopPayload/frozenManifestPayload/
 //     frozenHashProcessedParts) ran:
-//       go run . <fycha>/services/doctemplate/testdata
+//     go run . <fycha>/services/doctemplate/testdata
 //     Output (OLD engine):
-//       goldenFrozenV1    = "01353c1301d4577580c4b3dbf355a29577a892f8e353062431ff23d403232444" // residual_tokens=0
-//       goldenFrozenV2    = "e0356efed80095ecaaf080e5e29a3a22616c4df5730424c7b72111c11b104e7c" // residual_tokens=0
-//       goldenFrozenBlock = "5a69272c77656615a17a41aa4a02f989c3c47fdf502492f4d91f719e955555fa" // residual_tokens=0
+//     goldenFrozenV1    = "01353c1301d4577580c4b3dbf355a29577a892f8e353062431ff23d403232444" // residual_tokens=0
+//     goldenFrozenV2    = "e0356efed80095ecaaf080e5e29a3a22616c4df5730424c7b72111c11b104e7c" // residual_tokens=0
+//     goldenFrozenBlock = "5a69272c77656615a17a41aa4a02f989c3c47fdf502492f4d91f719e955555fa" // residual_tokens=0
 //  4. This test then ran against the NEW (Wave-6 + FIX-6) engine and produced
 //     the identical three hashes — proving the refactor is byte-stable on the
 //     real frozen artifacts. Any intentional emission change must update these
