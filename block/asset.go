@@ -9,8 +9,10 @@ package block
 import (
 	"context"
 	"fmt"
+	locationpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/entity/location"
 	"math"
 	"net/http"
+	"sort"
 	"strings"
 
 	consumerapp "github.com/erniealice/espyna-golang/consumer/app"
@@ -67,10 +69,12 @@ func wireAssetModule(
 	w assetWiring,
 ) {
 	assetDeps := &asset.AssetModuleDeps{
-		Routes:       w.assetRoutes,
-		CommonLabels: w.common,
-		Labels:       w.assetLabels,
-		TableLabels:  ctx.Table,
+		LoadLocationOptions: assetLocationOptionsLoader(useCases),
+		LoadProductOptions:  assetProductOptionsLoader(useCases),
+		Routes:              w.assetRoutes,
+		CommonLabels:        w.common,
+		Labels:              w.assetLabels,
+		TableLabels:         ctx.Table,
 		// Depreciation Run + Revaluation labels (Surface A / E)
 		DepreciationRunLabels:  w.depreciationRunLabels,
 		AssetRevaluationLabels: w.assetRevaluationLabels,
@@ -322,6 +326,9 @@ func recordToAsset(r *assetform.Record) *assetpb.Asset {
 	if r.Description != "" {
 		a.Description = &r.Description
 	}
+	if r.ProductID != "" {
+		a.ProductId = &r.ProductID
+	}
 	if r.LocationID != "" {
 		a.LocationId = &r.LocationID
 	}
@@ -341,6 +348,7 @@ func assetToRecord(a *assetpb.Asset) *assetform.Record {
 		AssetType:          strings.ToLower(strings.TrimPrefix(a.GetAssetType().String(), "ASSET_TYPE_")),
 		AssetCategoryID:    a.GetAssetCategoryId(),
 		LocationID:         a.GetLocationId(),
+		ProductID:          a.GetProductId(),
 		AcquisitionCost:    float64(a.GetAcquisitionCost()) / 100,
 		Currency:           a.GetCurrency(),
 		SalvageValue:       float64(a.GetSalvageValue()) / 100,
@@ -354,4 +362,33 @@ func assetToRecord(a *assetpb.Asset) *assetform.Record {
 		r.Description = *a.Description
 	}
 	return r
+}
+
+// assetLocationOptionsLoader deliberately applies no activation filter. The
+// location use case retains authorization and workspace scope from ctx.
+func assetLocationOptionsLoader(uc *UseCases) func(context.Context) ([]pyezatypes.SelectOption, error) {
+	if uc == nil || uc.GetLocationListPageData == nil {
+		return nil
+	}
+	return func(ctx context.Context) ([]pyezatypes.SelectOption, error) {
+		var options []pyezatypes.SelectOption
+		for page := int32(1); ; page++ {
+			resp, err := uc.GetLocationListPageData(ctx, &locationpb.GetLocationListPageDataRequest{
+				Pagination: &commonpb.PaginationRequest{Limit: 100, Method: &commonpb.PaginationRequest_Offset{Offset: &commonpb.OffsetPagination{Page: page}}},
+			})
+			if err != nil {
+				return nil, err
+			}
+			for _, loc := range resp.GetLocationList() {
+				if loc != nil {
+					options = append(options, pyezatypes.SelectOption{Value: loc.GetId(), Label: loc.GetName()})
+				}
+			}
+			if !resp.GetPagination().GetHasNext() {
+				break
+			}
+		}
+		sort.SliceStable(options, func(i, j int) bool { return strings.ToLower(options[i].Label) < strings.ToLower(options[j].Label) })
+		return options, nil
+	}
 }

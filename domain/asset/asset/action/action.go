@@ -2,6 +2,7 @@ package action
 
 import (
 	"context"
+	"github.com/erniealice/pyeza-golang/types"
 
 	asset "github.com/erniealice/fycha-golang/domain/asset/asset"
 	assetform "github.com/erniealice/fycha-golang/domain/asset/asset/form"
@@ -9,6 +10,9 @@ import (
 
 // Deps holds dependencies for asset action handlers.
 type Deps struct {
+	LoadProductOptions  func(context.Context) ([]types.SelectOption, error)
+	LoadLocationOptions func(context.Context) ([]types.SelectOption, error)
+
 	Routes asset.Routes
 	Labels asset.Labels
 
@@ -37,6 +41,9 @@ type Deps struct {
 // repetition without introducing a mapper that transforms no values.
 func labelsFromDeps(deps *Deps) assetform.Labels {
 	return assetform.Labels{
+		Product:                          deps.Labels.Form.Product,
+		ProductPlaceholder:               deps.Labels.Form.ProductPlaceholder,
+		ProductInfo:                      deps.Labels.Form.ProductInfo,
 		Name:                             deps.Labels.Form.Name,
 		NamePlaceholder:                  deps.Labels.Form.NamePlaceholder,
 		AssetNumber:                      deps.Labels.Form.AssetNumber,
@@ -66,4 +73,18 @@ func labelsFromDeps(deps *Deps) assetform.Labels {
 		DepreciationMethodInfo:           deps.Labels.Form.DepreciationMethodInfo,
 		UnitsOfProductionDisabledTooltip: deps.Labels.Form.UnitsOfProductionDisabledTooltip,
 	}
+}
+
+func loadLocationOptions(ctx context.Context, deps *Deps) ([]types.SelectOption, error) {
+	if deps.LoadLocationOptions == nil {
+		return nil, nil
+	}
+	return deps.LoadLocationOptions(ctx)
+}
+
+func loadProductOptions(ctx context.Context, deps *Deps) ([]types.SelectOption, error) {
+	if deps.LoadProductOptions == nil {
+		return nil, nil
+	}
+	return deps.LoadProductOptions(ctx)
 }

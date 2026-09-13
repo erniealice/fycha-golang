@@ -69,6 +69,9 @@ type EmptyLabels struct {
 }
 
 type FormLabels struct {
+	Product                    string `json:"product"`
+	ProductPlaceholder         string `json:"product_placeholder"`
+	ProductInfo                string `json:"product_info"`
 	Name                       string `json:"name"`
 	NamePlaceholder            string `json:"namePlaceholder"`
 	AssetNumber                string `json:"assetNumber"`

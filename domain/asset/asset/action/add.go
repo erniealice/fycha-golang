@@ -23,7 +23,18 @@ func NewAddAction(deps *Deps) view.View {
 		}
 
 		if viewCtx.Request.Method == http.MethodGet {
+			productOptions, err := loadProductOptions(ctx, deps)
+			if err != nil {
+				return view.Error(err)
+			}
+			locationOptions, err := loadLocationOptions(ctx, deps)
+			if err != nil {
+				return view.Error(err)
+			}
 			return view.OK("asset-drawer-form", &assetform.Data{
+				ShowProduct:        deps.LoadProductOptions != nil,
+				ProductOptions:     productOptions,
+				LocationOptions:    locationOptions,
 				FormAction:         deps.Routes.AddURL,
 				Active:             true,
 				DepreciationMethod: "straight_line",
@@ -69,6 +80,7 @@ func NewAddAction(deps *Deps) view.View {
 			AssetType:          "PPE",
 			AssetCategoryID:    viewCtx.Request.FormValue("asset_category_id"),
 			LocationID:         viewCtx.Request.FormValue("location_id"),
+			ProductID:          viewCtx.Request.FormValue("product_id"),
 			AcquisitionCost:    acqCost,
 			SalvageValue:       salvage,
 			BookValue:          acqCost - salvage,

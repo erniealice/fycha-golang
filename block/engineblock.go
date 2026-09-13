@@ -27,6 +27,9 @@ func EngineBlock(depRunURL string) consumerapp.AppOption {
 			return err
 		}
 		adapted := buildFychaUseCases(uc)
+		if ctx.BusinessType == "leasing" && uc.Product != nil && uc.Product.Product != nil && uc.Product.Product.ListProducts != nil {
+			adapted.ListAssetProducts = uc.Product.Product.ListProducts.Execute
+		}
 
 		infra := &Infra{AssetDepreciationRunURL: depRunURL}
 		infra.UploadFile, _ = ctx.UploadFile.(func(context.Context, string, string, []byte, string) error)
@@ -53,6 +56,9 @@ func EngineBlock(depRunURL string) consumerapp.AppOption {
 // typed shape. All sub-group wiring is nil-safe.
 func buildFychaUseCases(uc *consumer.UseCases) *UseCases {
 	result := &UseCases{}
+	if uc.Entity != nil && uc.Entity.Location != nil && uc.Entity.Location.GetLocationListPageData != nil {
+		result.GetLocationListPageData = uc.Entity.Location.GetLocationListPageData.Execute
+	}
 
 	// Workspace.Read — for functional currency lookup
 	if uc.Entity != nil && uc.Entity.Workspace != nil {

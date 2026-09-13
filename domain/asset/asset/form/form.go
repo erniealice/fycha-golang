@@ -1,5 +1,7 @@
 package form
 
+import "github.com/erniealice/pyeza-golang/types"
+
 // Record is a flat struct for passing asset data between action handlers
 // and the DB layer. It avoids a dependency on protobuf types.
 type Record struct {
@@ -9,6 +11,7 @@ type Record struct {
 	Description        string
 	AssetType          string
 	AssetCategoryID    string
+	ProductID          string
 	LocationID         string
 	AcquisitionCost    float64
 	SalvageValue       float64
@@ -22,6 +25,9 @@ type Record struct {
 
 // Labels holds i18n labels for the drawer form template.
 type Labels struct {
+	Product                    string
+	ProductPlaceholder         string
+	ProductInfo                string
 	Name                       string
 	NamePlaceholder            string
 	AssetNumber                string
@@ -56,14 +62,20 @@ type Labels struct {
 
 // Data is the template data for the asset drawer form.
 type Data struct {
+	ProductOptions  []types.SelectOption
+	ShowProduct     bool
+	ProductLocked   bool
+	LocationOptions []types.SelectOption
+
 	FormAction         string
-	WorkspaceID         string // injected by C1: populated by ViewAdapter.injectWorkspaceID for action_workspace_guard
+	WorkspaceID        string // injected by C1: populated by ViewAdapter.injectWorkspaceID for action_workspace_guard
 	IsEdit             bool
 	ID                 string
 	Name               string
 	AssetNumber        string
 	Description        string
 	CategoryID         string
+	ProductID          string
 	LocationID         string
 	AcquisitionCost    string
 	SalvageValue       string

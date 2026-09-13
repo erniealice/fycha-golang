@@ -49,7 +49,7 @@ Labels: all text via .Labels.* — no English literals.
             )}}
         </div>
 
-        <div class="form-row">
+        <div class="form-row single">
             {{template "form-group" (dict
                 "Type" "text"
                 "Name" "asset_category_id"
@@ -57,9 +57,29 @@ Labels: all text via .Labels.* — no English literals.
                 "Value" .CategoryID
                 "Placeholder" .Labels.CategoryPlaceholder
             )}}
+        </div>
+
+        {{if .ShowProduct}}
+        <div class="form-row single">
             {{template "form-group" (dict
-                "Type" "text"
+                "Type" "select"
+                "Name" "product_id"
+                "Label" .Labels.Product
+                "Value" .ProductID
+                "Options" .ProductOptions
+                "Placeholder" .Labels.ProductPlaceholder
+                "Info" .Labels.ProductInfo
+                "Disabled" .ProductLocked
+            )}}
+            {{if .ProductLocked}}<input type="hidden" name="product_id" value="{{.ProductID}}">{{end}}
+        </div>
+        {{end}}
+
+        <div class="form-row single">
+            {{template "form-group" (dict
+                "Type" "select"
                 "Name" "location_id"
+                "Options" .LocationOptions
                 "Label" .Labels.Location
                 "Value" .LocationID
                 "Placeholder" .Labels.LocationPlaceholder

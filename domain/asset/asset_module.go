@@ -21,6 +21,9 @@ import (
 
 // AssetModuleDeps holds all dependencies for the asset module.
 type AssetModuleDeps struct {
+	LoadProductOptions  func(context.Context) ([]types.SelectOption, error)
+	LoadLocationOptions func(context.Context) ([]types.SelectOption, error)
+
 	Routes       entityasset.Routes
 	CommonLabels pyeza.CommonLabels
 	Labels       entityasset.Labels
@@ -102,6 +105,8 @@ func NewAssetModule(deps *AssetModuleDeps) *AssetModule {
 		GetAssetInUseIDs: deps.GetAssetInUseIDs,
 	}
 	actionDeps := &assetaction.Deps{
+		LoadLocationOptions:        deps.LoadLocationOptions,
+		LoadProductOptions:         deps.LoadProductOptions,
 		Routes:                     deps.Routes,
 		Labels:                     deps.Labels,
 		CreateAsset:                deps.CreateAsset,

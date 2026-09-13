@@ -25,6 +25,14 @@ func NewEditAction(deps *Deps) view.View {
 		id := viewCtx.Request.PathValue("id")
 
 		if viewCtx.Request.Method == http.MethodGet {
+			productOptions, err := loadProductOptions(ctx, deps)
+			if err != nil {
+				return view.Error(err)
+			}
+			locationOptions, err := loadLocationOptions(ctx, deps)
+			if err != nil {
+				return view.Error(err)
+			}
 			// Check whether depreciation fields are locked (posted depreciation exists).
 			depLocked := checkDepreciationFieldsLocked(ctx, deps, id)
 
@@ -36,6 +44,9 @@ func NewEditAction(deps *Deps) view.View {
 					return view.HTMXError(deps.Labels.Actions.IDRequired)
 				}
 				return view.OK("asset-drawer-form", &assetform.Data{
+					ShowProduct:              deps.LoadProductOptions != nil,
+					ProductOptions:           productOptions,
+					LocationOptions:          locationOptions,
 					FormAction:               route.ResolveURL(deps.Routes.EditURL, "id", record.ID),
 					IsEdit:                   true,
 					ID:                       record.ID,
@@ -44,6 +55,8 @@ func NewEditAction(deps *Deps) view.View {
 					Description:              record.Description,
 					CategoryID:               record.AssetCategoryID,
 					LocationID:               record.LocationID,
+					ProductID:                record.ProductID,
+					ProductLocked:            true,
 					AcquisitionCost:          fmt.Sprintf("%.2f", record.AcquisitionCost),
 					SalvageValue:             fmt.Sprintf("%.2f", record.SalvageValue),
 					UsefulLifeMonths:         strconv.Itoa(record.UsefulLifeMonths),
@@ -57,6 +70,9 @@ func NewEditAction(deps *Deps) view.View {
 
 			// Fallback: mock data
 			return view.OK("asset-drawer-form", &assetform.Data{
+				ShowProduct:              deps.LoadProductOptions != nil,
+				ProductOptions:           productOptions,
+				LocationOptions:          locationOptions,
 				FormAction:               route.ResolveURL(deps.Routes.EditURL, "id", id),
 				IsEdit:                   true,
 				ID:                       id,
@@ -97,6 +113,7 @@ func NewEditAction(deps *Deps) view.View {
 			Description:        viewCtx.Request.FormValue("description"),
 			AssetCategoryID:    viewCtx.Request.FormValue("asset_category_id"),
 			LocationID:         viewCtx.Request.FormValue("location_id"),
+			ProductID:          viewCtx.Request.FormValue("product_id"),
 			AcquisitionCost:    acqCost,
 			SalvageValue:       salvage,
 			BookValue:          acqCost - salvage,

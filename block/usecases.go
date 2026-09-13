@@ -12,6 +12,7 @@ package block
 import (
 	"context"
 	"fmt"
+	productpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/product/product"
 	"log"
 	"os"
 	"testing"
@@ -22,6 +23,7 @@ import (
 	revaluationpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/asset_revaluation"
 	depschpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/depreciation"
 	deprunpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/depreciation_run"
+	locationpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/entity/location"
 	workspacepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/entity/workspace"
 	forexratepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/finance/forex_rate"
 	fundpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/funding/fund"
@@ -53,6 +55,9 @@ import (
 //  3. Closure signatures use proto request/response types directly.
 //  4. Dashboard closures use the view-layer types.
 type UseCases struct {
+	ListAssetProducts       func(context.Context, *productpb.ListProductsRequest) (*productpb.ListProductsResponse, error)
+	GetLocationListPageData func(context.Context, *locationpb.GetLocationListPageDataRequest) (*locationpb.GetLocationListPageDataResponse, error)
+
 	// Workspace.ReadWorkspace is needed by getFunctionalCurrency.
 	Workspace WorkspaceUseCases
 
