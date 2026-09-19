@@ -20,16 +20,18 @@ import (
 
 // fychaEngineBlock returns a consumerapp.AppOption that registers all fycha domain
 // modules via the compose engine (replaces legacy fychaBlock).
-func EngineBlock(depRunURL string) consumerapp.AppOption {
+func EngineBlock(depRunURL string, opts ...EngineOption) consumerapp.AppOption {
+	cfg := engineConfig{}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
 	return func(ctx *consumerapp.AppContext) error {
 		uc, err := consumerapp.RequireUseCases(ctx, "fychaEngineBlock")
 		if err != nil {
 			return err
 		}
 		adapted := buildFychaUseCases(uc)
-		if ctx.BusinessType == "leasing" && uc.Product != nil && uc.Product.Product != nil && uc.Product.Product.ListProducts != nil {
-			adapted.ListAssetProducts = uc.Product.Product.ListProducts.Execute
-		}
+		bindAssetProducts(adapted, uc, cfg.assetProductSelection)
 
 		infra := &Infra{AssetDepreciationRunURL: depRunURL}
 		infra.UploadFile, _ = ctx.UploadFile.(func(context.Context, string, string, []byte, string) error)
@@ -388,4 +390,15 @@ func buildFychaUseCases(uc *consumer.UseCases) *UseCases {
 	}
 
 	return result
+}
+
+// bindAssetProducts preserves the optional dependency when the capability is off
+// or the product use case is unavailable. Permissions remain in the use case.
+func bindAssetProducts(adapted *UseCases, uc *consumer.UseCases, enabled bool) {
+	if adapted == nil || uc == nil || !enabled {
+		return
+	}
+	if uc.Product != nil && uc.Product.Product != nil && uc.Product.Product.ListProducts != nil {
+		adapted.ListAssetProducts = uc.Product.Product.ListProducts.Execute
+	}
 }

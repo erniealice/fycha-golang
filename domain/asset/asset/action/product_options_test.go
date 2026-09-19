@@ -15,7 +15,7 @@ import (
 func TestAssetProductDrawerSelection(t *testing.T) {
 	deps := testDeps()
 	deps.LoadProductOptions = func(context.Context) ([]types.SelectOption, error) {
-		return []types.SelectOption{{Value: "product", Label: "1BR"}}, nil
+		return []types.SelectOption{{Value: "product", Label: "Sample Product"}}, nil
 	}
 	deps.ReadAsset = func(context.Context, string) (*assetform.Record, error) {
 		return &assetform.Record{ID: "asset", ProductID: "product"}, nil
@@ -29,7 +29,7 @@ func TestAssetProductDrawerSelection(t *testing.T) {
 	}
 	saved := ""
 	deps.CreateAsset = func(_ context.Context, r *assetform.Record) error { saved = r.ProductID; return nil }
-	values := url.Values{"name": {"Unit"}, "product_id": {"product"}, "acquisition_cost": {"100"}}
+	values := url.Values{"name": {"Sample Asset"}, "product_id": {"product"}, "acquisition_cost": {"100"}}
 	req = httptest.NewRequest(http.MethodPost, "/action/asset/add", strings.NewReader(values.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	NewAddAction(deps).Handle(ctxWithPerms("asset:create"), &view.ViewContext{Request: req})
