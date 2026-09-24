@@ -721,160 +721,140 @@ func rowText(row *etree.Element) string {
 }
 
 // ProcessBody is the main entry point for processing the document body.
-// It uses clone-based iteration for body-level loops, supporting two-level
-// nesting (body-level loop wrapping table-level loops).
 //
-// For body-level loops ({{#key}}...{{/key}} as standalone paragraphs):
-//  1. Scans body children to find start/end marker paragraphs
-//  2. Collects all elements between markers as the "template block"
-//  3. Deep-copies the template block for each array item via element.Copy()
-//  4. Processes each clone with the current item's data (resolving nested table loops)
-//  5. Replaces the original markers and template block with processed clones
-//  6. Processes remaining elements (before/after) with root data
+// Body-level loops are standalone paragraphs {{#key}} ... {{/key}} whose
+// elements between the markers form a template block. expandBodyBlock handles
+// them recursively, so a body loop may contain further body loops (nested, e.g.
+// {{#jobs}} wrapping {{#assessments}}) and a scope may hold several sibling
+// loops. Each clone of a block is processed against its item's data; nested
+// table-row loops inside a block resolve against that item, as before.
 func ProcessBody(body *etree.Element, data map[string]any) error {
-	bodyItems := body.ChildElements()
+	return expandBodyBlock(body, body.ChildElements(), data, 0)
+}
 
-	// First pass: non-destructive scan for body-level loop markers
-	startIdx, endIdx, loopKey := findBodyLoopMarkers(bodyItems)
+// maxBodyLoopDepth bounds body-loop recursion. Real templates nest two or three
+// levels (jobs → assessments → ratings); anything deeper is treated as a
+// malformed template rather than an invitation to unbounded recursion.
+const maxBodyLoopDepth = 8
 
-	// No loop markers found — process all elements normally with root data
-	if startIdx == -1 || endIdx == -1 {
-		for _, el := range bodyItems {
-			switch el.Tag {
-			case "p":
-				processParagraph(el, data)
-				if err := applyStyleAttributes(el, data); err != nil {
+// expandBodyBlock processes the sibling elements `elements` (all direct children
+// of parent, in document order) at the scope `data`, expanding every
+// well-formed body loop in place.
+//
+// Pairing is fail closed and matches the original single-loop rule: an opener
+// {{#key}} pairs with the next {{/key}} of the SAME key at the same nesting
+// depth (a same-key opener in between deepens it). An opener with no matching
+// closer is not a loop — it is processed as an ordinary paragraph, which blanks
+// the marker, and scanning continues. Clones are inserted immediately before
+// the closing marker, then the markers and the original template block are
+// removed, so surrounding elements (and sectPr) keep their positions.
+func expandBodyBlock(parent *etree.Element, elements []*etree.Element, data map[string]any, depth int) error {
+	for i := 0; i < len(elements); i++ {
+		el := elements[i]
+		if key, ok := bodyLoopOpener(el); ok && depth < maxBodyLoopDepth {
+			if end := matchingBodyLoopCloser(elements, i, key); end != -1 {
+				if err := expandBodyLoop(parent, elements[i:end+1], key, data, depth); err != nil {
 					return err
 				}
-			case "tbl":
-				if err := processTable(el, data); err != nil {
-					return err
-				}
+				i = end
+				continue
 			}
 		}
-		return nil
-	}
-
-	// Process elements before the loop with root data
-	for i := 0; i < startIdx; i++ {
-		el := bodyItems[i]
-		switch el.Tag {
-		case "p":
-			processParagraph(el, data)
-			if err := applyStyleAttributes(el, data); err != nil {
-				return err
-			}
-		case "tbl":
-			if err := processTable(el, data); err != nil {
-				return err
-			}
+		if err := processBodyElement(el, data); err != nil {
+			return err
 		}
 	}
-
-	// Collect the template block elements (between start and end markers, exclusive)
-	var templateBlock []*etree.Element
-	for i := startIdx + 1; i < endIdx; i++ {
-		templateBlock = append(templateBlock, bodyItems[i])
-	}
-
-	// Get the array data for the loop key
-	loopItems := resolveLoopData(data, loopKey)
-
-	// The anchor for insertion is the end marker paragraph
-	anchor := bodyItems[endIdx]
-
-	// Clone and process template block for each array item.
-	// Each clone gets processParagraph/processTable with the item's data,
-	// so nested table loops (e.g., {{#items}} inside a table) resolve
-	// against the current body-loop item's scope.
-	for _, itemData := range loopItems {
-		itemMap, ok := itemData.(map[string]any)
-		if !ok {
-			continue
-		}
-		for _, tmplEl := range templateBlock {
-			namespaces := namespaceContextFor(tmplEl)
-			clone := tmplEl.Copy()
-			switch clone.Tag {
-			case "p":
-				processParagraph(clone, itemMap)
-				if err := applyStyleAttributesWithNamespaceContext(clone, itemMap, namespaces); err != nil {
-					return err
-				}
-			case "tbl":
-				if err := processTableWithNamespaceContext(clone, itemMap, namespaces); err != nil {
-					return err
-				}
-			}
-			body.InsertChild(anchor, clone)
-		}
-	}
-
-	// Remove original start marker, template block elements, and end marker
-	body.RemoveChild(bodyItems[startIdx]) // {{#key}} paragraph
-	for _, tmplEl := range templateBlock {
-		body.RemoveChild(tmplEl)
-	}
-	body.RemoveChild(bodyItems[endIdx]) // {{/key}} paragraph
-
-	// Process elements after the loop with root data.
-	// Elements before the loop were already processed above.
-	// Cloned elements were processed with item data during insertion.
-	// Re-running processParagraph/processTable on those is safe because
-	// already-replaced text won't match placeholder patterns.
-	for i := endIdx + 1; i < len(bodyItems); i++ {
-		el := bodyItems[i]
-		switch el.Tag {
-		case "p":
-			processParagraph(el, data)
-			if err := applyStyleAttributes(el, data); err != nil {
-				return err
-			}
-		case "tbl":
-			if err := processTable(el, data); err != nil {
-				return err
-			}
-		}
-	}
-
 	return nil
 }
 
-// findBodyLoopMarkers scans body child elements for the first {{#key}}/{{/key}} pair.
-// It reads text without modifying the elements (non-destructive scan).
-func findBodyLoopMarkers(elements []*etree.Element) (startIdx, endIdx int, key string) {
-	startIdx = -1
-	endIdx = -1
-
-	for i, el := range elements {
-		if el.Tag != "p" {
+// expandBodyLoop expands one paired loop. block[0] is the opener paragraph,
+// block[len-1] the closer; the elements between are the template.
+func expandBodyLoop(parent *etree.Element, block []*etree.Element, key string, data map[string]any, depth int) error {
+	opener, closer := block[0], block[len(block)-1]
+	template := block[1 : len(block)-1]
+	for _, item := range resolveLoopData(data, key) {
+		itemMap, ok := item.(map[string]any)
+		if !ok {
 			continue
 		}
-		text := paragraphText(el)
-		trimmed := strings.TrimSpace(text)
-
-		if startIdx == -1 {
-			if m := loopStartRegex.FindStringSubmatch(trimmed); len(m) > 0 && m[0] == trimmed {
-				startIdx = i
-				key = strings.TrimSpace(m[1])
-			}
-		} else {
-			// The close marker must carry the SAME key as the open marker. A
-			// mismatched {{/otherkey}} does not close this loop; scanning
-			// continues for the matching {{/key}}. If no matching close is ever
-			// found we fall through to the final return and report no loop
-			// (-1, -1, ""), so ProcessBody treats the body as having no loop:
-			// every element is processed once at root scope and stray marker
-			// paragraphs are blanked by processParagraph's exact-match branch.
-			// This is fail closed (matching the no-marker path), never
-			// truncating the template block at the wrong close marker.
-			if m := loopEndRegex.FindStringSubmatch(trimmed); len(m) > 0 && m[0] == trimmed && strings.TrimSpace(m[1]) == key {
-				endIdx = i
-				return
-			}
+		clones := make([]*etree.Element, 0, len(template))
+		for _, tmplEl := range template {
+			clone := tmplEl.Copy()
+			// Insert before processing so the clone sees its ancestors' namespace
+			// declarations exactly as the original template element did.
+			parent.InsertChild(closer, clone)
+			clones = append(clones, clone)
+		}
+		if err := expandBodyBlock(parent, clones, itemMap, depth+1); err != nil {
+			return err
 		}
 	}
-	return -1, -1, ""
+	parent.RemoveChild(opener)
+	for _, tmplEl := range template {
+		parent.RemoveChild(tmplEl)
+	}
+	parent.RemoveChild(closer)
+	return nil
+}
+
+// processBodyElement applies placeholder replacement to one non-loop body
+// element at the given scope.
+func processBodyElement(el *etree.Element, data map[string]any) error {
+	switch el.Tag {
+	case "p":
+		processParagraph(el, data)
+		return applyStyleAttributes(el, data)
+	case "tbl":
+		return processTable(el, data)
+	}
+	return nil
+}
+
+// bodyLoopOpener reports whether el is a paragraph whose entire text is a
+// {{#key}} marker.
+func bodyLoopOpener(el *etree.Element) (string, bool) {
+	if el.Tag != "p" {
+		return "", false
+	}
+	trimmed := strings.TrimSpace(paragraphText(el))
+	if m := loopStartRegex.FindStringSubmatch(trimmed); len(m) > 0 && m[0] == trimmed {
+		return strings.TrimSpace(m[1]), true
+	}
+	return "", false
+}
+
+// bodyLoopCloser reports whether el is a paragraph whose entire text is a
+// {{/key}} marker.
+func bodyLoopCloser(el *etree.Element) (string, bool) {
+	if el.Tag != "p" {
+		return "", false
+	}
+	trimmed := strings.TrimSpace(paragraphText(el))
+	if m := loopEndRegex.FindStringSubmatch(trimmed); len(m) > 0 && m[0] == trimmed {
+		return strings.TrimSpace(m[1]), true
+	}
+	return "", false
+}
+
+// matchingBodyLoopCloser returns the index of the {{/key}} that closes the
+// opener at elements[start], or -1. Markers of other keys are ignored here
+// (they are paired, or blanked, when their own scope is processed); same-key
+// openers in between nest.
+func matchingBodyLoopCloser(elements []*etree.Element, start int, key string) int {
+	nested := 0
+	for i := start + 1; i < len(elements); i++ {
+		if k, ok := bodyLoopOpener(elements[i]); ok && k == key {
+			nested++
+			continue
+		}
+		if k, ok := bodyLoopCloser(elements[i]); ok && k == key {
+			if nested == 0 {
+				return i
+			}
+			nested--
+		}
+	}
+	return -1
 }
 
 // paragraphText concatenates all text content in a paragraph for marker detection,
