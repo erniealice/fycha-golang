@@ -48,6 +48,7 @@ os.WriteFile("invoice-output.docx", result, 0644)
 | Header/footer processing | Done | Placeholders in document headers/footers are replaced |
 | OOXML preservation | Done | All namespaces (w:, w14:, mc:, etc.) preserved on roundtrip |
 | Body-level loops | Done | `{{#section}}...{{/section}}` for paragraph-level looping |
+| Table column loops | Done | a cell holding `{{#key}}...{{/key}}` is cloned once per item, widening the table |
 | Image replacement | Planned | — |
 
 ## Template Syntax
@@ -78,6 +79,51 @@ Date: 2026-03-08
 ```
 
 **Nested paths** use dot notation: `{{client.name}}` traverses `data["client"]["name"]`.
+
+### Table Column Loops
+
+A table cell whose whole text is `{{#key}}` … `{{/key}}` (each marker in its own run) is a
+**column-loop cell**: it is cloned once per item of `key`, left to right, and each clone resolves
+its placeholders and whitelisted style tokens (`w:shd/@w:fill`, `w:color/@w:val`, `w:b/@w:val`)
+against that item. `key` is resolved in the row's scope, so a header row iterates a root list and
+a row-loop template row iterates a list on each row item:
+
+| Name | `{{#columns}}{{name}}{{/columns}}` |
+|---|---|
+| `{{#rows}}` | |
+| `{{label}}` | `{{#cells}}{{value}}{{/cells}}` |
+| `{{/rows}}` | |
+
+The template cell's grid column (`w:tblGrid/w:gridCol`) and cell width (`w:tcW`) are split evenly
+across the clones (the remainder goes to the last), so the table keeps its width. Zero items is
+valid: the loop's grid column is removed entirely and the affected rows lose that cell, so the grid
+and every row's cell count stay consistent.
+
+Every violation below is a `ColumnLoopContractError` — `errors.As(err, &contract)` against the
+exported interface, or `errors.As` against a locally declared
+`interface{ ColumnLoopContractError() bool }` for callers that do not want to import this package's
+types (the same pattern as the style-token contract's `StyleContractError`):
+
+- **Column count.** Every column loop of one table must start at the same grid column and produce
+  the same number of cells. The limit is on the table's **total** grid columns after expansion
+  (static columns + expanded items), not the item count alone — Word caps a table at 63 columns, so
+  a table with one static column can only take 62 loop items.
+- **Cell shape.** The template cell must span exactly one grid column (`gridSpan` of 1) and must not
+  contain a nested table.
+- **Width.** The cell's `w:tcW` must declare an explicit `dxa` width (`w:type="dxa"`, or no `w:type`
+  at all); `pct`, `auto`, or a missing width are rejected rather than producing a zero or stale
+  width. The width must also be large enough to split into a positive width per item.
+- **Crossing rows.** A `gridSpan`, `gridBefore`, `gridAfter`, or `vMerge` on a DIFFERENT row's cell
+  that crosses the loop's grid column is rejected — the engine has no way to remap it across the
+  expanded columns. A plain, single-column cell that merely sits at that column is unaffected.
+- **Marker parsing.** A column-loop cell's whole marker stream is parsed before anything is mutated:
+  an opener with no closer in the same cell (split), and a nested or repeated same-key pair, are
+  both rejected. A lone `{{#key}}` or `{{/key}}` occupying a whole cell is a row-loop marker, not a
+  column loop, and is unaffected.
+- **Loop value.** The loop value must resolve to a list of objects.
+
+Column-loop cells are classified structurally before the row-loop marker scan runs, so a
+column-loop marker (e.g. the header's `{{#columns}}`) is never misread as a row-loop opener.
 
 ### Table Row Loops
 

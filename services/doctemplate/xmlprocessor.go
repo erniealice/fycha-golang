@@ -462,10 +462,40 @@ func processTable(tbl *etree.Element, data map[string]any) error {
 }
 
 func processTableWithNamespaceContext(tbl *etree.Element, data map[string]any, inherited namespaceContext) error {
+	// Column loops (see columnloop.go) are table-scoped: every row shares one
+	// state, and the grid is rewritten once all rows have expanded.
+	columns := newColumnLoopState()
+	if err := processTableRows(tbl, data, inherited, columns); err != nil {
+		return err
+	}
+	namespaces := mergeNamespaceContexts(inherited, namespaceContextFor(tbl))
+	return applyColumnLoopGrid(tbl, columns, namespaces)
+}
+
+func processTableRows(tbl *etree.Element, data map[string]any, inherited namespaceContext, columns *columnLoopState) error {
 	namespaces := mergeNamespaceContexts(inherited, namespaceContextFor(tbl))
 	rows := tbl.FindElements("./tr")
 	if len(rows) == 0 {
 		return nil
+	}
+
+	// Rule 7: classify every row's column-loop cells structurally BEFORE the
+	// row-loop marker scan below, so a column-loop marker (e.g. {{#columns}}
+	// in a header cell) is never misread as a row-loop opener, and a
+	// malformed column-loop cell (rule 5) is rejected up front rather than
+	// silently feeding the row-loop pairing scan. planColumnLoopStructure
+	// then proves the table's column-loop shape (grid column, nested tables,
+	// crossing spans) before any row is mutated.
+	rowHasLoop := make([]bool, len(rows))
+	for i, row := range rows {
+		hasLoop, err := rowHasColumnLoop(row)
+		if err != nil {
+			return err
+		}
+		rowHasLoop[i] = hasLoop
+	}
+	if err := planColumnLoopStructure(tbl, rows, rowHasLoop, namespaces, columns); err != nil {
+		return err
 	}
 
 	// Pair loop markers with a LIFO stack, scanning the COMPLETE marker stream
@@ -503,7 +533,7 @@ func processTableWithNamespaceContext(tbl *etree.Element, data map[string]any, i
 	malformed := false
 
 	for i, row := range rows {
-		text := rowText(row)
+		text := rowText(row, rowHasLoop[i])
 		if key := extractLoopMarker(text, "#"); key != "" {
 			stack = append(stack, openMarker{key: key, index: i})
 			continue
@@ -547,7 +577,7 @@ func processTableWithNamespaceContext(tbl *etree.Element, data map[string]any, i
 	// Fail closed — never expand or truncate on ambiguous markers.
 	if malformed || startIndex == -1 || endIndex == -1 || loopKey == "" {
 		for _, row := range rows {
-			if err := processRowCellsWithNamespaceContext(row, data, namespaces); err != nil {
+			if err := processTableRowCells(row, data, namespaces, columns); err != nil {
 				return err
 			}
 		}
@@ -561,7 +591,7 @@ func processTableWithNamespaceContext(tbl *etree.Element, data map[string]any, i
 		if i >= startIndex && i <= endIndex {
 			continue
 		}
-		if err := processRowCellsWithNamespaceContext(row, data, namespaces); err != nil {
+		if err := processTableRowCells(row, data, namespaces, columns); err != nil {
 			return err
 		}
 	}
@@ -628,7 +658,7 @@ func processTableWithNamespaceContext(tbl *etree.Element, data map[string]any, i
 		}
 		for _, tmplRow := range templateRows {
 			newRow := tmplRow.Copy()
-			if err := processRowCellsWithNamespaceContext(newRow, itemMap, namespaces); err != nil {
+			if err := processTableRowCells(newRow, itemMap, namespaces, columns); err != nil {
 				return err
 			}
 			clones = append(clones, newRow)
@@ -702,6 +732,20 @@ func processRowCells(row *etree.Element, data map[string]any) error {
 }
 
 func processRowCellsWithNamespaceContext(row *etree.Element, data map[string]any, inherited namespaceContext) error {
+	return processTableRowCells(row, data, inherited, newColumnLoopState())
+}
+
+// processTableRowCells is processRowCellsWithNamespaceContext with the
+// table's shared column-loop state. A row without a column-loop cell takes
+// the original path unchanged.
+func processTableRowCells(row *etree.Element, data map[string]any, inherited namespaceContext, columns *columnLoopState) error {
+	hasLoop, err := rowHasColumnLoop(row)
+	if err != nil {
+		return err
+	}
+	if hasLoop {
+		return processColumnLoopRow(row, data, inherited, columns)
+	}
 	for _, cell := range row.FindElements(".//tc") {
 		for _, p := range cell.FindElements("./p") {
 			processParagraph(p, data)
@@ -712,10 +756,28 @@ func processRowCellsWithNamespaceContext(row *etree.Element, data map[string]any
 }
 
 // rowText concatenates all text content in a table row for marker detection.
-func rowText(row *etree.Element) string {
+// Column-loop cells are skipped: their {{#key}} … {{/key}} markers belong to
+// the cell, not to a row loop. hasColumnLoop is the rule-7 pre-pass
+// classification (see processTableRows), computed once per row before this
+// runs, so a column-loop cell's own error path never resurfaces here.
+func rowText(row *etree.Element, hasColumnLoop bool) string {
+	if !hasColumnLoop {
+		var sb strings.Builder
+		for _, t := range row.FindElements(".//t") {
+			sb.WriteString(t.Text())
+		}
+		return sb.String()
+	}
 	var sb strings.Builder
-	for _, t := range row.FindElements(".//t") {
-		sb.WriteString(t.Text())
+	for _, child := range row.ChildElements() {
+		if child.Tag == "tc" {
+			if _, loop := columnLoopCell(child); loop {
+				continue
+			}
+		}
+		for _, t := range child.FindElements(".//t") {
+			sb.WriteString(t.Text())
+		}
 	}
 	return sb.String()
 }
