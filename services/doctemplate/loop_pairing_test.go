@@ -15,11 +15,11 @@ import (
 // Byte-stability golden — frozen live report-card emissions
 // ----------------------------------------------------------------------------
 
-// goldenReportCardTemplate returns a report-card-shaped docx: a body-level loop
+// goldenOutcomeSummaryTemplate returns a report-card-shaped docx: a body-level loop
 // ({{#job_categories.academic.jobs}}) wrapping a per-subject heading and a table
 // with a nested row loop ({{#outcome_criteria}}) — the live v1/v2 emission shape
 // (cf. TestContractShape_BodyLoopWithNestedMapsAndRowLoop).
-func goldenReportCardTemplate(t *testing.T) []byte {
+func goldenOutcomeSummaryTemplate(t *testing.T) []byte {
 	t.Helper()
 	inner := `<w:p><w:r><w:t>Report Header</w:t></w:r></w:p>
 <w:p><w:r><w:t>{{#job_categories.academic.jobs}}</w:t></w:r></w:p>
@@ -37,7 +37,7 @@ func goldenReportCardTemplate(t *testing.T) []byte {
 	return createTestDocx(t, bodyDoc(inner))
 }
 
-func goldenReportCardData() map[string]any {
+func goldenOutcomeSummaryData() map[string]any {
 	return map[string]any{
 		"job_categories": map[string]any{
 			"academic": map[string]any{
@@ -94,8 +94,8 @@ func hashDocumentXML(t *testing.T, docx []byte) string {
 // the same commit.
 func TestByteStability_FrozenEmissions(t *testing.T) {
 	const (
-		goldenInvoice    = "129fdd6745c04871e8fdba8ec5bfeed4d20732d5ddcb5686f21d96e9fd8231be"
-		goldenReportCard = "be60e4c7b94cf732a646ce6ad1e041db52d51a9a407c567ce0247a82d1174e07"
+		goldenInvoice        = "129fdd6745c04871e8fdba8ec5bfeed4d20732d5ddcb5686f21d96e9fd8231be"
+		goldenOutcomeSummary = "be60e4c7b94cf732a646ce6ad1e041db52d51a9a407c567ce0247a82d1174e07"
 	)
 
 	inv, err := os.ReadFile("testdata/invoice-template.docx")
@@ -110,12 +110,12 @@ func TestByteStability_FrozenEmissions(t *testing.T) {
 		t.Errorf("invoice emission byte-stability regression:\n  want %s\n  got  %s", goldenInvoice, got)
 	}
 
-	rcOut, err := ProcessTemplate(goldenReportCardTemplate(t), goldenReportCardData())
+	rcOut, err := ProcessTemplate(goldenOutcomeSummaryTemplate(t), goldenOutcomeSummaryData())
 	if err != nil {
 		t.Fatalf("process report card: %v", err)
 	}
-	if got := hashDocumentXML(t, rcOut); got != goldenReportCard {
-		t.Errorf("report-card emission byte-stability regression:\n  want %s\n  got  %s", goldenReportCard, got)
+	if got := hashDocumentXML(t, rcOut); got != goldenOutcomeSummary {
+		t.Errorf("report-card emission byte-stability regression:\n  want %s\n  got  %s", goldenOutcomeSummary, got)
 	}
 }
 
