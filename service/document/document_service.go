@@ -75,7 +75,7 @@ func (s *DocumentService) ProcessBytesToPDF(templateData []byte, data map[string
 	if err != nil {
 		return nil, err
 	}
-	return convertToPDF(docxBytes)
+	return convertToPDF(context.Background(), docxBytes)
 }
 
 // ProcessFromStorage reads a template from storage, processes it with the given data,
@@ -139,7 +139,7 @@ func (s *DocumentService) ProcessFromStorageToPDF(
 		return fmt.Errorf("processing template: %w", err)
 	}
 
-	pdfBytes, err := convertToPDF(docxBytes)
+	pdfBytes, err := convertToPDF(ctx, docxBytes)
 	if err != nil {
 		return fmt.Errorf("converting to PDF: %w", err)
 	}
@@ -198,13 +198,14 @@ func (s *DocumentService) ProcessFromStorageToPDFBytes(
 		return nil, fmt.Errorf("processing template: %w", err)
 	}
 
-	return convertToPDF(docxBytes)
+	return convertToPDF(ctx, docxBytes)
 }
 
-// convertToPDF converts DOCX bytes to PDF using LibreOffice.
+// convertToPDF converts DOCX bytes to PDF using LibreOffice, or the remote
+// converter when FYCHA_PDF_CONVERTER_URL is set. ctx bounds either path.
 // Returns an error if LibreOffice is not installed (no silent fallback).
-func convertToPDF(docxBytes []byte) ([]byte, error) {
-	pdfBytes, ok, err := pdfconv.ConvertDocxToPDF(docxBytes)
+func convertToPDF(ctx context.Context, docxBytes []byte) ([]byte, error) {
+	pdfBytes, ok, err := pdfconv.ConvertDocxToPDFContext(ctx, docxBytes)
 	if err != nil {
 		return nil, fmt.Errorf("PDF conversion failed: %w", err)
 	}

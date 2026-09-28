@@ -146,7 +146,21 @@ func ConvertDocxToPDF(docxBytes []byte) (pdfBytes []byte, ok bool, err error) {
 // ConvertDocxToPDFContext is ConvertDocxToPDF bounded by the caller's context:
 // cancelling ctx (e.g. a client disconnect) stops queueing and kills an
 // in-progress LibreOffice process group.
+//
+// When FYCHA_PDF_CONVERTER_URL is set, the conversion is delegated to that
+// remote converter instead (see remote.go) and never falls back to the local
+// LibreOffice: the remote exists to keep soffice off this instance.
 func ConvertDocxToPDFContext(ctx context.Context, docxBytes []byte) (pdfBytes []byte, ok bool, err error) {
+	if cfg, configured := remoteConfigFromEnv(); configured {
+		return convertRemote(ctx, docxBytes, cfg, productionRemoteDeps())
+	}
+	return ConvertDocxToPDFLocal(ctx, docxBytes)
+}
+
+// ConvertDocxToPDFLocal always converts with the local LibreOffice, ignoring
+// FYCHA_PDF_CONVERTER_URL. The dedicated converter server uses it so it can
+// never delegate to itself.
+func ConvertDocxToPDFLocal(ctx context.Context, docxBytes []byte) (pdfBytes []byte, ok bool, err error) {
 	return convertDocxToPDFWithDeps(ctx, docxBytes, productionConversionDeps())
 }
 
