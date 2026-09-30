@@ -1,0 +1,154 @@
+{{/* Charge policy version page — full page (direct access / non-HTMX). */}}
+{{define "charge-policy-version-detail"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial — HTMX navigation. */}}
+{{define "charge-policy-version-detail-content"}}
+<div class="page-content detail-layout" data-testid="charge-policy-version" data-policy-id="{{.PolicyID}}" data-version-id="{{.VersionID}}" data-version-status="{{.StatusVariant}}">
+  <div class="detail-actions detail-actions--spaced">
+    <a class="btn btn-secondary" href="{{.PolicyURL}}" data-testid="charge-policy-back">{{.BackLabel}}</a>
+    <span class="badge badge--{{.StatusVariant}}" data-testid="charge-policy-version-status">{{.StatusLabel}}</span>
+    {{if .SelfApproved}}<span class="badge badge--warning" data-testid="charge-policy-self-approved">{{.Labels.Detail.SelfApprovedNote}}</span>{{end}}
+  </div>
+
+  {{if .ShowLocked}}
+  <div data-testid="charge-policy-locked-notice">{{template "alert" (dict "Message" .Labels.Detail.LockedNotice "State" "info")}}</div>
+  {{end}}
+
+  {{if .IsDraft}}{{template "charge-policy-checklist-card" .}}{{end}}
+
+  <div class="detail-tabs">
+    {{template "tabs" (dict "Items" .TabItems "ActiveTab" .ActiveTab "Variant" "default" "ID" "charge-policy-version-tabs")}}
+  </div>
+
+  <div id="tabContent" class="detail-body" role="tabpanel" aria-labelledby="tab-{{.ActiveTab}}">
+    {{if eq .ActiveTab "classification"}}
+      {{template "charge-policy-version-tab-classification" .}}
+    {{else if eq .ActiveTab "components"}}
+      {{template "charge-policy-version-tab-components" .}}
+    {{else if eq .ActiveTab "postings"}}
+      {{template "charge-policy-version-tab-postings" .}}
+    {{else if eq .ActiveTab "approval"}}
+      {{template "charge-policy-version-tab-approval" .}}
+    {{else if eq .ActiveTab "audit-history"}}
+      {{template "audit-history-tab" .}}
+    {{end}}
+  </div>
+</div>
+{{end}}
+
+{{/* Approval checklist card (draft versions). */}}
+{{define "charge-policy-checklist-card"}}
+<section data-testid="charge-policy-checklist" aria-label="{{.Labels.Detail.ChecklistTitle}}">
+  <h4 class="detail-section-title">{{.Labels.Detail.ChecklistTitle}}</h4>
+  {{if .ChecklistReady}}
+    {{if .Reasons}}
+    <div data-testid="charge-policy-unsupported">
+      {{template "alert" (dict "Title" .Labels.Detail.UnsupportedTitle "Message" .ReasonsText "State" "warning")}}
+    </div>
+    {{end}}
+    <ul data-testid="charge-policy-checklist-items">
+      {{range .Checklist}}
+      <li data-passed="{{.Passed}}" data-testid="charge-policy-check-item">
+        <span class="badge badge--{{if .Passed}}success{{else}}danger{{end}}">{{if .Passed}}{{$.Labels.Detail.ChecklistPassed}}{{else}}{{$.Labels.Detail.ChecklistFailed}}{{end}}</span>
+        {{.Text}}{{if .Detail}} <span class="detail-info-label">{{.Detail}}</span>{{end}}
+      </li>
+      {{end}}
+    </ul>
+  {{end}}
+</section>
+{{end}}
+
+{{/* ---- Classification ---- */}}
+{{define "charge-policy-version-tab-classification"}}
+<div class="tab-scroll">
+  <h4 class="detail-section-title">{{.Labels.Tabs.Classification}}</h4>
+  <div class="detail-info-grid">
+    {{range .Fields}}
+    <div class="detail-info-item">
+      <span class="detail-info-label">{{.Label}}</span>
+      <span class="detail-info-value" data-testid="{{.TestID}}">{{.Value}}</span>
+    </div>
+    {{end}}
+  </div>
+
+  <div id="charge-policy-version-result" class="form-result form-result--hidden" aria-live="polite" aria-atomic="true"></div>
+
+  <div class="detail-actions detail-actions--spaced">
+    {{if .CanEdit}}
+    <a class="btn btn-primary" data-testid="charge-policy-version-edit"
+       hx-get="{{.EditURL}}" hx-target="#sheetContent" hx-swap="innerHTML"
+       data-hx-on="sheet-open">{{.Labels.Buttons.EditVersion}}</a>
+    {{else}}
+    <button type="button" class="btn btn-primary" data-testid="charge-policy-version-edit" disabled aria-disabled="true" title="{{.EditTip}}">{{.Labels.Buttons.EditVersion}}</button>
+    {{end}}
+
+    {{if .CanDelete}}
+    <form data-testid="charge-policy-version-delete-form" hx-post="{{.DeleteURL}}" hx-swap="none"
+          hx-confirm="{{.Labels.Confirm.DeleteMsg}}"
+          data-confirm-title="{{.Labels.Confirm.DeleteTitle}}" data-confirm-variant="danger"
+          data-hx-on="form-result" data-result-id="charge-policy-version-result"
+          data-success-source="header" data-success-header="HX-Success-Message" data-hide-mode="classList">
+      {{actionForm .DeleteURL .WorkspaceID}}
+      <button type="submit" class="btn btn-secondary" data-testid="charge-policy-version-delete">{{.Labels.Buttons.DeleteDraft}}</button>
+    </form>
+    {{else}}
+    <button type="button" class="btn btn-secondary" data-testid="charge-policy-version-delete" disabled aria-disabled="true" title="{{.DeleteTip}}">{{.Labels.Buttons.DeleteDraft}}</button>
+    {{end}}
+  </div>
+</div>
+{{end}}
+
+{{/* ---- Components ---- */}}
+{{define "charge-policy-version-tab-components"}}
+<div class="tab-scroll tab-scroll--table">
+  {{template "table-card" .ComponentsTable}}
+</div>
+{{end}}
+
+{{/* ---- Postings ---- */}}
+{{define "charge-policy-version-tab-postings"}}
+<div class="tab-scroll tab-scroll--table">
+  {{template "table-card" .PostingsTable}}
+</div>
+{{end}}
+
+{{/* ---- Evidence & approval ---- */}}
+{{define "charge-policy-version-tab-approval"}}
+<div class="tab-scroll">
+  <h4 class="detail-section-title">{{.Labels.Detail.EvidenceTitle}}</h4>
+  {{if .AttachmentTable}}{{template "table-card" .AttachmentTable}}{{end}}
+
+  <h4 class="detail-section-title">{{.Labels.Detail.ChecklistTitle}}</h4>
+  {{if .IsDraft}}
+    {{template "charge-policy-checklist-card" .}}
+    <div id="charge-policy-approve-result" class="form-result form-result--hidden" aria-live="polite" aria-atomic="true"></div>
+    <div class="detail-actions detail-actions--spaced">
+      {{if .ApproveOff}}
+      <button type="button" class="btn btn-primary" data-testid="charge-policy-approve" disabled aria-disabled="true" title="{{.ApproveTip}}">{{.Labels.Buttons.Approve}}</button>
+      {{else}}
+      <form data-testid="charge-policy-approve-form" hx-post="{{.ApproveURL}}" hx-swap="none"
+            hx-confirm="{{.Labels.Confirm.ApproveMsg}}"
+            data-confirm-title="{{.Labels.Confirm.ApproveTitle}}" data-confirm-variant="primary"
+            data-hx-on="form-result" data-result-id="charge-policy-approve-result"
+            data-success-source="header" data-success-header="HX-Success-Message" data-hide-mode="classList">
+        {{actionForm .ApproveURL .WorkspaceID}}
+        <button type="submit" class="btn btn-primary" data-testid="charge-policy-approve">{{.Labels.Buttons.Approve}}</button>
+      </form>
+      {{end}}
+    </div>
+  {{else}}
+    <div class="detail-info-grid">
+      <div class="detail-info-item">
+        <span class="detail-info-label">{{.Labels.Detail.ApprovedBy}}</span>
+        <span class="detail-info-value" data-testid="charge-policy-approved-by">{{if .ApprovedBy}}{{.ApprovedBy}}{{else}}—{{end}}</span>
+      </div>
+      <div class="detail-info-item">
+        <span class="detail-info-label">{{.Labels.Detail.ApprovedAt}}</span>
+        <span class="detail-info-value" data-testid="charge-policy-approved-on">{{if .ApprovedOn}}{{.ApprovedOn}}{{else}}—{{end}}</span>
+      </div>
+    </div>
+  {{end}}
+</div>
+{{end}}

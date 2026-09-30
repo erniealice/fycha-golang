@@ -1,0 +1,15 @@
+{{/* Document series list — full page (direct access / non-HTMX). */}}
+{{define "document-series-list"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial — HTMX navigation. Status tabs are link tabs
+     (Active · Retired); the table card follows. */}}
+{{define "document-series-list-content"}}
+<div class="page-content page-content--table" data-testid="document-series-list" data-status="{{.ActiveStatus}}">
+  <div class="detail-tabs" data-testid="document-series-status-tabs">
+    {{template "tabs" (dict "Items" .StatusTabs "ActiveTab" .ActiveStatus "Variant" "category" "ID" "document-series-status-tabs")}}
+  </div>
+  {{template "table-card" .Table}}
+</div>
+{{end}}

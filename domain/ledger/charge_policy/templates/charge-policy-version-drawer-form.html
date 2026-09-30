@@ -1,0 +1,28 @@
+{{/* Draft version classification drawer. Data: see form.VersionData */}}
+{{define "charge-policy-version-drawer-form"}}
+<form hx-post="{{.FormAction}}" hx-swap="none" data-hx-on="sheet-response" data-testid="charge-policy-version-form">
+  {{actionForm .FormAction .WorkspaceID}}
+  <input type="hidden" name="id" value="{{.VersionID}}">
+
+  <div class="sheet-body">
+    <div class="form-row">
+      {{template "form-group" (dict "Type" "select" "Name" "accounting_role" "ID" "cpv-accounting-role" "Label" .Labels.Form.AccountingRoleLabel "Options" .AccountingRoles "Placeholder" .Labels.Form.Unspecified "TestId" "cpv-accounting-role-group")}}
+      {{template "form-group" (dict "Type" "select" "Name" "book_presentation" "ID" "cpv-book-presentation" "Label" .Labels.Form.BookPresentationLabel "Options" .BookPresentations "Placeholder" .Labels.Form.Unspecified "TestId" "cpv-book-presentation-group")}}
+    </div>
+    <div class="form-row">
+      {{template "form-group" (dict "Type" "select" "Name" "tax_position" "ID" "cpv-tax-position" "Label" .Labels.Form.TaxPositionLabel "Options" .TaxPositions "Placeholder" .Labels.Form.Unspecified "TestId" "cpv-tax-position-group")}}
+      {{if .TaxTreatmentOptions}}
+        {{template "form-group" (dict "Type" "select" "Name" "tax_treatment_id" "ID" "cpv-tax-treatment" "Label" .Labels.Form.TaxTreatmentLabel "Options" .TaxTreatmentOptions "Placeholder" .Labels.Form.Unspecified "TestId" "cpv-tax-treatment-group")}}
+      {{end}}
+    </div>
+    <div class="form-row single">
+      {{template "form-group" (dict "Type" "text" "Name" "assessment_scope" "ID" "cpv-assessment-scope" "Label" .Labels.Form.AssessmentScopeLabel "Value" .AssessmentScope "TestId" "cpv-assessment-scope-group")}}
+    </div>
+    <div class="form-row single">
+      {{template "form-group" (dict "Type" "textarea" "Name" "assessment_note" "ID" "cpv-assessment-note" "Label" .Labels.Form.AssessmentNoteLabel "Value" .AssessmentNote "TestId" "cpv-assessment-note-group")}}
+    </div>
+  </div>
+
+  {{template "sheet-form-footer" (dict "CommonLabels" .CommonLabels "ShowCancel" true "IsEdit" true)}}
+</form>
+{{end}}

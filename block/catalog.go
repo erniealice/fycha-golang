@@ -21,6 +21,7 @@ package block
 
 import (
 	"context"
+	"fmt"
 
 	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
 
@@ -40,6 +41,8 @@ import (
 	fundingpkg "github.com/erniealice/fycha-golang/domain/funding/funding"
 	fundinglabels "github.com/erniealice/fycha-golang/domain/funding/funding/labels"
 	ledger "github.com/erniealice/fycha-golang/domain/ledger"
+	chargepolicy "github.com/erniealice/fycha-golang/domain/ledger/charge_policy"
+	documentseries "github.com/erniealice/fycha-golang/domain/ledger/document_series"
 	equity "github.com/erniealice/fycha-golang/domain/ledger/equity"
 	ledgerview "github.com/erniealice/fycha-golang/domain/ledger/ledger"
 	payroll "github.com/erniealice/fycha-golang/domain/payroll"
@@ -334,6 +337,145 @@ func PettyCashUnit(_ *UseCases, _ *Infra) compose.Unit {
 }
 
 // ---------------------------------------------------------------------------
+// Charge policy unit (opt-in: WithChargePolicies)
+// ---------------------------------------------------------------------------
+
+// chargePolicyViewUseCases converts the block's proto-closure set into the one the
+// charge policy views consume (identical field set, so a plain struct conversion),
+// feeding the account picker from the ledger account list when not bound.
+func chargePolicyViewUseCases(uc *UseCases) *chargepolicy.UseCases {
+	c := uc.ChargePolicy
+	if c.GetAccountListPageData == nil {
+		c.GetAccountListPageData = uc.Ledger.Account.GetListPageData
+	}
+	v := chargepolicy.UseCases(c)
+	return &v
+}
+
+// ChargePolicyUnit wires the Ledger › Settings › Charge Policies pages. It is
+// not part of the default unit set; AllUnits appends it only when the app
+// passes WithChargePolicies(true).
+func ChargePolicyUnit(uc *UseCases, infra *Infra) compose.Unit {
+	u := chargepolicy.Describe()
+	u.Mount = func(mc *compose.MountContext) error {
+		// R4 M1: compose-v2 Mount does not run RequireFor — refuse boot here.
+		if uc == nil {
+			return fmt.Errorf("fycha.ChargePolicyUnit: UseCases not supplied")
+		}
+		if err := requireChargePolicy(uc); err != nil {
+			return fmt.Errorf("fycha.ChargePolicyUnit: incomplete UseCases: %w", err)
+		}
+		r := u.Routes.(*chargepolicy.Routes)
+		l := u.Labels.(*chargepolicy.Labels)
+
+		deps := &ledger.ChargePolicyModuleDeps{
+			Routes:       *r,
+			Labels:       *l,
+			CommonLabels: mc.Common,
+			TableLabels:  mc.Table,
+		}
+		if infra != nil {
+			deps.NewAttachmentID = infra.NewAttachmentID
+			deps.UploadFile = infra.UploadFile
+			deps.ListAttachments = infra.ListAttachments
+			deps.CreateAttachment = infra.CreateAttachment
+			deps.DeleteAttachment = infra.DeleteAttachment
+		}
+		deps.UseCases = chargePolicyViewUseCases(uc)
+		ledger.NewChargePolicyModule(deps).RegisterRoutes(mc.Routes)
+		return nil
+	}
+	return u
+}
+
+// ---------------------------------------------------------------------------
+// Document series unit (opt-in: WithDocumentSeries)
+// ---------------------------------------------------------------------------
+
+// documentSeriesViewUseCases converts the block's proto-closure set into the one
+// the document series views consume (identical field set).
+func documentSeriesViewUseCases(uc *UseCases) *documentseries.UseCases {
+	v := documentseries.UseCases(uc.DocumentSeries)
+	return &v
+}
+
+// DocumentSeriesUnit wires the Ledger › Settings › Document Series pages. It is
+// not part of the default unit set; AllUnits appends it only when the app
+// passes WithDocumentSeries(true). Mount fails closed (R4 M1): an unbound
+// closure refuses boot instead of mounting pages that 503.
+func DocumentSeriesUnit(uc *UseCases, _ *Infra) compose.Unit {
+	u := documentseries.Describe()
+	u.Mount = func(mc *compose.MountContext) error {
+		if uc == nil {
+			return fmt.Errorf("fycha.DocumentSeriesUnit: UseCases not supplied")
+		}
+		if err := requireDocumentSeries(uc); err != nil {
+			return fmt.Errorf("fycha.DocumentSeriesUnit: incomplete UseCases: %w", err)
+		}
+		r := u.Routes.(*documentseries.Routes)
+		l := u.Labels.(*documentseries.Labels)
+		ledger.NewDocumentSeriesModule(&ledger.DocumentSeriesModuleDeps{
+			Routes:       *r,
+			Labels:       *l,
+			CommonLabels: mc.Common,
+			TableLabels:  mc.Table,
+			UseCases:     documentSeriesViewUseCases(uc),
+		}).RegisterRoutes(mc.Routes)
+		return nil
+	}
+	return u
+}
+
+// ---------------------------------------------------------------------------
+// Recovery reports unit (opt-in: WithRecoveryReports)
+// ---------------------------------------------------------------------------
+
+// RecoveryReportsUnit wires the recoverables aging and cost-source
+// reconciliation reports. Its templates ride on the reports unit's embed
+// (service/report/views/templates). Mount fails closed (R4 M1).
+func RecoveryReportsUnit(uc *UseCases, _ *Infra) compose.Unit {
+	routes := report.DefaultRecoveryReportsRoutes()
+	labels := report.DefaultRecoveryReportsLabels()
+	u := compose.Unit{
+		Key:       "report.recovery",
+		Routes:    &routes,
+		RouteJSON: compose.JSONBinding{File: "route.json", Key: "recovery_reports"},
+		Labels:    &labels,
+		LabelJSON: compose.JSONBinding{File: "recovery_report.json", Key: "recovery_report"},
+		LabelName: "RecoveryReportsLabels",
+		Nav: compose.NavContrib{
+			Permission: "recovery_document:list",
+			Items: []compose.NavItem{
+				{Key: "recoverables-aging", Route: "reports.recoverables_aging",
+					Label: "Recoverables Aging", Icon: "icon-clock", Permission: "recovery_document:list",
+					LabelKey: "recoverables_aging_label", IconKey: "recoverables_aging_icon"},
+				{Key: "cost-source-reconciliation", Route: "reports.cost_source_reconciliation",
+					Label: "Cost Reconciliation", Icon: "icon-check-circle", Permission: "expenditure:read",
+					LabelKey: "cost_source_reconciliation_label", IconKey: "cost_source_reconciliation_icon"},
+			},
+		},
+	}
+	u.Mount = func(mc *compose.MountContext) error {
+		if uc == nil {
+			return fmt.Errorf("fycha.RecoveryReportsUnit: UseCases not supplied")
+		}
+		if err := requireRecoveryReports(uc); err != nil {
+			return fmt.Errorf("fycha.RecoveryReportsUnit: incomplete UseCases: %w", err)
+		}
+		reportmod.NewRecoveryModule(&reportmod.RecoveryModuleDeps{
+			Routes:                *u.Routes.(*report.RecoveryReportsRoutes),
+			Labels:                *u.Labels.(*report.RecoveryReportsLabels),
+			CommonLabels:          mc.Common,
+			TableLabels:           mc.Table,
+			ListRecoverablesAging: uc.RecoveryReports.ListRecoverablesAging,
+			ReconcileCostSource:   uc.RecoveryReports.ReconcileCostSource,
+		}).RegisterRoutes(mc.Routes)
+		return nil
+	}
+	return u
+}
+
+// ---------------------------------------------------------------------------
 // Tax unit
 // ---------------------------------------------------------------------------
 
@@ -571,7 +713,28 @@ func ReportsUnit(uc *UseCases, _ *Infra) compose.Unit {
 // AllUnits returns the complete curated unit list for the fycha accounting
 // domain, in the same logical grouping order as Block(). Service-admin's
 // composition root calls this to obtain the unit slice for the engine.
-func AllUnits(uc *UseCases, infra *Infra) []compose.Unit {
+func AllUnits(uc *UseCases, infra *Infra, opts ...EngineOption) []compose.Unit {
+	cfg := engineConfig{}
+	for _, opt := range opts {
+		opt(&cfg)
+	}
+	units := allUnits(uc, infra)
+	if cfg.chargePolicies {
+		// Appended after LedgerUnit so its Ledger-app routes/labels exist; the
+		// unit is independent (own route/label bindings) and never reorders the
+		// default set.
+		units = append(units, ChargePolicyUnit(uc, infra))
+	}
+	if cfg.documentSeries {
+		units = append(units, DocumentSeriesUnit(uc, infra))
+	}
+	if cfg.recoveryReports {
+		units = append(units, RecoveryReportsUnit(uc, infra))
+	}
+	return units
+}
+
+func allUnits(uc *UseCases, infra *Infra) []compose.Unit {
 	return []compose.Unit{
 		// Reports service surface
 		ReportsUnit(uc, infra),

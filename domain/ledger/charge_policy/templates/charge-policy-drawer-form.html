@@ -1,0 +1,29 @@
+{{/*
+Charge policy add/edit drawer (sheet). Data: .FormAction .WorkspaceID .IsEdit .ID
+.Code .Name .Description .Labels .CommonLabels
+Code is immutable once created (edit shows it read-only).
+*/}}
+{{define "charge-policy-drawer-form"}}
+<form hx-post="{{.FormAction}}" hx-swap="none" data-hx-on="sheet-response" data-testid="charge-policy-form">
+  {{actionForm .FormAction .WorkspaceID}}
+  {{if .ID}}<input type="hidden" name="id" value="{{.ID}}">{{end}}
+
+  <div class="sheet-body">
+    <div class="form-row single">
+      {{if .IsEdit}}
+        {{template "form-group" (dict "Type" "text" "Name" "code_display" "ID" "charge-policy-code" "Label" .Labels.Form.CodeLabel "Value" .Code "Disabled" true "TestId" "charge-policy-code-group")}}
+      {{else}}
+        {{template "form-group" (dict "Type" "text" "Name" "code" "ID" "charge-policy-code" "Label" .Labels.Form.CodeLabel "Value" .Code "Required" true "Placeholder" .Labels.Form.CodePlaceholder "Pattern" "[A-Z][A-Z0-9_]*" "TestId" "charge-policy-code-group")}}
+      {{end}}
+    </div>
+    <div class="form-row single">
+      {{template "form-group" (dict "Type" "text" "Name" "name" "ID" "charge-policy-name" "Label" .Labels.Form.NameLabel "Value" .Name "Required" true "TestId" "charge-policy-name-group")}}
+    </div>
+    <div class="form-row single">
+      {{template "form-group" (dict "Type" "textarea" "Name" "description" "ID" "charge-policy-description" "Label" .Labels.Form.DescriptionLabel "Value" .Description "TestId" "charge-policy-description-group")}}
+    </div>
+  </div>
+
+  {{template "sheet-form-footer" (dict "CommonLabels" .CommonLabels "ShowCancel" true "IsEdit" .IsEdit)}}
+</form>
+{{end}}

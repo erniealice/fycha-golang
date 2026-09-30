@@ -1,0 +1,19 @@
+{{/* Posting (account mapping) add/edit drawer. Data: see form.PostingData */}}
+{{define "charge-policy-posting-drawer-form"}}
+<form hx-post="{{.FormAction}}" hx-swap="none" data-hx-on="sheet-response" data-testid="charge-policy-posting-form">
+  {{actionForm .FormAction .WorkspaceID}}
+  {{if .ID}}<input type="hidden" name="id" value="{{.ID}}">{{end}}
+
+  <div class="sheet-body">
+    <div class="form-row">
+      {{template "form-group" (dict "Type" "select" "Name" "event" "ID" "cpp-event" "Label" .Labels.Form.EventLabel "Options" .Events "Required" true "TestId" "cpp-event-group")}}
+      {{template "form-group" (dict "Type" "select" "Name" "posting_role" "ID" "cpp-posting-role" "Label" .Labels.Form.PostingRoleLabel "Options" .Roles "Required" true "TestId" "cpp-posting-role-group")}}
+    </div>
+    <div class="form-row single">
+      {{template "form-group" (dict "Type" "select" "Name" "account_id" "ID" "cpp-account" "Label" .Labels.Form.AccountLabel "Options" .Accounts "Placeholder" .Labels.Form.AccountPlaceholder "Required" true "TestId" "cpp-account-group")}}
+    </div>
+  </div>
+
+  {{template "sheet-form-footer" (dict "CommonLabels" .CommonLabels "ShowCancel" true "IsEdit" .IsEdit)}}
+</form>
+{{end}}

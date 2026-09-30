@@ -15,6 +15,8 @@ import (
 	productpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/product/product"
 	"log"
 	"os"
+	"sort"
+	"strings"
 	"testing"
 	"time"
 
@@ -25,13 +27,20 @@ import (
 	deprunpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/asset/depreciation_run"
 	locationpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/entity/location"
 	workspacepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/entity/workspace"
+	costsourcecomponentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/expenditure/cost_source_component"
 	forexratepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/finance/forex_rate"
 	fundpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/funding/fund"
 	fundallocationpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/funding/fund_allocation"
 	fundtransactionpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/funding/fund_transaction"
 	accountpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/account"
+	policypb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/charge_policy"
+	componentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/charge_policy_component"
+	postingpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/charge_policy_posting"
+	versionpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/charge_policy_version"
 	fiscalperiodpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/fiscal_period"
 	journalentrypb "github.com/erniealice/esqyma/pkg/schema/v1/domain/ledger/journal_entry"
+	documentseriespb "github.com/erniealice/esqyma/pkg/schema/v1/domain/revenue/document_series"
+	recoverydocumentpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/revenue/recovery_document"
 	taxratepb "github.com/erniealice/esqyma/pkg/schema/v1/domain/tax/tax_rate"
 	withholdinpb "github.com/erniealice/esqyma/pkg/schema/v1/domain/treasury/withholding_certificate"
 	apagingpb "github.com/erniealice/esqyma/pkg/schema/v1/service/reporting/ap_aging"
@@ -69,6 +78,21 @@ type UseCases struct {
 	// Ledger domain groups
 	Ledger       LedgerUseCases
 	FiscalPeriod FiscalPeriodUseCases
+
+	// ChargePolicy is the Ledger charge policy use-case set (opt-in module; nil
+	// closures fail closed). Bound from espyna's LedgerUseCases.ChargePolicy.
+	ChargePolicy ChargePolicyUseCases
+
+	// DocumentSeries is the Ledger › Settings document series use-case set
+	// (opt-in module; nil closures refuse boot in the unit's Mount). Bound from
+	// espyna's RevenueUseCases.DocumentSeries.
+	DocumentSeries DocumentSeriesUseCases
+
+	// RecoveryReports feeds the recoverables-aging and cost-source
+	// reconciliation reports (opt-in module). Bound from espyna's
+	// Revenue.RecoveryDocument.ListRecoverablesAging and
+	// Expenditure.CostSourceComponent.ReconcileCostSource.
+	RecoveryReports RecoveryReportUseCases
 
 	// Funding domain group
 	Funding FundingUseCases
@@ -245,6 +269,59 @@ type FiscalPeriodUseCases struct {
 	Close           func(context.Context, *fiscalperiodpb.CloseFiscalPeriodRequest) (*fiscalperiodpb.CloseFiscalPeriodResponse, error)
 }
 
+// ChargePolicyUseCases — Ledger charge policy ops. Closures are bound via
+// `uc.Ledger.ChargePolicy.<Field>.Execute` (proto request/response, same
+// shape as FiscalPeriodUseCases). Field names equal espyna's RPC names and the
+// set is field-for-field the chargepolicy.UseCases the views consume (the block
+// converts one to the other).
+type ChargePolicyUseCases struct {
+	CreateChargePolicy          func(context.Context, *policypb.CreateChargePolicyRequest) (*policypb.CreateChargePolicyResponse, error)
+	ReadChargePolicy            func(context.Context, *policypb.ReadChargePolicyRequest) (*policypb.ReadChargePolicyResponse, error)
+	UpdateChargePolicy          func(context.Context, *policypb.UpdateChargePolicyRequest) (*policypb.UpdateChargePolicyResponse, error)
+	GetChargePolicyListPageData func(context.Context, *policypb.GetChargePolicyListPageDataRequest) (*policypb.GetChargePolicyListPageDataResponse, error)
+	RetireChargePolicy          func(context.Context, *policypb.RetireChargePolicyRequest) (*policypb.RetireChargePolicyResponse, error)
+	DeleteChargePolicy          func(context.Context, *policypb.DeleteChargePolicyRequest) (*policypb.DeleteChargePolicyResponse, error)
+	GetChargePolicyInUseIds     func(context.Context, *policypb.GetChargePolicyInUseIdsRequest) (*policypb.GetChargePolicyInUseIdsResponse, error)
+
+	CreateDraftChargePolicyVersion         func(context.Context, *versionpb.CreateDraftChargePolicyVersionRequest) (*versionpb.CreateDraftChargePolicyVersionResponse, error)
+	ReadChargePolicyVersion                func(context.Context, *versionpb.ReadChargePolicyVersionRequest) (*versionpb.ReadChargePolicyVersionResponse, error)
+	ListChargePolicyVersions               func(context.Context, *versionpb.ListChargePolicyVersionsRequest) (*versionpb.ListChargePolicyVersionsResponse, error)
+	UpdateChargePolicyVersion              func(context.Context, *versionpb.UpdateChargePolicyVersionRequest) (*versionpb.UpdateChargePolicyVersionResponse, error)
+	DeleteChargePolicyVersion              func(context.Context, *versionpb.DeleteChargePolicyVersionRequest) (*versionpb.DeleteChargePolicyVersionResponse, error)
+	ValidateChargePolicyVersionForApproval func(context.Context, *versionpb.ValidateChargePolicyVersionForApprovalRequest) (*versionpb.ValidateChargePolicyVersionForApprovalResponse, error)
+	ApproveChargePolicyVersion             func(context.Context, *versionpb.ApproveChargePolicyVersionRequest) (*versionpb.ApproveChargePolicyVersionResponse, error)
+
+	CreateChargePolicyComponent func(context.Context, *componentpb.CreateChargePolicyComponentRequest) (*componentpb.CreateChargePolicyComponentResponse, error)
+	UpdateChargePolicyComponent func(context.Context, *componentpb.UpdateChargePolicyComponentRequest) (*componentpb.UpdateChargePolicyComponentResponse, error)
+	DeleteChargePolicyComponent func(context.Context, *componentpb.DeleteChargePolicyComponentRequest) (*componentpb.DeleteChargePolicyComponentResponse, error)
+	CreateChargePolicyPosting   func(context.Context, *postingpb.CreateChargePolicyPostingRequest) (*postingpb.CreateChargePolicyPostingResponse, error)
+	UpdateChargePolicyPosting   func(context.Context, *postingpb.UpdateChargePolicyPostingRequest) (*postingpb.UpdateChargePolicyPostingResponse, error)
+	DeleteChargePolicyPosting   func(context.Context, *postingpb.DeleteChargePolicyPostingRequest) (*postingpb.DeleteChargePolicyPostingResponse, error)
+
+	// GetAccountListPageData feeds the posting drawer's account picker; the
+	// block falls back to Ledger.Account.GetListPageData when it is nil.
+	GetAccountListPageData func(context.Context, *accountpb.GetAccountListPageDataRequest) (*accountpb.GetAccountListPageDataResponse, error)
+}
+
+// DocumentSeriesUseCases — document series settings ops. Closures are bound via
+// `uc.Revenue.DocumentSeries.<Field>.Execute` (proto request/response); the
+// field set is field-for-field the documentseries.UseCases the views consume.
+type DocumentSeriesUseCases struct {
+	CreateDocumentSeries          func(context.Context, *documentseriespb.CreateDocumentSeriesRequest) (*documentseriespb.CreateDocumentSeriesResponse, error)
+	ReadDocumentSeries            func(context.Context, *documentseriespb.ReadDocumentSeriesRequest) (*documentseriespb.ReadDocumentSeriesResponse, error)
+	UpdateDocumentSeries          func(context.Context, *documentseriespb.UpdateDocumentSeriesRequest) (*documentseriespb.UpdateDocumentSeriesResponse, error)
+	GetDocumentSeriesListPageData func(context.Context, *documentseriespb.GetDocumentSeriesListPageDataRequest) (*documentseriespb.GetDocumentSeriesListPageDataResponse, error)
+}
+
+// RecoveryReportUseCases — recovery report reads, bound via
+// `uc.Revenue.RecoveryDocument.ListRecoverablesAging.Execute` and
+// `uc.Expenditure.CostSourceComponent.ReconcileCostSource.Execute` (proto
+// request/response).
+type RecoveryReportUseCases struct {
+	ListRecoverablesAging func(context.Context, *recoverydocumentpb.ListRecoverablesAgingRequest) (*recoverydocumentpb.ListRecoverablesAgingResponse, error)
+	ReconcileCostSource   func(context.Context, *costsourcecomponentpb.ReconcileCostSourceRequest) (*costsourcecomponentpb.ReconcileCostSourceResponse, error)
+}
+
 // TaxUseCases — tax rate read-only ops.
 type TaxUseCases struct {
 	ListTaxRates func(context.Context, *taxratepb.ListTaxRatesRequest) (*taxratepb.ListTaxRatesResponse, error)
@@ -367,6 +444,12 @@ func (u *UseCases) RequireFor(cfg *blockConfig) error {
 		check(u.Tax.ListTaxRates != nil, "UseCases.Tax.ListTaxRates")
 	}
 
+	if cfg.wantChargePolicy() {
+		if err := requireChargePolicy(u); err != nil {
+			missing = append(missing, err.Error())
+		}
+	}
+
 	if cfg.wantForexRate() {
 		check(u.Finance.ListForexRates != nil, "UseCases.Finance.ListForexRates")
 	}
@@ -379,6 +462,76 @@ func (u *UseCases) RequireFor(cfg *blockConfig) error {
 		return fmt.Errorf("fycha.Block: incomplete UseCases — missing %v", missing)
 	}
 	return nil
+}
+
+// requireUnit is the one fycha Mount/RequireFor completeness helper (same
+// signature as centymo block/require.go): it returns an error naming every
+// missing closure in sorted order, or nil. checks maps a closure name to "is
+// wired".
+func requireUnit(unit string, checks map[string]bool) error {
+	var missing []string
+	for name, ok := range checks {
+		if !ok {
+			missing = append(missing, name)
+		}
+	}
+	if len(missing) == 0 {
+		return nil
+	}
+	sort.Strings(missing)
+	return fmt.Errorf("fycha %s: missing use cases: %s", unit, strings.Join(missing, ", "))
+}
+
+// requireChargePolicy reports the unbound charge policy closures. It is shared
+// by RequireFor (legacy Block() path) and ChargePolicyUnit.Mount (compose-v2
+// EngineBlock path) so both fail closed on the same list.
+func requireChargePolicy(u *UseCases) error {
+	cp := &u.ChargePolicy
+	return requireUnit("charge_policy", map[string]bool{
+		"UseCases.ChargePolicy.CreateChargePolicy":                                         cp.CreateChargePolicy != nil,
+		"UseCases.ChargePolicy.ReadChargePolicy":                                           cp.ReadChargePolicy != nil,
+		"UseCases.ChargePolicy.UpdateChargePolicy":                                         cp.UpdateChargePolicy != nil,
+		"UseCases.ChargePolicy.GetChargePolicyListPageData":                                cp.GetChargePolicyListPageData != nil,
+		"UseCases.ChargePolicy.RetireChargePolicy":                                         cp.RetireChargePolicy != nil,
+		"UseCases.ChargePolicy.DeleteChargePolicy":                                         cp.DeleteChargePolicy != nil,
+		"UseCases.ChargePolicy.GetChargePolicyInUseIds":                                    cp.GetChargePolicyInUseIds != nil,
+		"UseCases.ChargePolicy.CreateDraftChargePolicyVersion":                             cp.CreateDraftChargePolicyVersion != nil,
+		"UseCases.ChargePolicy.ReadChargePolicyVersion":                                    cp.ReadChargePolicyVersion != nil,
+		"UseCases.ChargePolicy.ListChargePolicyVersions":                                   cp.ListChargePolicyVersions != nil,
+		"UseCases.ChargePolicy.UpdateChargePolicyVersion":                                  cp.UpdateChargePolicyVersion != nil,
+		"UseCases.ChargePolicy.DeleteChargePolicyVersion":                                  cp.DeleteChargePolicyVersion != nil,
+		"UseCases.ChargePolicy.ValidateChargePolicyVersionForApproval":                     cp.ValidateChargePolicyVersionForApproval != nil,
+		"UseCases.ChargePolicy.ApproveChargePolicyVersion":                                 cp.ApproveChargePolicyVersion != nil,
+		"UseCases.ChargePolicy.CreateChargePolicyComponent":                                cp.CreateChargePolicyComponent != nil,
+		"UseCases.ChargePolicy.UpdateChargePolicyComponent":                                cp.UpdateChargePolicyComponent != nil,
+		"UseCases.ChargePolicy.DeleteChargePolicyComponent":                                cp.DeleteChargePolicyComponent != nil,
+		"UseCases.ChargePolicy.CreateChargePolicyPosting":                                  cp.CreateChargePolicyPosting != nil,
+		"UseCases.ChargePolicy.UpdateChargePolicyPosting":                                  cp.UpdateChargePolicyPosting != nil,
+		"UseCases.ChargePolicy.DeleteChargePolicyPosting":                                  cp.DeleteChargePolicyPosting != nil,
+		"UseCases.ChargePolicy.GetAccountListPageData (or Ledger.Account.GetListPageData)": cp.GetAccountListPageData != nil || u.Ledger.Account.GetListPageData != nil,
+	})
+}
+
+// requireDocumentSeries reports the unbound document series closures. Shared by
+// DocumentSeriesUnit.Mount (compose-v2 path; R4 M1) — the legacy Block() path
+// does not mount this opt-in module.
+func requireDocumentSeries(u *UseCases) error {
+	ds := &u.DocumentSeries
+	return requireUnit("document_series", map[string]bool{
+		"UseCases.DocumentSeries.CreateDocumentSeries":          ds.CreateDocumentSeries != nil,
+		"UseCases.DocumentSeries.ReadDocumentSeries":            ds.ReadDocumentSeries != nil,
+		"UseCases.DocumentSeries.UpdateDocumentSeries":          ds.UpdateDocumentSeries != nil,
+		"UseCases.DocumentSeries.GetDocumentSeriesListPageData": ds.GetDocumentSeriesListPageData != nil,
+	})
+}
+
+// requireRecoveryReports reports the unbound recovery report closures
+// (RecoveryReportsUnit.Mount, R4 M1).
+func requireRecoveryReports(u *UseCases) error {
+	return requireUnit("recovery_reports", map[string]bool{
+		"UseCases.RecoveryReports.ListRecoverablesAging": u.RecoveryReports.ListRecoverablesAging != nil,
+		"UseCases.RecoveryReports.ReconcileCostSource":   u.RecoveryReports.ReconcileCostSource != nil,
+	})
 }
 
 // MustValidate is the FAIL-CLOSED enforcement wrapper around RequireFor. It is

@@ -24,6 +24,7 @@ type blockConfig struct {
 	financial bool
 	// Tax integration modules (Phase 2)
 	taxRate                bool
+	chargePolicy           bool
 	forexRate              bool
 	withholdingCertificate bool
 	// assetDepreciationRunURL is the resolved run-detail URL template plumbed into
@@ -52,7 +53,11 @@ func WithCash() BlockOption      { return func(c *blockConfig) { c.cash = true }
 func WithExpenses() BlockOption  { return func(c *blockConfig) { c.expenses = true } }
 func WithFinancial() BlockOption { return func(c *blockConfig) { c.financial = true } }
 func WithTaxRate() BlockOption   { return func(c *blockConfig) { c.taxRate = true } }
-func WithForexRate() BlockOption { return func(c *blockConfig) { c.forexRate = true } }
+
+// WithChargePolicy mounts the Ledger charge policy pages. Never implied by
+// enableAll: charge policies are an explicit opt-in (UI-CP-10).
+func WithChargePolicy() BlockOption { return func(c *blockConfig) { c.chargePolicy = true } }
+func WithForexRate() BlockOption    { return func(c *blockConfig) { c.forexRate = true } }
 func WithWithholdingCertificate() BlockOption {
 	return func(c *blockConfig) { c.withholdingCertificate = true }
 }
@@ -71,17 +76,18 @@ func WithAssetDepreciationRunURL(url string) BlockOption {
 	return func(c *blockConfig) { c.assetDepreciationRunURL = url }
 }
 
-func (c *blockConfig) wantReports() bool   { return c.enableAll || c.reports }
-func (c *blockConfig) wantAsset() bool     { return c.enableAll || c.asset }
-func (c *blockConfig) wantLedger() bool    { return c.enableAll || c.ledger }
-func (c *blockConfig) wantLoans() bool     { return c.enableAll || c.loans }
-func (c *blockConfig) wantEquity() bool    { return c.enableAll || c.equity }
-func (c *blockConfig) wantPayroll() bool   { return c.enableAll || c.payroll }
-func (c *blockConfig) wantCash() bool      { return c.enableAll || c.cash }
-func (c *blockConfig) wantExpenses() bool  { return c.enableAll || c.expenses }
-func (c *blockConfig) wantFinancial() bool { return c.enableAll || c.financial }
-func (c *blockConfig) wantTaxRate() bool   { return c.enableAll || c.taxRate }
-func (c *blockConfig) wantForexRate() bool { return c.enableAll || c.forexRate }
+func (c *blockConfig) wantReports() bool      { return c.enableAll || c.reports }
+func (c *blockConfig) wantAsset() bool        { return c.enableAll || c.asset }
+func (c *blockConfig) wantLedger() bool       { return c.enableAll || c.ledger }
+func (c *blockConfig) wantLoans() bool        { return c.enableAll || c.loans }
+func (c *blockConfig) wantEquity() bool       { return c.enableAll || c.equity }
+func (c *blockConfig) wantPayroll() bool      { return c.enableAll || c.payroll }
+func (c *blockConfig) wantCash() bool         { return c.enableAll || c.cash }
+func (c *blockConfig) wantExpenses() bool     { return c.enableAll || c.expenses }
+func (c *blockConfig) wantFinancial() bool    { return c.enableAll || c.financial }
+func (c *blockConfig) wantTaxRate() bool      { return c.enableAll || c.taxRate }
+func (c *blockConfig) wantChargePolicy() bool { return c.chargePolicy }
+func (c *blockConfig) wantForexRate() bool    { return c.enableAll || c.forexRate }
 func (c *blockConfig) wantWithholdingCertificate() bool {
 	return c.enableAll || c.withholdingCertificate
 }

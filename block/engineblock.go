@@ -45,7 +45,7 @@ func EngineBlock(depRunURL string, opts ...EngineOption) consumerapp.AppOption {
 			}
 		}
 
-		units := AllUnits(adapted, infra)
+		units := AllUnits(adapted, infra, engineOptions(cfg)...)
 		return consumerapp.AssembleEngineBlock("fycha", units, ctx)
 	}
 }
@@ -110,11 +110,51 @@ func buildFychaUseCases(uc *consumer.UseCases) *UseCases {
 			result.Ledger.JournalEntry.Post = uc.Ledger.JournalEntry.PostJournalEntry.Execute
 			result.Ledger.JournalEntry.Reverse = uc.Ledger.JournalEntry.ReverseJournalEntry.Execute
 		}
+		if cp := uc.Ledger.ChargePolicy; cp != nil {
+			c := &result.ChargePolicy
+			c.CreateChargePolicy = cp.CreateChargePolicy.Execute
+			c.ReadChargePolicy = cp.ReadChargePolicy.Execute
+			c.UpdateChargePolicy = cp.UpdateChargePolicy.Execute
+			c.GetChargePolicyListPageData = cp.GetChargePolicyListPageData.Execute
+			c.RetireChargePolicy = cp.RetireChargePolicy.Execute
+			c.DeleteChargePolicy = cp.DeleteChargePolicy.Execute
+			c.GetChargePolicyInUseIds = cp.GetChargePolicyInUseIds.Execute
+			c.CreateDraftChargePolicyVersion = cp.CreateDraftChargePolicyVersion.Execute
+			c.ReadChargePolicyVersion = cp.ReadChargePolicyVersion.Execute
+			c.ListChargePolicyVersions = cp.ListChargePolicyVersions.Execute
+			c.UpdateChargePolicyVersion = cp.UpdateChargePolicyVersion.Execute
+			c.DeleteChargePolicyVersion = cp.DeleteChargePolicyVersion.Execute
+			c.ValidateChargePolicyVersionForApproval = cp.ValidateChargePolicyVersionForApproval.Execute
+			c.ApproveChargePolicyVersion = cp.ApproveChargePolicyVersion.Execute
+			c.CreateChargePolicyComponent = cp.CreateChargePolicyComponent.Execute
+			c.UpdateChargePolicyComponent = cp.UpdateChargePolicyComponent.Execute
+			c.DeleteChargePolicyComponent = cp.DeleteChargePolicyComponent.Execute
+			c.CreateChargePolicyPosting = cp.CreateChargePolicyPosting.Execute
+			c.UpdateChargePolicyPosting = cp.UpdateChargePolicyPosting.Execute
+			c.DeleteChargePolicyPosting = cp.DeleteChargePolicyPosting.Execute
+		}
 		if uc.Ledger.FiscalPeriod != nil {
 			result.FiscalPeriod.GetListPageData = uc.Ledger.FiscalPeriod.GetFiscalPeriodListPageData.Execute
 			result.FiscalPeriod.Create = uc.Ledger.FiscalPeriod.CreateFiscalPeriod.Execute
 			result.FiscalPeriod.Close = uc.Ledger.FiscalPeriod.CloseFiscalPeriod.Execute
 		}
+	}
+
+	// Revenue domain — document series settings + recovery reports (opt-in units).
+	if uc.Revenue != nil {
+		if d := uc.Revenue.DocumentSeries; d != nil {
+			c := &result.DocumentSeries
+			c.CreateDocumentSeries = d.CreateDocumentSeries.Execute
+			c.ReadDocumentSeries = d.ReadDocumentSeries.Execute
+			c.UpdateDocumentSeries = d.UpdateDocumentSeries.Execute
+			c.GetDocumentSeriesListPageData = d.GetDocumentSeriesListPageData.Execute
+		}
+		if rd := uc.Revenue.RecoveryDocument; rd != nil {
+			result.RecoveryReports.ListRecoverablesAging = rd.ListRecoverablesAging.Execute
+		}
+	}
+	if uc.Expenditure != nil && uc.Expenditure.CostSourceComponent != nil {
+		result.RecoveryReports.ReconcileCostSource = uc.Expenditure.CostSourceComponent.ReconcileCostSource.Execute
 	}
 
 	// Tax domain
@@ -400,5 +440,14 @@ func bindAssetProducts(adapted *UseCases, uc *consumer.UseCases, enabled bool) {
 	}
 	if uc.Product != nil && uc.Product.Product != nil && uc.Product.Product.ListProducts != nil {
 		adapted.ListAssetProducts = uc.Product.Product.ListProducts.Execute
+	}
+}
+
+// engineOptions re-expresses the resolved engine config as AllUnits options.
+func engineOptions(cfg engineConfig) []EngineOption {
+	return []EngineOption{
+		WithChargePolicies(cfg.chargePolicies),
+		WithDocumentSeries(cfg.documentSeries),
+		WithRecoveryReports(cfg.recoveryReports),
 	}
 }

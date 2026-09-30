@@ -1,0 +1,15 @@
+{{/* Charge Policies list — full page (direct access / non-HTMX). */}}
+{{define "charge-policy-list"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial — HTMX navigation. Status tabs are link tabs
+     (Active · Draft · Retired); the table card follows. */}}
+{{define "charge-policy-list-content"}}
+<div class="page-content page-content--table" data-testid="charge-policy-list" data-status="{{.ActiveStatus}}">
+  <div class="detail-tabs" data-testid="charge-policy-status-tabs">
+    {{template "tabs" (dict "Items" .StatusTabs "ActiveTab" .ActiveStatus "Variant" "category" "ID" "charge-policy-status-tabs")}}
+  </div>
+  {{template "table-card" .Table}}
+</div>
+{{end}}

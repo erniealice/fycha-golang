@@ -1,0 +1,34 @@
+{{/* Recovery report filter sheet — loaded into #sheetContent via HTMX.
+     Data: report.RecoveryFilterSheetData. */}}
+{{define "recovery-report-filter-sheet"}}
+<form class="filter-sheet-form rr-filter-form"
+      id="{{.FormID}}"
+      hx-get="{{.ReportURL}}"
+      hx-target="#main-content"
+      hx-swap="innerHTML show:none"
+      hx-push-url="true"
+      hx-indicator=".page-content"
+      data-hx-on="report-filter">
+
+    <div class="rr-filter-body">
+    {{range .Fields}}
+    <div class="filter-sheet-section">
+        {{template "form-group" (dict "Type" .Type "Name" .Name "ID" .ID "Label" .Label "Value" .Value "Hint" .Hint "TestId" .TestID)}}
+    </div>
+    {{end}}
+    </div>
+
+    <div class="rr-filter-footer">
+        <button type="submit" class="btn btn-primary rr-apply-btn"
+                data-testid="report-filters-apply">{{.ApplyLabel}}</button>
+        <a href="{{.ReportURL}}" class="btn btn-ghost"
+           data-testid="report-filters-clear"
+           hx-get="{{.ReportURL}}"
+           hx-target="#main-content"
+           hx-swap="innerHTML show:none"
+           hx-push-url="true"
+           hx-indicator=".page-content"
+           data-hx-on="sheet-close">{{.ClearLabel}}</a>
+    </div>
+</form>
+{{end}}

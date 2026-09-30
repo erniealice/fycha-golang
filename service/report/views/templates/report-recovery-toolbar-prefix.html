@@ -1,0 +1,30 @@
+{{/* Recovery report toolbar prefix: filter button + active-filter chips.
+     Data: report.RecoveryToolbarPrefixData (all text from Lyngua). */}}
+{{define "report-recovery-toolbar-prefix"}}
+<div class="report-header-actions">
+    <button type="button" class="btn btn-primary"
+            data-testid="report-filters-open-btn"
+            aria-controls="sheetContent"
+            aria-haspopup="dialog"
+            hx-get="{{.FilterSheetURL}}"
+            hx-target="#sheetContent"
+            hx-swap="innerHTML"
+            hx-push-url="false"
+            data-sheet-open data-sheet-title="{{.FiltersLabel}}">
+        {{template "icon-filter"}}
+        <span>{{.FiltersLabel}}</span>
+        {{if .ActiveFilterCount}}
+        <span class="filter-count-badge">{{.ActiveFilterCount}}</span>
+        {{end}}
+    </button>
+</div>
+<div class="rr-active-filters">
+    {{range $i, $c := .Chips}}
+    {{if $i}}<span class="rr-chip-sep">&middot;</span>{{end}}
+    <span class="rr-chip" data-testid="{{$c.TestID}}">
+        <span class="rr-chip-label">{{$c.Label}}</span>
+        <span class="rr-chip-value">{{$c.Value}}</span>
+    </span>
+    {{end}}
+</div>
+{{end}}

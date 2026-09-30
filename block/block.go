@@ -43,6 +43,7 @@ import (
 	expenditure "github.com/erniealice/fycha-golang/domain/expenditure"
 	finance "github.com/erniealice/fycha-golang/domain/finance"
 	ledger "github.com/erniealice/fycha-golang/domain/ledger"
+	chargepolicy "github.com/erniealice/fycha-golang/domain/ledger/charge_policy"
 	payroll "github.com/erniealice/fycha-golang/domain/payroll"
 	tax "github.com/erniealice/fycha-golang/domain/tax"
 	treasury "github.com/erniealice/fycha-golang/domain/treasury"
@@ -454,6 +455,31 @@ func Block(opts ...BlockOption) consumerapp.AppOption {
 				taxRateDeps.ListTaxRates = useCases.Tax.ListTaxRates
 			}
 			tax.NewTaxRateModule(taxRateDeps).RegisterRoutes(ctx.Routes)
+		}
+
+		// =====================================================================
+		// Charge Policy module (fycha — explicit opt-in, never via enableAll)
+		// =====================================================================
+
+		if cfg.wantChargePolicy() {
+			chargePolicyRoutes := chargepolicy.DefaultRoutes()
+			_ = translations.LoadPathIfExists("en", ctx.BusinessType, "route.json", "charge_policy", &chargePolicyRoutes)
+			chargePolicyLabels := chargepolicy.DefaultLabels()
+			_ = translations.LoadPathIfExists("en", ctx.BusinessType, "charge_policy.json", "charge_policy", &chargePolicyLabels)
+
+			cpDeps := &ledger.ChargePolicyModuleDeps{
+				Routes:           chargePolicyRoutes,
+				Labels:           chargePolicyLabels,
+				CommonLabels:     ctx.Common,
+				TableLabels:      fychaTableLabels,
+				NewAttachmentID:  newAttachmentID,
+				UploadFile:       uploadFile,
+				ListAttachments:  listAttachments,
+				CreateAttachment: createAttachment,
+				DeleteAttachment: deleteAttachment,
+			}
+			cpDeps.UseCases = chargePolicyViewUseCases(useCases)
+			ledger.NewChargePolicyModule(cpDeps).RegisterRoutes(ctx.Routes)
 		}
 
 		// =====================================================================

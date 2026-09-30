@@ -1,0 +1,10 @@
+{{/* "New draft version" confirmation drawer. Data: .FormAction .WorkspaceID .Labels .CommonLabels .Message */}}
+{{define "charge-policy-new-version-drawer-form"}}
+<form hx-post="{{.FormAction}}" hx-swap="none" data-hx-on="sheet-response" data-testid="charge-policy-new-version-form">
+  {{actionForm .FormAction .WorkspaceID}}
+  <div class="sheet-body">
+    <p>{{.Message}}</p>
+  </div>
+  {{template "sheet-form-footer" (dict "CommonLabels" .CommonLabels "ShowCancel" true "SubmitLabel" .Labels.Buttons.NewVersion)}}
+</form>
+{{end}}

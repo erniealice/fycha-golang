@@ -1,0 +1,51 @@
+{{/*
+Document series add/edit drawer (sheet). Data: see form.SeriesData.
+Code, document kind, restart mode and next number are fixed once created.
+*/}}
+{{define "document-series-drawer-form"}}
+<form hx-post="{{.FormAction}}" hx-swap="none" data-hx-on="sheet-response" data-testid="document-series-form">
+  {{actionForm .FormAction .WorkspaceID}}
+  {{if .ID}}<input type="hidden" name="id" value="{{.ID}}">{{end}}
+
+  <div class="sheet-body">
+    <div class="form-row">
+      {{if .IsEdit}}
+        {{template "form-group" (dict "Type" "text" "Name" "code_display" "ID" "document-series-code" "Label" .Labels.Form.CodeLabel "Value" .Code "Disabled" true "TestId" "document-series-code-group")}}
+      {{else}}
+        {{template "form-group" (dict "Type" "text" "Name" "code" "ID" "document-series-code" "Label" .Labels.Form.CodeLabel "Value" .Code "Required" true "Placeholder" .Labels.Form.CodePlaceholder "Pattern" "[A-Z0-9][A-Z0-9_\\-]*" "TestId" "document-series-code-group")}}
+      {{end}}
+      {{template "form-group" (dict "Type" "text" "Name" "name" "ID" "document-series-name" "Label" .Labels.Form.NameLabel "Value" .Name "Placeholder" .Labels.Form.NamePlaceholder "TestId" "document-series-name-group")}}
+    </div>
+    <div class="form-row">
+      {{template "form-group" (dict "Type" "text" "Name" "issuer_name" "ID" "document-series-issuer-name" "Label" .Labels.Form.IssuerNameLabel "Value" .IssuerName "Required" true "TestId" "document-series-issuer-name-group")}}
+      {{template "form-group" (dict "Type" "text" "Name" "issuer_tax_id" "ID" "document-series-issuer-tax-id" "Label" .Labels.Form.IssuerTaxIDLabel "Value" .IssuerTaxID "TestId" "document-series-issuer-tax-id-group")}}
+    </div>
+    <div class="form-row single">
+      {{if .IsEdit}}
+        {{template "form-group" (dict "Type" "text" "Name" "document_kind_display" "ID" "document-series-document-kind" "Label" .Labels.Form.DocumentKindLabel "Value" .KindLabel "Disabled" true "TestId" "document-series-document-kind-group")}}
+      {{else}}
+        {{template "form-group" (dict "Type" "select" "Name" "document_kind" "ID" "document-series-document-kind" "Label" .Labels.Form.DocumentKindLabel "Options" .KindOptions "Required" true "TestId" "document-series-document-kind-group")}}
+      {{end}}
+    </div>
+    <div class="form-row">
+      {{template "form-group" (dict "Type" "text" "Name" "prefix" "ID" "document-series-prefix" "Label" .Labels.Form.PrefixLabel "Value" .Prefix "Disabled" .Locked "Placeholder" .Labels.Form.PrefixPlaceholder "TestId" "document-series-prefix-group")}}
+      {{template "form-group" (dict "Type" "text" "Name" "branch_code" "ID" "document-series-branch-code" "Label" .Labels.Form.BranchCodeLabel "Value" .BranchCode "TestId" "document-series-branch-code-group")}}
+    </div>
+    <div class="form-row">
+      {{template "form-group" (dict "Type" "text" "Name" "fiscal_reset_display" "ID" "document-series-fiscal-reset" "Label" .Labels.Form.FiscalResetLabel "Value" .FiscalReset "Disabled" true "TestId" "document-series-fiscal-reset-group")}}
+      {{template "form-group" (dict "Type" "number" "Name" "number_padding" "ID" "document-series-number-padding" "Label" .Labels.Form.NumberPaddingLabel "Value" .NumberPadding "Min" "1" "Max" "18" "Disabled" .Locked "Required" true "TestId" "document-series-number-padding-group")}}
+    </div>
+    <div class="form-row single">
+      {{if .IsEdit}}
+        {{template "form-group" (dict "Type" "text" "Name" "next_number_display" "ID" "document-series-next-number" "Label" .Labels.Form.NextNumberLabel "Value" .NextNumber "Disabled" true "TestId" "document-series-next-number-group")}}
+        <p class="form-hint" data-testid="document-series-next-preview">{{.NextPreview}}</p>
+        {{if .Locked}}<p class="form-hint" data-testid="document-series-locked-notice">{{.Labels.Detail.LockedNotice}}</p>{{end}}
+      {{else}}
+        {{template "form-group" (dict "Type" "number" "Name" "next_number" "ID" "document-series-next-number" "Label" .Labels.Form.NextNumberLabel "Value" .NextNumber "Min" "1" "TestId" "document-series-next-number-group")}}
+      {{end}}
+    </div>
+  </div>
+
+  {{template "sheet-form-footer" (dict "CommonLabels" .CommonLabels "ShowCancel" true "IsEdit" .IsEdit)}}
+</form>
+{{end}}

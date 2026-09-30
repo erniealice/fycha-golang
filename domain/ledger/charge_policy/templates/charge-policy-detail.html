@@ -1,0 +1,116 @@
+{{/* Charge policy detail — full page (direct access / non-HTMX). */}}
+{{define "charge-policy-detail"}}
+{{template "app-shell" .}}
+{{end}}
+
+{{/* Content-only partial — HTMX navigation. */}}
+{{define "charge-policy-detail-content"}}
+<div class="page-content detail-layout" data-testid="charge-policy-detail" data-policy-id="{{.ID}}">
+  <div class="detail-actions detail-actions--spaced">
+    <span class="badge badge--{{.StatusVariant}}" data-testid="charge-policy-status">{{.StatusLabel}}</span>
+    <span class="detail-info-value" data-testid="charge-policy-current-version">{{.CurrentLabel}}</span>
+  </div>
+
+  <div class="detail-tabs">
+    {{template "tabs" (dict "Items" .TabItems "ActiveTab" .ActiveTab "Variant" "default" "ID" "charge-policy-detail-tabs")}}
+  </div>
+
+  <div id="tabContent" class="detail-body" role="tabpanel" aria-labelledby="tab-{{.ActiveTab}}">
+    {{if eq .ActiveTab "info"}}
+      {{template "charge-policy-tab-info" .}}
+    {{else if eq .ActiveTab "versions"}}
+      {{template "charge-policy-tab-versions" .}}
+    {{else if eq .ActiveTab "usage"}}
+      {{template "charge-policy-tab-usage" .}}
+    {{else if eq .ActiveTab "audit-history"}}
+      {{template "audit-history-tab" .}}
+    {{end}}
+  </div>
+</div>
+{{end}}
+
+{{/* ---- Info ---- */}}
+{{define "charge-policy-tab-info"}}
+<div class="tab-scroll">
+  <h4 class="detail-section-title">{{.Labels.Tabs.Info}}</h4>
+  <div class="detail-info-grid">
+    <div class="detail-info-item">
+      <span class="detail-info-label">{{.Labels.Columns.Code}}</span>
+      <span class="detail-info-value" data-testid="charge-policy-info-code">{{.Code}}</span>
+    </div>
+    <div class="detail-info-item">
+      <span class="detail-info-label">{{.Labels.Columns.Name}}</span>
+      <span class="detail-info-value" data-testid="charge-policy-info-name">{{.Name}}</span>
+    </div>
+    <div class="detail-info-item">
+      <span class="detail-info-label">{{.Labels.Form.DescriptionLabel}}</span>
+      <span class="detail-info-value">{{if .Description}}{{.Description}}{{else}}{{.Labels.Detail.NoDescription}}{{end}}</span>
+    </div>
+    <div class="detail-info-item">
+      <span class="detail-info-label">{{.Labels.Columns.Status}}</span>
+      <span><span class="badge badge--{{.StatusVariant}}">{{.StatusLabel}}</span></span>
+    </div>
+    <div class="detail-info-item">
+      <span class="detail-info-label">{{.Labels.Columns.CurrentVersion}}</span>
+      <span class="detail-info-value">{{.CurrentLabel}}</span>
+    </div>
+    <div class="detail-info-item">
+      <span class="detail-info-label">{{.Labels.Detail.Created}}</span>
+      <span class="detail-info-value">{{if .CreatedDate}}{{.CreatedDate}}{{else}}—{{end}}</span>
+    </div>
+    <div class="detail-info-item">
+      <span class="detail-info-label">{{.Labels.Columns.Modified}}</span>
+      <span class="detail-info-value">{{if .ModifiedDate}}{{.ModifiedDate}}{{else}}—{{end}}</span>
+    </div>
+    {{if .IsRetired}}
+    <div class="detail-info-item">
+      <span class="detail-info-label">{{.Labels.Columns.RetiredOn}}</span>
+      <span class="detail-info-value">{{if .RetiredDate}}{{.RetiredDate}}{{else}}—{{end}}</span>
+    </div>
+    {{end}}
+  </div>
+
+  <div id="charge-policy-action-result" class="form-result form-result--hidden" aria-live="polite" aria-atomic="true"></div>
+
+  <div class="detail-actions detail-actions--spaced">
+    {{if .CanEdit}}
+    <a class="btn btn-primary" data-testid="charge-policy-edit"
+       hx-get="{{.EditURL}}" hx-target="#sheetContent" hx-swap="innerHTML"
+       data-hx-on="sheet-open">{{.Labels.Buttons.Edit}}</a>
+    {{else}}
+    <button type="button" class="btn btn-primary" data-testid="charge-policy-edit" disabled aria-disabled="true" title="{{.MissingPermEdit}}">{{.Labels.Buttons.Edit}}</button>
+    {{end}}
+
+    {{if and .CanRetire (not .IsRetired)}}
+    <form data-testid="charge-policy-retire-form" hx-post="{{.RetireURL}}" hx-swap="none"
+          hx-confirm="{{.Labels.Confirm.RetireMsg}}"
+          data-confirm-title="{{.Labels.Confirm.RetireTitle}}" data-confirm-variant="warning"
+          data-hx-on="form-result" data-result-id="charge-policy-action-result"
+          data-success-source="header" data-success-header="HX-Success-Message" data-hide-mode="classList">
+      {{actionForm .RetireURL .WorkspaceID}}
+      <button type="submit" class="btn btn-secondary" data-testid="charge-policy-retire">{{.Labels.Buttons.Retire}}</button>
+    </form>
+    {{else}}
+    <button type="button" class="btn btn-secondary" data-testid="charge-policy-retire" disabled aria-disabled="true" title="{{.RetireDisabled}}">{{.Labels.Buttons.Retire}}</button>
+    {{end}}
+  </div>
+</div>
+{{end}}
+
+{{/* ---- Versions ---- */}}
+{{define "charge-policy-tab-versions"}}
+<div class="tab-scroll tab-scroll--table">
+  {{template "table-card" .VersionsTable}}
+</div>
+{{end}}
+
+{{/* ---- Where used ---- */}}
+{{define "charge-policy-tab-usage"}}
+<div class="tab-scroll tab-scroll--table" data-testid="charge-policy-usage">
+  <p class="detail-info-value" data-testid="charge-policy-in-use">{{if .InUse}}{{.Labels.Detail.UsageInUse}}{{else}}{{.Labels.Detail.UsageNotInUse}}{{end}}</p>
+  {{range .UsageTables}}
+    <h4 class="detail-section-title">{{.Title}}</h4>
+    {{template "table-card" .Table}}
+  {{end}}
+</div>
+{{end}}

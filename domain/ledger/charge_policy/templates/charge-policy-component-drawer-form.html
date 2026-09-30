@@ -1,0 +1,21 @@
+{{/* Component (document rule) add/edit drawer. Data: see form.ComponentData */}}
+{{define "charge-policy-component-drawer-form"}}
+<form hx-post="{{.FormAction}}" hx-swap="none" data-hx-on="sheet-response" data-testid="charge-policy-component-form">
+  {{actionForm .FormAction .WorkspaceID}}
+  {{if .ID}}<input type="hidden" name="id" value="{{.ID}}">{{end}}
+
+  <div class="sheet-body">
+    <div class="form-row single">
+      {{template "form-group" (dict "Type" "select" "Name" "component_role" "ID" "cpc-component-role" "Label" .Labels.Form.ComponentRoleLabel "Options" .Roles "Required" true "TestId" "cpc-component-role-group")}}
+    </div>
+    <div class="form-row single">
+      {{template "form-group" (dict "Type" "select" "Name" "document_kind" "ID" "cpc-document-kind" "Label" .Labels.Form.DocumentKindLabel "Options" .DocumentKinds "Required" true "TestId" "cpc-document-kind-group")}}
+    </div>
+    <div class="form-row single">
+      {{template "form-group" (dict "Type" "select" "Name" "book_presentation" "ID" "cpc-book-presentation" "Label" .Labels.Form.BookPresentationLabel "Options" .BookPresentations "Required" true "TestId" "cpc-book-presentation-group")}}
+    </div>
+  </div>
+
+  {{template "sheet-form-footer" (dict "CommonLabels" .CommonLabels "ShowCancel" true "IsEdit" .IsEdit)}}
+</form>
+{{end}}
